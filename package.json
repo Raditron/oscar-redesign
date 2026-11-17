@@ -1,0 +1,17 @@
+{
+  "name": "oscar-redesign-dev",
+  "private": true,
+  "description": "Dev-only tooling for the Oscar Club site (tests, font sources). Nothing here is uploaded.",
+  "scripts": {
+    "pretest": "playwright install chromium",
+    "test": "playwright test",
+    "serve": "node tests/server.js"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@fontsource-variable/onest": "^5.3.1",
+    "@fontsource/cormorant": "^5.3.0",
+    "@fontsource/poiret-one": "^5.3.0",
+    "@playwright/test": "^1.65.1"
+  }
+}

@@ -1,5 +1,197 @@
+/* Oscar Club — the one behaviour script. Progressive enhancement only: every page is complete without it.
+   Loaded with `defer` on all four pages, so the DOM is ready when it runs. No framework, no third-party code.
+
+   Shared helpers on window.OC (use them from your region instead of re-implementing):
+     OC.lang                  'bg' | 'en', from <html lang>
+     OC.t({ bg, en })         the string for the current language (anything else is returned as is)
+     OC.reducedMotion()       true when the visitor prefers reduced motion
+     OC.toMin('18:00')        minutes since midnight → 1080
+     OC.hours                 the week, Sofia time: [{ d, open, close }], d 0 = Sunday … 6 = Saturday.
+                              close <= open means the night runs past midnight (Thu 02:00, Fri/Sat 03:00)
+     OC.hoursFor(d)           that weekday's row of OC.hours
+     OC.dayNames[lang][d]     weekday names, d 0 = Sunday
+     OC.sofiaNow()            { d, m }: weekday (0 = Sunday) and minutes since midnight in Europe/Sofia,
+                              whatever the visitor's own timezone. Honours the clock override below
+     OC.nightOf(now?)         the weekday whose night it is. After midnight, until the previous night's late close,
+                              that is still the previous day (Fri 01:30 → Thursday). Use it to mark "today" in the week
+     OC.status(now?)          { state: 'open' | 'soon' | 'closed', label, detail } for the current language.
+                              'soon' = closes within 45 minutes. Logic lifted unchanged from the prototype (site.js)
+     OC.renderStatus(el)      fill one status element (see "status" below); OC.renderAllStatus() fills them all
+
+   Clock override (tests and demos): the time is read as Sofia local time and frozen.
+     ?now=2026-11-20T01:30        in the page URL
+     window.OC_NOW = '2026-11-20T01:30'   in an inline script that runs before this file
+   OC.clock tells which one is in use: 'live' | 'override'.
+
+   Status elements: any element with [data-oc-status]. In the HTML it holds the no-JS fallback (the week's hours) and
+   role="status". On load and then every minute this script replaces its content with the open-now line:
+     data-oc-status=""      v2 line:  <i class="v2-dot"></i><b>Open now</b> <span class="det">until 03:00</span>
+     data-oc-status="pill"  v1 pill (menu head): <i></i><b>Open now</b> <span>· until 03:00</span>
+   and sets data-state="open|soon|closed" on the element (CSS colours the dot from it). The space between <b> and
+   <span> is for screen readers (it collapses inside the inline-flex line). Content only changes when the status
+   text changes, so screen readers hear it once, not every minute.
+   Example (no-JS fallback inside, as in the header):
+     <p class="v2-now" role="status" data-oc-status><span class="v2-now-week"><span>Пн–Ср и Нд 18:00–23:30</span> ·
+       <span>Чт до 02:00</span> · <span>Пт–Сб до 03:00</span></span></p>
+
+   Per-ticket code goes in the regions at the end of this file. Keep each region's code inside its own block { … }
+   so names never collide, and edit only inside your own markers. */
+(() => {
 'use strict';
 
-document.querySelectorAll('[data-year]').forEach((el) => {
-  el.textContent = new Date().getFullYear();
-});
+const OC = window.OC = window.OC || {};
+
+/* ---------- language ---------- */
+OC.lang = (document.documentElement.lang || 'bg').slice(0, 2) === 'en' ? 'en' : 'bg';
+OC.t = o => (o && typeof o === 'object' && 'bg' in o) ? o[OC.lang] : o;
+OC.reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- opening hours, Sofia time (data.js) ---------- */
+OC.hours = [
+  { d: 1, open: '18:00', close: '23:30' }, { d: 2, open: '18:00', close: '23:30' }, { d: 3, open: '18:00', close: '23:30' },
+  { d: 4, open: '18:00', close: '02:00' }, { d: 5, open: '18:00', close: '03:00' }, { d: 6, open: '18:00', close: '03:00' },
+  { d: 0, open: '18:00', close: '23:30' }
+];
+OC.dayNames = {
+  bg: ['Неделя', 'Понеделник', 'Вторник', 'Сряда', 'Четвъртък', 'Петък', 'Събота'],
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+};
+const toMin = OC.toMin = s => +s.slice(0, 2) * 60 + +s.slice(3);
+OC.hoursFor = d => OC.hours.find(h => h.d === d);
+
+/* ---------- the clock: live Sofia time, or a frozen override ---------- */
+const parseNow = s => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(String(s || '').trim());
+  if (!m) return null;
+  const [, y, mo, d, h, mi] = m.map(Number);
+  return { d: new Date(Date.UTC(y, mo - 1, d)).getUTCDay(), m: h * 60 + mi };
+};
+const override = parseNow(new URLSearchParams(location.search).get('now')) || parseNow(window.OC_NOW);
+OC.clock = override ? 'override' : 'live';
+OC.sofiaNow = () => {
+  if (override) return { ...override };
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Sofia', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map(x => [x.type, x.value]));
+  return { d: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday), m: (+p.hour % 24) * 60 + +p.minute };
+};
+
+/* before the previous night's close, "today" is still that night (site.js hoursTable / site-v2.js week) */
+OC.nightOf = (now = OC.sofiaNow()) => {
+  const yest = OC.hoursFor((now.d + 6) % 7);
+  return yest && toMin(yest.close) <= toMin(yest.open) && now.m < toMin(yest.close) ? (now.d + 6) % 7 : now.d;
+};
+
+/* ---------- open-now status: lifted unchanged from the prototype (design-system/site.js, OC.status) ---------- */
+OC.status = (now = OC.sofiaNow()) => {
+  const L = OC.lang === 'bg';
+  const today = OC.hoursFor(now.d), yest = OC.hoursFor((now.d + 6) % 7), tom = OC.hoursFor((now.d + 1) % 7);
+  let until = null;
+  if (yest && toMin(yest.close) <= toMin(yest.open) && now.m < toMin(yest.close)) until = { at: yest.close, left: toMin(yest.close) - now.m };
+  else if (today && now.m >= toMin(today.open)) {
+    const c = toMin(today.close), end = c <= toMin(today.open) ? c + 1440 : c;
+    if (now.m < end) until = { at: today.close, left: end - now.m };
+  }
+  if (until && until.left <= 45) return { state: 'soon', label: L ? 'Затваря скоро' : 'Closing soon', detail: L ? `в ${until.at}` : `at ${until.at}` };
+  if (until) return { state: 'open', label: L ? 'Отворено' : 'Open now', detail: L ? `до ${until.at}` : `until ${until.at}` };
+  const later = today && now.m < toMin(today.open);
+  const at = later ? today.open : tom.open;
+  return { state: 'closed', label: L ? 'Затворено' : 'Closed', detail: L ? `отваря ${later ? 'днес' : 'утре'} в ${at}` : `opens ${later ? 'today' : 'tomorrow'} at ${at}` };
+};
+
+/* ---------- status elements ---------- */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+OC.renderStatus = (el, s = OC.status()) => {
+  const html = el.dataset.ocStatus === 'pill'
+    ? `<i aria-hidden="true"></i><b>${esc(s.label)}</b> <span>· ${esc(s.detail)}</span>`
+    : `<i class="v2-dot" aria-hidden="true"></i><b>${esc(s.label)}</b> <span class="det">${esc(s.detail)}</span>`;
+  if (el.dataset.state === s.state && el.innerHTML === html) return;
+  el.dataset.state = s.state;
+  el.innerHTML = html;
+};
+OC.renderAllStatus = () => {
+  const s = OC.status();
+  document.querySelectorAll('[data-oc-status]').forEach(el => OC.renderStatus(el, s));
+};
+OC.renderAllStatus();
+if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
+
+
+/* =====================================================================================================================
+   Per-ticket regions. Each ticket edits only between its own markers, inside its own block.
+   ===================================================================================================================== */
+
+// [#12 chrome] menu page only: anything the pinned header needs (e.g. measuring it for the category bar)
+{
+}
+// [/#12 chrome]
+
+// [#9 hero] hero flicker-on (only under prefers-reduced-motion: no-preference)
+{
+}
+// [/#9 hero]
+
+// [#10 story]
+{
+}
+// [/#10 story]
+
+// [#10 carousel] featured-cocktail carousel (site-v2.js: feature / carousel)
+{
+}
+// [/#10 carousel]
+
+// [#10 index] cocktail index: point or focus a row → preview + lit name (site-v2.js: index / pick)
+{
+}
+// [/#10 index]
+
+// [#11 music]
+{
+}
+// [/#11 music]
+
+// [#11 events] copy-to-clipboard on the events contacts
+{
+}
+// [/#11 events]
+
+// [#11 hours] mark tonight's row in the week (OC.nightOf) and the now-line
+{
+}
+// [/#11 hours]
+
+// [#11 visit]
+{
+}
+// [/#11 visit]
+
+// [#12 menu-head]
+{
+}
+// [/#12 menu-head]
+
+// [#12 catbar] the category bar follows the scroll
+{
+}
+// [/#12 catbar]
+
+// [#12 cocktails] base-spirit filter
+{
+}
+// [/#12 cocktails]
+
+// [#13 shots]
+{
+}
+// [/#13 shots]
+
+// [#13 accordions]
+{
+}
+// [/#13 accordions]
+
+// [#13 nx0]
+{
+}
+// [/#13 nx0]
+
+})();

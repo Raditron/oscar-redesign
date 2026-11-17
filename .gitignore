@@ -8,3 +8,11 @@
 .DS_Store
 *.suo
 *.sw?
+
+# Dev tooling (never uploaded)
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+dist/
