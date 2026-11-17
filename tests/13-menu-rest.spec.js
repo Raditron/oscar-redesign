@@ -29,10 +29,29 @@ const T = {
 const CATS = DATA.menu.map(m => m.id);   // vodka gin tequila whisky irish bourbon digestif wine beer soft
 const PHONE = 'tel:+359899666633';
 
-/** Every price row in a section, in reading order: [{ name, price }] where price is a number, or null for "—".
- *  A row is found by what a visitor sees: a price ("3 €" / "€3" / "—") and the drink name beside it. */
+// What is in each shot, in Bulgarian on the BG menu (the prototype's data has it in English only): brand names stay as
+// they are, the rest is translated
+const SHOT_ING_BG = {
+  'Adios': 'Jägermeister, малинов шнапс, Aftershock', 'B-68': 'Kahlúa, Baileys, абсент', 'Strawberry NI': 'ром, ягода, Baileys',
+  'B-52': 'Kahlúa, Baileys, Cointreau', 'Blow Job': 'Kahlúa, Baileys, бита сметана', 'Bolivian Kiss': 'Agwa de Bolivia, лайм',
+  'Brain Tumor': 'Carpano Dry, гренадин, Baileys', 'Brave Bull': 'текила, Kahlúa, какаов ликьор', 'Hot Jump': 'самбука, ром, Tabasco',
+  'Slippery Nipple': 'самбука, Baileys, гренадин', 'Sticky Fingers': 'Aftershock Red, уиски', 'Coco-Loco': 'водка, какао, Frangelico',
+  'Thin Red Line': 'текила, самбука, Tabasco', 'Viagra': 'мента, амарето, Baileys, какао', 'Cool Kiss': 'Aftershock Red, Baileys',
+  'Goodbye Johnnie': 'текила, ананасов ром', 'Hammer': 'Aftershock Black, абсент', 'K-For': 'ментов шнапс, Jägermeister',
+  'No Name': 'Baileys, Licor 43, Cointreau', 'Peach Lady': 'праскова, ананасов ром, гренадин', 'Red Devil': 'Aftershock Red, абсент'
+};
+const shotIng = (lang, name, en) => (lang === 'bg' ? SHOT_ING_BG[name] : en);
+// the serving as each language writes it: EN uses the decimal point (0.5 l), BG the comma (0,5 l)
+const vol = (lang, v) => (lang === 'en' ? v.replace(/(\d),(\d)/, '$1.$2') : v);
+// a price the bar has not confirmed (Averna) says so, in words, where the price goes
+const ASK = { bg: 'Питай бара', en: 'Ask the bar' };
+const IVORY = 'rgb(243, 235, 221)';
+
+/** Every price row in a section, in reading order: [{ name, price }] where price is a number, or null for a price still
+ *  to confirm. A row is found by what a visitor sees: a price ("3 €" / "€3" / "Питай бара" / "Ask the bar") and the
+ *  drink name beside it. */
 const priceRows = (pw, sectionId) => pw.locator(`#${sectionId}`).evaluate(sec => {
-  const re = /^(?:(\d+) €|€(\d+)|—)$/;
+  const re = /^(?:(\d+) €|€(\d+)|Питай бара|Ask the bar)$/;
   const out = [];
   const walk = document.createTreeWalker(sec, NodeFilter.SHOW_ELEMENT);
   for (let el = walk.nextNode(); el; el = walk.nextNode()) {
@@ -72,7 +91,11 @@ for (const lang of ['bg', 'en']) {
       await expect(shots.getByRole('heading', { level: 3 })).toHaveText(L.setsH);
       expect(await priceRows(page, 'shots')).toEqual(expectedShots(lang));
       // what is in each shot is said under its name
-      for (const [n, ing] of DATA.shots) await expect(shots.getByText(ing, { exact: true }).first(), n).toBeVisible();
+      for (const [n, ing] of DATA.shots) await expect(shots.getByText(shotIng(lang, n, ing), { exact: true }).first(), n).toBeVisible();
+      // the BG menu says it in Bulgarian: none of the English lines is left (the ones made only of brand names stay)
+      if (lang === 'bg') {
+        for (const [n, ing] of DATA.shots) if (SHOT_ING_BG[n] !== ing) await expect(shots.getByText(ing, { exact: true }), n).toHaveCount(0);
+      }
       for (const s of DATA.shotSets) await expect(shots.getByText(s.ing[lang], { exact: true })).toBeVisible();
     });
 
@@ -82,7 +105,7 @@ for (const lang of ['bg', 'en']) {
       await expect(sp.getByRole('heading', { level: 2 })).toHaveText(L.spH);
       // the accordions, in order, each named by its category (and its serving and count)
       const summaries = await page.locator('#spirits details > summary').allTextContents();
-      expect(summaries.map(s => s.replace(/\s+/g, ' ').trim())).toEqual(DATA.menu.map(m => `${label(m.id)} ${m.vol ? m.vol + ' · ' : ''}${m.items.length}`));
+      expect(summaries.map(s => s.replace(/\s+/g, ' ').trim())).toEqual(DATA.menu.map(m => `${label(m.id)} ${m.vol ? vol(lang, m.vol) + ' · ' : ''}${m.items.length}`));
       expect(await page.locator('#spirits details').evaluateAll(ds => ds.map(d => d.id))).toEqual(CATS);
       // every drink and price (closed ones included: they are in the page, just folded)
       expect(await priceRows(page, 'spirits')).toEqual(expectedSpirits());
@@ -91,9 +114,17 @@ for (const lang of ['bg', 'en']) {
       await expect(sp.getByText('Skyy', { exact: true })).toBeVisible();
       for (const id of CATS.slice(1)) await expect(page.locator(`#${id}`)).toHaveJSProperty('open', false);
       await expect(sp.getByText('Bickens', { exact: true })).toBeHidden();
-      // a price still to confirm shows as a dash with its note, never a guess
+      // a price still to confirm says so where the price goes ("Питай бара" / "Ask the bar"), never a guess; the owner's
+      // to-do (the old price is in leva) is not shown to guests. Plain ivory type: not gold (not a price), not a status colour
       await page.locator('#digestif > summary').click();
-      await expect(sp.getByText(DATA.menu.find(m => m.id === 'digestif').note[lang], { exact: true })).toBeVisible();
+      const ask = page.locator('#digestif').getByText(ASK[lang], { exact: true });
+      await expect(ask).toBeVisible();
+      await expect(page.locator('#digestif')).not.toContainText(DATA.menu.find(m => m.id === 'digestif').note[lang]);
+      await expect(page.locator('#digestif')).not.toContainText(/BGN|лева|leva|евро|euro/);
+      expect(await ask.evaluate(el => getComputedStyle(el).color)).toBe(IVORY);
+      // Red Bull says what it is in plain words
+      await page.locator('#soft > summary').click();
+      await expect(page.locator('#soft').getByText(lang === 'bg' ? 'енергийна напитка, също без захар и с вкусове' : 'energy drink, sugar-free and flavoured editions', { exact: true })).toBeVisible();
     });
 
     test('the accordions open and close with Enter and with Space', async ({ page }) => {
@@ -192,12 +223,14 @@ for (const lang of ['bg', 'en']) {
       await expect(get).toBeVisible();
       const ask = nx0.getByText(L.ask, { exact: true });
       await expect(ask).toBeVisible();
-      // marked: set apart from the words around it, not dressed as a button
+      // marked: set apart from the words around it (by weight), in ivory like the rest of the type (no status colour:
+      // colour is for drinks), not dressed as a button
       const look = await ask.evaluate(el => {
         const a = getComputedStyle(el), p = getComputedStyle(el.parentElement);
-        return { color: a.color, parent: p.color, bg: a.backgroundColor, pbg: p.backgroundColor };
+        return { color: a.color, weight: +a.fontWeight, pweight: +p.fontWeight, bg: a.backgroundColor, pbg: p.backgroundColor };
       });
-      expect(look.color).not.toBe(look.parent);
+      expect(look.color).toBe(IVORY);
+      expect(look.weight).toBeGreaterThan(look.pweight);
       expect(look.bg).toBe('rgba(0, 0, 0, 0)');
       expect(look.pbg).toBe('rgba(0, 0, 0, 0)');
     });
@@ -263,7 +296,7 @@ for (const lang of ['bg', 'en']) {
       await expect(page.locator('#soft > summary')).toBeInViewport();
       // the NX0 strip is all there
       await expect(page.getByRole('region', { name: L.nx0H }).getByRole('link', { name: 'NX0', exact: true })).toBeVisible();
-      await expect(page.getByText(L.ask, { exact: true })).toBeVisible();
+      await expect(page.getByRole('region', { name: L.nx0H }).getByText(L.ask, { exact: true })).toBeVisible();
     });
   });
 }

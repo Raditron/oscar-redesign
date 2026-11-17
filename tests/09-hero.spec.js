@@ -10,14 +10,14 @@ const SLOGAN = 'allow yourself to be yourself.';
 const COPY = {
   bg: {
     call: 'Обади се за маса', phone: '+359 899 666 633', dm: 'или пиши в Instagram', dirs: 'Маршрут',
-    address: 'ул. „Славянска“ 15', ratings: '4,7 Google · 4,8 Tripadvisor 812 отзива', award: 'Бранд на годината 2024',
+    address: 'ул. „Славянска“ 15', ratings: '4,7 Google (671 отзива) · 4,8 Tripadvisor (141 отзива)', ratingsSeen: '4,7 Google (671) · 4,8 Tripadvisor (141)', award: 'Бранд на годината 2024',
     week: 'Пн–Ср и Нд 18:00–23:30 · Чт до 02:00 · Пт–Сб до 03:00',
     // Fri 22:00 in Sofia: open until 03:00
     status: 'Отворено до 03:00'
   },
   en: {
     call: 'Call to book a table', phone: '+359 899 666 633', dm: 'or message us on Instagram', dirs: 'Directions',
-    address: '15 Slavyanska St', ratings: '4.7 Google · 4.8 Tripadvisor 812 reviews', award: 'Brand of the Year 2024',
+    address: '15 Slavyanska St', ratings: '4.7 Google (671 reviews) · 4.8 Tripadvisor (141 reviews)', ratingsSeen: '4.7 Google (671) · 4.8 Tripadvisor (141)', award: 'Brand of the Year 2024',
     week: 'Mon–Wed & Sun 18:00–23:30 · Thu to 02:00 · Fri–Sat to 03:00',
     status: 'Open now until 03:00'
   }
@@ -28,6 +28,13 @@ const FRI_22 = '2026-11-20T22:00';
 const hero = pw => pw.getByRole('region', { name: SLOGAN });
 const slate = pw => hero(pw).getByRole('list');
 const textOf = loc => loc.evaluate(el => el.textContent.replace(/\s+/g, ' ').trim());
+// the text drawn on screen: leaves out words that are there for screen readers only (clipped to a 1px box)
+const seenText = loc => loc.evaluate(el => {
+  const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  let out = '';
+  for (let n = w.nextNode(); n; n = w.nextNode()) { const r = n.parentElement.getBoundingClientRect(); if (r.width > 1 && r.height > 1) out += n.data; }
+  return out.replace(/\s+/g, ' ').trim();
+});
 
 // WCAG relative luminance / contrast of two computed rgb() colours
 const contrast = (a, b) => {
@@ -88,8 +95,10 @@ for (const lang of ['bg', 'en']) {
       expect(url.origin + url.pathname).toBe('https://www.google.com/maps/dir/');
       expect(url.searchParams.get('api')).toBe('1');
       expect(url.searchParams.get('destination')).toMatch(/Slavyanska 15, Sofia/);
-      // ratings: Google 4.7 and Tripadvisor 4.8 with the combined review count (671 + 141), as text
+      // ratings: Google 4.7 and Tripadvisor 4.8, each with its own review count, as text. On screen the count stands in
+      // brackets; a screen reader also hears the word "reviews"
       expect(await textOf(items.nth(2))).toBe(C.ratings);
+      expect(await seenText(items.nth(2))).toBe(C.ratingsSeen);
       expect(await textOf(items.nth(3))).toBe(C.award);
       for (let i = 0; i < 4; i++) await expect(items.nth(i)).toBeVisible();
     });
@@ -243,7 +252,7 @@ test.describe('hero parity', () => {
     expect(en.links).toEqual(bg.links);
     expect(en.items).toEqual(bg.items);
     expect(en.glass).toBe(bg.glass);
-    // and they say the same thing: the clock line, the street number, the two ratings and their review count, the year
-    expect(bg.items.map(i => i.numbers)).toEqual([['03', '00'], ['15'], ['4.7', '4.8', '812'], ['2024']]);
+    // and they say the same thing: the clock line, the street number, the two ratings and their review counts, the year
+    expect(bg.items.map(i => i.numbers)).toEqual([['03', '00'], ['15'], ['4.7', '671', '4.8', '141'], ['2024']]);
   });
 });
