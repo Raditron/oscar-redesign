@@ -172,9 +172,9 @@ test.describe('the hand-off note', () => {
 
     for (const [article, words] of [
       [bg, ['oscarclubsofia.com', 'Замени', 'Обедини', 'Не трийте нищо', '+359 899 666 633', 'search.google.com/test/rich-results',
-        'Питай бара', 'NX0', 'основателя', 'Работното време', 'ноември 2026', 'Оценките', 'Averna']],
+        'Питай бара', 'NX0', 'основателя', 'Работното време', 'ноември 2026', 'Оценките', 'Averna', 'Happy hour']],
       [en, ['oscarclubsofia.com', 'Overwrite', 'Merge', 'Don\'t delete anything', '+359 899 666 633', 'search.google.com/test/rich-results',
-        'Ask the bar', 'NX0', 'founder', 'Opening hours', 'November 2026', 'ratings', 'Averna']]
+        'Ask the bar', 'NX0', 'founder', 'Opening hours', 'November 2026', 'ratings', 'Averna', 'Happy hour']]
     ]) {
       const text = await article.innerText();
       for (const w of words) expect(text, `"${w}"`).toContain(w);

@@ -65,6 +65,8 @@ const C = {
   visit1: { bg: '„Славянска“', en: 'Slavyanska' },
   visitP: { bg: 'София център. Влизаш под светещия знак OC.', en: 'Sofia centre. Walk in under the lit OC sign.' },
   late: { bg: 'Четвъртък до 02:00. Петък и събота до 03:00.', en: 'Thursdays until 02:00. Fridays and Saturdays until 03:00.' },
+  /* happy hour (#18): only the time is known. The old site never mentions it, so days, drinks and prices are "ask the bar" */
+  hh: { bg: '<span lang="en">Happy hour</span> <span class="tnum">18:00–20:00</span>. Дни, напитки и цени: <span class="v2-ask">Питай бара</span>', en: 'Happy hour <span class="tnum">18:00–20:00</span>. Days, drinks and prices: <span class="v2-ask">Ask the bar</span>' },
   now: { bg: 'сега', en: 'now' },
   phone: { bg: 'Телефон', en: 'Phone' }, email: { bg: 'Имейл', en: 'Email' }, access: { bg: 'Достъп', en: 'Access' },
   accessV: { bg: 'Входът е достъпен с инвалидна количка', en: 'Step-free, wheelchair-accessible entrance' },
@@ -282,7 +284,7 @@ const visit = () => `<section class="v2-visit" id="visit" aria-labelledby="v2-vi
   </div>
   <p class="v2-lede v2-visit-p">${t(C.visitP)}</p>
   <div class="v2-visit-grid">
-    <div class="v2-hours"><div class="v2-hours-h"><h3 class="v2-h3">${t(OC.copy.hoursH)}</h3>${nowLine()}</div>${week()}<p class="v2-dim">${t(C.late)}</p></div>
+    <div class="v2-hours"><div class="v2-hours-h"><h3 class="v2-h3">${t(OC.copy.hoursH)}</h3>${nowLine()}</div>${week()}<p class="v2-dim">${t(C.late)}</p><p class="v2-dim">${t(C.hh)}</p></div>
     <div class="v2-contact">
       <dl class="v2-dl">
         <div><dt>${t(C.phone)}</dt><dd><a class="tnum" href="${OC.info.phoneHref}">${OC.info.phone}</a></dd></div>

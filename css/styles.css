@@ -752,7 +752,8 @@ body{margin:0;background:#000}
 /* the download, until the bar confirms the link: the words where the text link will go (ivory, not underlined, since it
    is not a link yet) and the marker "Питай бара" / "Ask the bar", set apart by weight and size, in ivory like the rest
    of the type: no status colour (colour is for drinks), as the menu marks Averna's price. Not a button and not gold:
-   gold stays on the call (rule 2) */
+   gold stays on the call (rule 2). The same marker ends the happy-hour line under the week ([#11 hours]) and under the
+   menu's open-now pill ([#12 menu-head]): only the time is confirmed there, the days, drinks and prices are not */
 .v2-nx0-get{font-size:17px;line-height:1.4;color:var(--ivory)}
 .v2-ask{font-size:14px;font-weight:650;letter-spacing:.02em;color:var(--ivory)}
 /* [/#13 nx0] */
