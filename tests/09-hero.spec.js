@@ -104,7 +104,7 @@ for (const lang of ['bg', 'en']) {
     test('the hero glass loads eagerly with fixed dimensions and resolves', async ({ page }) => {
       const log = H.watchNetwork(page);
       await H.openPage(page, P.path);
-      const glass = page.locator('img[src$="cocktails/blue.webp"]');
+      const glass = hero(page).locator('img[src$="cocktails/blue.webp"]');
       await expect(glass).toHaveCount(1);
       expect(await glass.getAttribute('loading')).not.toBe('lazy');
       expect(Number(await glass.getAttribute('width'))).toBeGreaterThan(0);
