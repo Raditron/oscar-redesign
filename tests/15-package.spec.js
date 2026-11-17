@@ -107,6 +107,8 @@ test.describe('the upload folder', () => {
   });
 
   test('every shipped file is referenced by a shipped page or stylesheet, and every reference resolves', async ({ page }) => {
+    // fetches every page and every referenced file in turn: give it room when the machine is busy (e.g. three engines)
+    test.setTimeout(120_000);
     const srv = await serve(site);
     try {
       const referenced = new Set();
