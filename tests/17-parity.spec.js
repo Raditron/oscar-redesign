@@ -253,19 +253,29 @@ test.describe('no separator left at the end (or start) of a line', () => {
 
     test.describe(`${home.name} without JavaScript`, () => {
       test.use({ javaScriptEnabled: false });
-      test(`P12: the header's week line never leaves a "·" at a line end`, async ({ page }) => {
-        await H.openPage(page, home.path);
-        const status = H.headerStatus(page);
-        const seps = status.getByText('·', { exact: true });
-        for (const width of [320, 360, 390, 560, 760, 860, 900, 1000, 1100, 1440]) {
-          await page.setViewportSize({ width, height: 900 });
-          await expect(seps).toHaveCount(2);
-          for (let i = 0; i < 2; i++) {
-            const one = await seps.nth(i).evaluate((sep, f) => new Function('a', 'b', `return (${f})(a, b)`)(sep.parentElement, sep.parentElement.nextElementSibling), sameLine.toString());
-            expect(await drawnAt(seps.nth(i)), `"·" ${i + 1} drawn at ${width}px`).toBe(one);
+      // P12 in the header (right-aligned), and the same week line in the hero slate and, on the menu, under the title
+      for (const [where, kind, find] of [
+        ['header', 'home', pw => H.headerStatus(pw)],
+        ['hero slate', 'home', pw => pw.getByRole('region', { name: 'allow yourself to be yourself.' }).getByRole('listitem').first()],
+        ['menu head', 'menu', pw => pw.getByRole('main').getByRole('region', { name: lang === 'bg' ? 'Меню' : 'Menu' })]
+      ]) {
+        test(`P12 ${where}: the week's hours never leave a "·" at the end or start of a line`, async ({ page }) => {
+          await H.openPage(page, H.page(lang, kind).path);
+          const seps = find(page).getByText('·', { exact: true });
+          for (const width of [320, 360, 390, 430, 560, 760, 860, 900, 1000, 1100, 1440]) {
+            await page.setViewportSize({ width, height: 900 });
+            await expect(seps).toHaveCount(2);
+            for (let i = 0; i < 2; i++) {
+              // the two parts of the week the "·" stands between (it trails the one before, or leads the one after)
+              const one = await seps.nth(i).evaluate((sep, f) => {
+                const part = sep.parentElement, lead = part.firstChild === sep;
+                return new Function('a', 'b', `return (${f})(a, b)`)(lead ? part.previousElementSibling : part, lead ? part : part.nextElementSibling);
+              }, sameLine.toString());
+              expect(await drawnAt(seps.nth(i)), `"·" ${i + 1} drawn at ${width}px`).toBe(one);
+            }
           }
-        }
-      });
+        });
+      }
     });
   }
 });
