@@ -19,11 +19,11 @@ const DATA = (() => {
 const T = {
   bg: {
     shotsH: '21 шота. Всеки е 3 €.', setsH: 'Сетове', shotsWord: 'шота', spH: 'Уиски, джин, вино, бира. Мерим по 50 ml, текилата по 25.',
-    nx0H: 'Касовата бележка тук струва нещо.', get: 'Изтегли NX0', ask: 'Питай бара', cats: 'Категории', call: 'Обади се'
+    nx0H: 'Касовата бележка тук струва нещо.', get: 'Изтегли NX0', cats: 'Категории', call: 'Обади се'
   },
   en: {
     shotsH: '21 shots. Every one is €3.', setsH: 'Sets', shotsWord: 'shots', spH: 'Whisky, gin, wine, beer. We pour 50 ml, tequila 25.',
-    nx0H: 'Your receipt here is worth something.', get: 'Get the NX0 app', ask: 'Ask the bar', cats: 'Categories', call: 'Call'
+    nx0H: 'Your receipt here is worth something.', get: 'Download NX0', cats: 'Categories', call: 'Call'
   }
 };
 const CATS = DATA.menu.map(m => m.id);   // vodka gin tequila whisky irish bourbon digestif wine beer soft
@@ -192,7 +192,7 @@ for (const lang of ['bg', 'en']) {
       await expect(page.locator('#whisky').getByText('Auchentoshan 12', { exact: true })).toBeVisible();
     });
 
-    test('NX0: their own logo, unaltered, links to NX0; the download is a marked "ask the bar" placeholder', async ({ page, request }) => {
+    test('NX0: their own logo, unaltered, links to NX0; the download is a text link to nx0.ai/en/downloads', async ({ page, request }) => {
       await H.openPage(page, P.path);
       const nx0 = page.getByRole('region', { name: L.nx0H });
       await expect(nx0.getByRole('heading', { level: 2 })).toHaveText(L.nx0H);
@@ -225,23 +225,29 @@ for (const lang of ['bg', 'en']) {
       const served = await (await request.get(shown.src)).body();
       expect(served.equals(fs.readFileSync(path.join(__dirname, '..', 'design-system', 'img', 'nx0-logo.png'))), 'the logo file is NX0\'s own, unchanged').toBe(true);
 
-      // the download: no made-up link, a visibly marked placeholder instead
-      await expect(nx0.getByRole('link')).toHaveCount(1);
-      await expect(page.locator('a[href*="download"], a[href*="apps.apple.com"], a[href*="play.google.com"]')).toHaveCount(0);
-      const get = nx0.getByText(`${L.get} · ${L.ask}`, { exact: true });
+      // the download: a text link to NX0's downloads page (the same /en/ page from both languages), opening in a new tab,
+      // with the outward arrow hidden from screen readers. Two links in the strip: the logo and this one
+      await expect(nx0.getByRole('link')).toHaveCount(2);
+      const get = nx0.getByRole('link', { name: L.get, exact: true });
       await expect(get).toBeVisible();
-      const ask = nx0.getByText(L.ask, { exact: true });
-      await expect(ask).toBeVisible();
-      // marked: set apart from the words around it (by weight), in ivory like the rest of the type (no status colour:
-      // colour is for drinks), not dressed as a button
-      const look = await ask.evaluate(el => {
-        const a = getComputedStyle(el), p = getComputedStyle(el.parentElement);
-        return { color: a.color, weight: +a.fontWeight, pweight: +p.fontWeight, bg: a.backgroundColor, pbg: p.backgroundColor };
+      await expect(get).toHaveAttribute('href', 'https://nx0.ai/en/downloads');
+      await expect(get).toHaveAttribute('target', '_blank');
+      await expect(get).toHaveAttribute('rel', /noopener/);
+      await expect(get.locator('.v2-ar')).toHaveAttribute('aria-hidden', 'true');
+      await expect(get.locator('.v2-ar')).toHaveText('↗');
+      // no "ask the bar" marker left in the strip
+      await expect(nx0.getByText(ASK[lang])).toHaveCount(0);
+      // styled as the site's other text links (v2-link): ivory, underlined by a hairline, not dressed as a button (gold
+      // stays on the call)
+      await expect(get).toHaveClass(/(^|\s)v2-link(\s|$)/);
+      const look = await get.evaluate(el => {
+        const a = getComputedStyle(el);
+        return { color: a.color, bg: a.backgroundColor, img: a.backgroundImage, deco: a.textDecorationLine };
       });
       expect(look.color).toBe(IVORY);
-      expect(look.weight).toBeGreaterThan(look.pweight);
       expect(look.bg).toBe('rgba(0, 0, 0, 0)');
-      expect(look.pbg).toBe('rgba(0, 0, 0, 0)');
+      expect(look.img).toContain('linear-gradient');
+      expect(look.deco).toBe('none');
     });
 
     for (const vp of ['phone', 'desktop']) {
@@ -306,7 +312,7 @@ for (const lang of ['bg', 'en']) {
       await expect(page.locator('#soft > summary')).toBeInViewport();
       // the NX0 strip is all there
       await expect(page.getByRole('region', { name: L.nx0H }).getByRole('link', { name: 'NX0', exact: true })).toBeVisible();
-      await expect(page.getByRole('region', { name: L.nx0H }).getByText(L.ask, { exact: true })).toBeVisible();
+      await expect(page.getByRole('region', { name: L.nx0H }).getByRole('link', { name: L.get, exact: true })).toHaveAttribute('href', 'https://nx0.ai/en/downloads');
     });
   });
 }

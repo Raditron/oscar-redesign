@@ -71,11 +71,12 @@ const C = {
   home: { bg: 'Начало', en: 'Home' },
   /* NX0 partnership. Facts only from NX0's own site (nx0.ai): pay as usual, scan the receipt, the reward lands in the
      City Wallet, and it only counts if the reward was live in Earn before you paid. No amounts: Oscar's offer is not known */
-  nx0Url: 'https://nx0.ai/download',
+  nx0Url: 'https://nx0.ai/',
+  nx0Dl: 'https://nx0.ai/en/downloads',
   nx0H: { bg: 'Касовата бележка тук струва нещо.', en: 'Your receipt here is worth something.' },
   nx0P: { bg: 'Оскар клуб е партньор на NX0. Плащаш както винаги, снимаш бележката в приложението и наградата отива в City Wallet.', en: 'Oscar Club is a partner on NX0. Pay the way you always do, scan the receipt in the app, and the reward lands in your City Wallet.' },
   nx0Rule: { bg: 'Отвори Earn, преди да платиш: бележката важи само ако наградата е активна.', en: 'Open Earn before you pay: a receipt only counts if the reward is live.' },
-  nx0Get: { bg: 'Изтегли NX0', en: 'Get the NX0 app' },
+  nx0Get: { bg: 'Изтегли NX0', en: 'Download NX0' },
 };
 
 /* the OC rings as a lit sign (brand mark: neon allowed) */
@@ -231,7 +232,7 @@ const nx0 = () => `<section class="v2-nx0" id="nx0" aria-labelledby="v2-nx0-h">
     <h2 class="v2-h2" id="v2-nx0-h">${t(C.nx0H)}</h2>
     <p class="v2-lede">${t(C.nx0P)}</p>
     <p class="v2-nx0-rule">${t(C.nx0Rule)}</p>
-    ${ext(C.nx0Url, 'v2-link', t(C.nx0Get) + out)}
+    ${ext(C.nx0Dl, 'v2-link', t(C.nx0Get) + out)}
   </div>
   ${ext(C.nx0Url, 'v2-nx0-mark', '<img src="img/nx0-logo.png" alt="NX0" width="640" height="229">')}
 </section>`;

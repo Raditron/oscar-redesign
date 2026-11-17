@@ -106,13 +106,13 @@ URL answering with its original bytes while the four pages become the new ones.
 Send `dist/oscarclubsofia.com.zip` to the bar. `README-handoff.html` inside it (source: `docs/handoff.html`) says,
 in Bulgarian and English: what to upload (the contents of `oscarclubsofia.com/` into the site's main folder,
 overwriting), what must not be deleted on the server, three checks after the upload, and the open "Питай бара"
-items (NX0 download link, founder's name, opening hours, rating snapshot, Averna's euro price).
+items (NX0 partnership terms, founder's name, opening hours, rating snapshot, Averna's euro price).
 
 ## Content still to confirm with the bar
 
 Kept on the site as visibly marked "Питай бара" / "Ask the bar" notes or left out, never guessed:
 
-- the NX0 download link (and the partnership terms): marked on both menu pages;
+- the NX0 partnership terms (the download link, https://nx0.ai/en/downloads, is on both menu pages);
 - the founder's name: hidden from the story until the owner confirms it;
 - whether the opening hours have changed since November 2026;
 - the Google and Tripadvisor ratings are a November 2026 snapshot;
