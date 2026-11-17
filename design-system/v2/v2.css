@@ -212,8 +212,10 @@
 }
 
 /* ================= NX0: the partner's sticker on the door (menu page only) ================= */
-/* a strip between two hairlines, the logo leading. No box around it (rule 5) */
-.v2-nx0{display:grid;gap:clamp(28px,4cqi,48px);align-items:center;margin:0 var(--g) var(--gap-section);padding-block:clamp(40px,5cqi,72px);border-block:1px solid var(--hair)}
+/* a strip between two hairlines, the logo leading. No box around it (rule 5). The hairlines keep the side gutter; the
+   logo and the text sit centred between them as one group, the way the story section on home centres its pair (the type
+   itself stays left-set) */
+.v2-nx0{display:grid;justify-content:center;gap:clamp(28px,4cqi,48px);align-items:center;margin:0 var(--g) var(--gap-section);padding-block:clamp(40px,5cqi,72px);border-block:1px solid var(--hair)}
 .v2-nx0-txt{display:grid;gap:16px;justify-items:start;max-width:46ch}
 .v2-nx0-rule{font-size:14px;line-height:1.45;color:var(--ivory-3)}
 /* NX0's own logo from nx0.ai, unaltered: a white wordmark made for dark grounds, so it sits on the black as it is.
@@ -222,7 +224,7 @@
 .v2-nx0-mark img{display:block;width:100%;height:auto}
 .v2 .v2-nx0-mark:hover{opacity:.82}
 @container site (min-width:760px){
-  .v2-nx0{grid-template-columns:auto minmax(0,1fr);column-gap:clamp(40px,6cqi,112px)}
+  .v2-nx0{grid-template-columns:auto minmax(0,46ch);column-gap:clamp(40px,6cqi,112px)}
 }
 /* the v1 menu body ends on its own section padding; the strip keeps its side gutter there too */
 .v2-v1menu + .v2-nx0{margin-top:var(--gap-section)}
