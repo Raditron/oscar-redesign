@@ -706,7 +706,7 @@ body{margin:0;background:#000}
 .mrow .nm::after{content:"";flex:1;min-width:var(--s-4);border-bottom:1px dotted var(--line-2);transform:translateY(-4px)}
 .mrow .pr{font:700 var(--fs-body)/1.5 var(--font-label);color:var(--gold-hi);font-variant-numeric:tabular-nums;text-align:right}
 /* a price the bar has not confirmed: "Питай бара" / "Ask the bar" in plain ivory (no gold: it is not a price; no status
-   colour: it is not a status), as the NX0 download is marked. Never a guess */
+   colour: it is not a status). Never a guess */
 .mrow .pr.tbd{color:var(--ivory);font-weight:600;font-size:var(--fs-sm)}
 .mrow .sub{grid-column:1/-1;font-size:var(--fs-sm);color:var(--ivory-3);line-height:1.4;margin-top:2px}
 /* the 21 shots run in two newspaper columns from a tablet up */
@@ -749,10 +749,4 @@ body{margin:0;background:#000}
 }
 /* the v1 menu body ends on its own section padding; the strip keeps its side gutter there too */
 .v2-v1menu + .v2-nx0{margin-top:var(--gap-section)}
-/* the download, until the bar confirms the link: the words where the text link will go (ivory, not underlined, since it
-   is not a link yet) and the marker "Питай бара" / "Ask the bar", set apart by weight and size, in ivory like the rest
-   of the type: no status colour (colour is for drinks), as the menu marks Averna's price. Not a button and not gold:
-   gold stays on the call (rule 2) */
-.v2-nx0-get{font-size:17px;line-height:1.4;color:var(--ivory)}
-.v2-ask{font-size:14px;font-weight:650;letter-spacing:.02em;color:var(--ivory)}
 /* [/#13 nx0] */

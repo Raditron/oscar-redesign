@@ -174,7 +174,7 @@ PX.route({ path: 'v2-menu', page: 'menu', layout: 'site', v2: true, title: 'v2 �
       ['Shots', 'v1', 'Two-column list at 3 € each, then the shot sets'],
       ['Spirits, wine, beer', 'v1', 'Accordions with volume and item count in each row. The first one starts open'],
       ['Background', 'Version 2', 'Pure black instead of v1’s warm off-black, so there is no seam under the v2 header'],
-      ['NX0 partnership', 'Version 2 (new)', 'Closes the menu, on this page only: a guest has just picked a drink and is about to pay. NX0’s own logo from nx0.ai (the white wordmark, made for dark grounds) leads the strip at up to 340px and links through to them, so a partner spots it first (Von Restorff, Serial Position). Then “Your receipt here is worth something”, how it works in one sentence, NX0’s rule (open Earn before you pay) and a text link to nx0.ai/download. A text link, not a second gold button: gold stays on the call (rule 2)']
+      ['NX0 partnership', 'Version 2 (new)', 'Closes the menu, on this page only: a guest has just picked a drink and is about to pay. NX0’s own logo from nx0.ai (the white wordmark, made for dark grounds) leads the strip at up to 340px and links through to them, so a partner spots it first (Von Restorff, Serial Position). Then “Your receipt here is worth something”, how it works in one sentence, NX0’s rule (open Earn before you pay) and a text link to nx0.ai/en/downloads. A text link, not a second gold button: gold stays on the call (rule 2)']
     ]))
 });
 })();
