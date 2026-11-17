@@ -1,13 +1,13 @@
-// #18 Happy hour, 18:00–20:00. The old site never mentions it, so only the time is stated; the days, the drinks and the
-// prices are marked "Питай бара" / "Ask the bar", never guessed. A guest finds it where the hours are: on home under
-// the week of opening hours, on the menu under the title and the open-now pill. Both languages, with and without
+// #18 Happy hour, 18:00–20:00. The old site never mentions it, so only the time is stated: no days, drinks or prices
+// of our own making, and (#21) no "Питай бара" / "Ask the bar" marker. A guest finds it where the hours are: on home
+// under the week of opening hours, on the menu under the title and the open-now pill. Both languages, with and without
 // JavaScript, at phone width.
 const { test, expect } = require('@playwright/test');
 const H = require('./helpers');
 
 const T = {
-  bg: { line: 'Happy hour 18:00–20:00. Дни, напитки и цени: Питай бара', ask: 'Питай бара', visit: 'Славянска 15', hours: 'Работно време', menu: 'Меню' },
-  en: { line: 'Happy hour 18:00–20:00. Days, drinks and prices: Ask the bar', ask: 'Ask the bar', visit: 'Slavyanska 15', hours: 'Opening hours', menu: 'Menu' }
+  bg: { line: 'Happy hour 18:00–20:00.', visit: 'Славянска 15', hours: 'Работно време', menu: 'Меню' },
+  en: { line: 'Happy hour 18:00–20:00.', visit: 'Slavyanska 15', hours: 'Opening hours', menu: 'Menu' }
 };
 
 /** The region the line belongs in: the visit section on home, the menu's title section on the menu. */
@@ -20,14 +20,15 @@ const textOf = loc => loc.evaluate(el => el.textContent.replace(/\s+/g, ' ').tri
 for (const P of H.PAGES) {
   const t = T[P.lang];
   test.describe(`${P.name}: happy hour`, () => {
-    test('says 18:00–20:00 and asks the bar for the rest, nothing more', async ({ page }) => {
+    test('says 18:00–20:00, nothing more', async ({ page }) => {
       await H.openPage(page, P.path);
       const hh = line(page, P.lang, P.kind);
       await expect(hh).toHaveCount(1);
       await expect(hh).toBeVisible();
-      // the exact words: the time and the marker. No day, drink, price, percentage or currency of our own making
+      // the exact words: the time. No day, drink, price, percentage or currency of our own making
       expect(await textOf(hh)).toBe(t.line);
-      await expect(hh.getByText(t.ask, { exact: true })).toBeVisible();
+      // no "Питай бара" / "Ask the bar" marker anywhere on the page (#21)
+      await expect(page.getByText(/Питай бара|Ask the bar/)).toHaveCount(0);
       // only one happy-hour line per page
       await expect(page.getByText(/happy hour/i)).toHaveCount(1);
     });
@@ -59,22 +60,20 @@ for (const P of H.PAGES) {
       });
     }
 
-    test('is plain type: no glow, not gold, the marker in ivory like the rest', async ({ page }) => {
+    test('is plain type: no glow, not gold, in the dim type of the line above', async ({ page }) => {
       await H.openPage(page, P.path);
       const hh = line(page, P.lang, P.kind);
       const look = el => { const s = getComputedStyle(el); return { shadow: s.textShadow, color: s.color }; };
-      const [l, m] = [await hh.evaluate(look), await hh.getByText(t.ask, { exact: true }).evaluate(look)];
+      const l = await hh.evaluate(look);
       expect(l.shadow).toBe('none');
-      expect(m.shadow).toBe('none');
-      // the marker is set apart from the dim line, in the site's ivory (the colour of the type), as the menu marks
-      // Averna's price and the NX0 download
-      const ivory = await hh.evaluate(el => {
-        const s = el.appendChild(document.createElement('span'));
-        s.style.color = 'var(--ivory)';
+      // the same dim colour as the site's other secondary lines (.v2-dim), not the gold of the call
+      const [dim, gold] = await hh.evaluate(el => [['p', 'v2-dim', ''], ['span', '', 'var(--gold)']].map(([tag, cls, color]) => {
+        const s = el.parentElement.appendChild(document.createElement(tag));
+        s.className = cls; s.style.color = color;
         const c = getComputedStyle(s).color; s.remove(); return c;
-      });
-      expect(m.color).toBe(ivory);
-      expect(m.color).not.toBe(l.color);
+      }));
+      expect(l.color).toBe(dim);
+      expect(l.color).not.toBe(gold);
     });
 
     test('at phone width it fits, with no sideways scroll', async ({ page }) => {

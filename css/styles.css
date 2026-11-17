@@ -705,8 +705,8 @@ body{margin:0;background:#000}
 .mrow .nm{display:flex;align-items:baseline;gap:var(--s-2);min-width:0;font-weight:600;color:var(--ivory)}
 .mrow .nm::after{content:"";flex:1;min-width:var(--s-4);border-bottom:1px dotted var(--line-2);transform:translateY(-4px)}
 .mrow .pr{font:700 var(--fs-body)/1.5 var(--font-label);color:var(--gold-hi);font-variant-numeric:tabular-nums;text-align:right}
-/* a price the bar has not confirmed: "Питай бара" / "Ask the bar" in plain ivory (no gold: it is not a price; no status
-   colour: it is not a status). Never a guess */
+/* a price the bar has not confirmed: a dash "—" in plain ivory (no gold: it is not a price; no status colour: it is not
+   a status). Never a guess */
 .mrow .pr.tbd{color:var(--ivory);font-weight:600;font-size:var(--fs-sm)}
 .mrow .sub{grid-column:1/-1;font-size:var(--fs-sm);color:var(--ivory-3);line-height:1.4;margin-top:2px}
 /* the 21 shots run in two newspaper columns from a tablet up */
@@ -752,8 +752,3 @@ body{margin:0;background:#000}
 /* the v1 menu body ends on its own section padding; the strip keeps its side gutter there too */
 .v2-v1menu + .v2-nx0{margin-top:var(--gap-section)}
 /* [/#13 nx0] */
-/* the marker "Питай бара" / "Ask the bar" for a fact the bar has not confirmed: set apart by weight and size, in ivory
-   like the rest of the type: no status colour (colour is for drinks), as the menu marks Averna's price. Not a button and
-   not gold: gold stays on the call (rule 2). It ends the happy-hour line under the week ([#11 hours]) and under the
-   menu's open-now pill ([#12 menu-head]): only the time is confirmed there, the days, drinks and prices are not */
-.v2-ask{font-size:14px;font-weight:650;letter-spacing:.02em;color:var(--ivory)}

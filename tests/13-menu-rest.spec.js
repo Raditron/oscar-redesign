@@ -43,15 +43,15 @@ const SHOT_ING_BG = {
 const shotIng = (lang, name, en) => (lang === 'bg' ? SHOT_ING_BG[name] : en);
 // the serving as each language writes it: EN uses the decimal point (0.5 l), BG the comma (0,5 l)
 const vol = (lang, v) => (lang === 'en' ? v.replace(/(\d),(\d)/, '$1.$2') : v);
-// a price the bar has not confirmed (Averna) says so, in words, where the price goes
-const ASK = { bg: 'Питай бара', en: 'Ask the bar' };
+// a price the bar has not confirmed (Averna) shows a dash where the price goes: no marker, no guess
+const ASK = { bg: '—', en: '—' };
 const IVORY = 'rgb(243, 235, 221)';
 
 /** Every price row in a section, in reading order: [{ name, price }] where price is a number, or null for a price still
- *  to confirm. A row is found by what a visitor sees: a price ("3 €" / "€3" / "Питай бара" / "Ask the bar") and the
+ *  to confirm. A row is found by what a visitor sees: a price ("3 €" / "€3" / "—") and the
  *  drink name beside it. */
 const priceRows = (pw, sectionId) => pw.locator(`#${sectionId}`).evaluate(sec => {
-  const re = /^(?:(\d+) €|€(\d+)|Питай бара|Ask the bar)$/;
+  const re = /^(?:(\d+) €|€(\d+)|—)$/;
   const out = [];
   const walk = document.createTreeWalker(sec, NodeFilter.SHOW_ELEMENT);
   for (let el = walk.nextNode(); el; el = walk.nextNode()) {
@@ -122,7 +122,7 @@ for (const lang of ['bg', 'en']) {
       await expect(sp.getByText('Skyy', { exact: true })).toBeVisible();
       for (const id of CATS.slice(1)) await expect(page.locator(`#${id}`)).toHaveJSProperty('open', false);
       await expect(sp.getByText('Bickens', { exact: true })).toBeHidden();
-      // a price still to confirm says so where the price goes ("Питай бара" / "Ask the bar"), never a guess; the owner's
+      // a price still to confirm is a dash where the price goes, never a guess and no "Питай бара" marker; the owner's
       // to-do (the old price is in leva) is not shown to guests. Plain ivory type: not gold (not a price), not a status colour
       await page.locator('#digestif > summary').click();
       const ask = page.locator('#digestif').getByText(ASK[lang], { exact: true });
@@ -236,7 +236,7 @@ for (const lang of ['bg', 'en']) {
       await expect(get.locator('.v2-ar')).toHaveAttribute('aria-hidden', 'true');
       await expect(get.locator('.v2-ar')).toHaveText('↗');
       // no "ask the bar" marker left in the strip
-      await expect(nx0.getByText(ASK[lang])).toHaveCount(0);
+      await expect(nx0.getByText(/Питай бара|Ask the bar/)).toHaveCount(0);
       // styled as the site's other text links (v2-link): ivory, underlined by a hairline, not dressed as a button (gold
       // stays on the call)
       await expect(get).toHaveClass(/(^|\s)v2-link(\s|$)/);
