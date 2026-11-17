@@ -213,7 +213,9 @@ for (const lang of ['bg', 'en']) {
         // one pure black from the header (between the mark and the status) down through the title, the category bar row and the cocktails, as in the footer
         const ys = await page.evaluate(() => {
           const r = s => document.querySelector(s).getBoundingClientRect();
-          return { header: [(r('header a').right + r('header [role=status]').left) / 2, r('header').top + 32], head: r('main h1').top - 30, bar: r('#cocktails').top - 8, sig: r('#cocktails').top + 30 };
+          // the header sample sits between the mark and the status, near the header's top edge: clear of the nav's words,
+          // whose place shifts with the length of the open/closed status (it changes through the day)
+          return { header: [(r('header a').right + r('header [role=status]').left) / 2, r('header').top + 6], head: r('main h1').top - 30, bar: r('#cocktails').top - 8, sig: r('#cocktails').top + 30 };
         });
         const samples = {};
         for (const [k, y] of Object.entries(ys)) samples[k] = Array.isArray(y) ? await pixel(page, Math.round(y[0]), Math.round(y[1])) : await pixel(page, 2, Math.round(y));
