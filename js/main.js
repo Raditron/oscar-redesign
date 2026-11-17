@@ -23,16 +23,18 @@
      window.OC_NOW = '2026-11-20T01:30'   in an inline script that runs before this file
    OC.clock tells which one is in use: 'live' | 'override'.
 
-   Status elements: any element with [data-oc-status]. In the HTML it holds the no-JS fallback (the week's hours) and
-   role="status". On load and then every minute this script replaces its content with the open-now line:
+   Status elements: any element with [data-oc-status]. In the HTML it holds the no-JS fallback (the week's hours). Only
+   the header's carries role="status": one live region per page, so a screen reader hears a change once, not from every
+   copy of the line; the others (hero slate, visit, menu head) are plain text filled the same way.
+   On load and then every minute this script replaces its content with the open-now line:
      data-oc-status=""      v2 line:  <i class="v2-dot"></i><b>Open now</b> <span class="det">until 03:00</span>
      data-oc-status="pill"  v1 pill (menu head): <i></i><b>Open now</b> <span>· until 03:00</span>
    and sets data-state="open|soon|closed" on the element (CSS colours the dot from it). The space between <b> and
    <span> is for screen readers (it collapses inside the inline-flex line). Content only changes when the status
    text changes, so screen readers hear it once, not every minute.
    Example (no-JS fallback inside, as in the header):
-     <p class="v2-now" role="status" data-oc-status><span class="v2-now-week"><span>Пн–Ср и Нд 18:00–23:30</span> ·
-       <span>Чт до 02:00</span> · <span>Пт–Сб до 03:00</span></span></p>
+     <p class="v2-now" role="status" data-oc-status><span class="v2-now-week"><span>Пн–Ср и Нд 18:00–23:30<i> · </i></span>
+       <span>Чт до 02:00<i> · </i></span> <span>Пт–Сб до 03:00</span></span></p>
 
    Per-ticket code goes in the regions at the end of this file. Keep each region's code inside its own block { … }
    so names never collide, and edit only inside your own markers. */
@@ -113,6 +115,39 @@ OC.renderAllStatus = () => {
 };
 OC.renderAllStatus();
 if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
+
+/* ---------- the language switch keeps your place ----------
+   The BG / EN links go to the top of the other page (that is all they do without script). Here they also carry the id
+   of the part of the page you are reading: the last section, open accordion or cocktail card whose top has passed a
+   third of the way down the screen. The ids are the same in both languages, so the other page opens at the same part.
+   At the very top of the page the link stays as it is. */
+{
+  const others = [...document.querySelectorAll('.v2-lang a[hreflang]:not([aria-current])')];
+  if (others.length) {
+    const bare = others.map(a => a.getAttribute('href').split('#')[0]);
+    const spots = [...document.querySelectorAll('main section[id], main details[id], main article[id]')];
+    let queued = false;
+    const update = () => {
+      queued = false;
+      let id = '';
+      if (scrollY > 0) {
+        const line = innerHeight / 3;
+        for (const el of spots) {
+          if (!el.getClientRects().length) continue;                       // hidden (a filtered-out card)
+          if (el.tagName === 'DETAILS' && !el.open) continue;               // a folded accordion: keep its section
+          if (el.getBoundingClientRect().top <= line) id = el.id;
+        }
+      }
+      others.forEach((a, i) => { a.setAttribute('href', bare[i] + (id ? '#' + encodeURIComponent(id) : '')); });
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
+    addEventListener('scroll', queue, { passive: true });
+    addEventListener('resize', queue);
+    document.addEventListener('toggle', queue, true);
+    others.forEach(a => { a.addEventListener('focus', update); a.addEventListener('pointerdown', update); a.addEventListener('click', update); });
+    update();
+  }
+}
 
 
 /* =====================================================================================================================
@@ -217,8 +252,8 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
 // [#10 index] cocktail index: point or focus a row → preview + lit name (site-v2.js: index / pick)
 {
-  /* Pointing at or focusing a row makes it the current one: from 860px its name lights in the drink's colour (CSS,
-     the name only) and the sticky glass beside the list swaps to that drink. Rows take focus only once this runs. */
+  /* Pointing at a row, or focusing its name (a link to that drink's card on the menu), makes it the current one: from
+     860px its name lights in the drink's colour (CSS, the name only) and the sticky glass beside the list swaps to it. */
   const box = document.querySelector('.v2-idx');
   if (box) {
     const rows = [...box.querySelectorAll('.v2-row')], prev = box.querySelector('.v2-prev');
@@ -228,7 +263,6 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
       prev.querySelectorAll('img').forEach(img => img.classList.toggle('on', img.dataset.v2Img === row.dataset.v2Pick));
       prev.style.setProperty('--drink', row.style.getPropertyValue('--drink'));
     };
-    rows.forEach(r => { r.tabIndex = 0; });
     box.addEventListener('pointerover', e => { const r = e.target.closest('.v2-row'); if (r) pick(r); });
     box.addEventListener('focusin', e => { const r = e.target.closest('.v2-row'); if (r) pick(r); });
   }
@@ -377,12 +411,20 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
     const wrap = box.closest('[hidden]');
     if (wrap) wrap.hidden = false;
     const buttons = [...box.querySelectorAll('button[data-base]')];
-    box.addEventListener('click', e => {
-      const b = e.target.closest('button[data-base]');
-      if (!b) return;
+    const filter = b => {
       const k = b.dataset.base;
       buttons.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
       grid.querySelectorAll('[data-base]').forEach(card => { card.hidden = !(k === 'all' || card.dataset.base === k); });
+    };
+    box.addEventListener('click', e => {
+      const b = e.target.closest('button[data-base]');
+      if (b) filter(b);
+    });
+    // a link to one drink's card (the home page's index links to #tarator …) never lands on a card the filter hides:
+    // back to All, then to the card
+    addEventListener('hashchange', () => {
+      const card = location.hash.length > 1 && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (card && card.hidden && grid.contains(card)) { filter(buttons.find(x => x.dataset.base === 'all')); card.scrollIntoView(); }
     });
   }
 }

@@ -87,7 +87,9 @@ for (const lang of ['bg', 'en']) {
       await H.openPage(page, P.path, { now: FRI_22 });
       const items = slate(page).getByRole('listitem');
       await expect(items).toHaveCount(4);
-      await expect(items.nth(0).getByRole('status')).toHaveText(C.status);
+      // the open-now line comes first. It is plain text here: the page's one live region is the header's (one announcement)
+      await expect(items.nth(0)).toHaveText(C.status);
+      await expect(items.nth(0).getByRole('status')).toHaveCount(0);
       expect(await textOf(items.nth(1))).toBe(`${C.address} ${C.dirs}↗`);
       const dirs = items.nth(1).getByRole('link', { name: C.dirs });
       await expect(dirs).toHaveAttribute('target', '_blank');
@@ -105,9 +107,9 @@ for (const lang of ['bg', 'en']) {
 
     test('the status follows the Sofia clock', async ({ page }) => {
       await H.openPage(page, P.path, { now: '2026-11-21T02:50' });
-      await expect(slate(page).getByRole('status')).toHaveText(lang === 'bg' ? 'Затваря скоро в 03:00' : 'Closing soon at 03:00');
+      await expect(slate(page).getByRole('listitem').first()).toHaveText(lang === 'bg' ? 'Затваря скоро в 03:00' : 'Closing soon at 03:00');
       await H.openPage(page, P.path, { now: '2026-11-16T17:59' });
-      await expect(slate(page).getByRole('status')).toHaveText(lang === 'bg' ? 'Затворено отваря днес в 18:00' : 'Closed opens today at 18:00');
+      await expect(slate(page).getByRole('listitem').first()).toHaveText(lang === 'bg' ? 'Затворено отваря днес в 18:00' : 'Closed opens today at 18:00');
     });
 
     test('the hero glass loads eagerly with fixed dimensions and resolves', async ({ page }) => {
@@ -150,7 +152,7 @@ for (const lang of ['bg', 'en']) {
       const ctx = await browser.newContext({ javaScriptEnabled: false });
       const pw = await ctx.newPage();
       await H.openPage(pw, P.path);
-      await expect(slate(pw).getByRole('status')).toHaveText(C.week);
+      await expect(slate(pw).getByRole('listitem').first()).toHaveText(C.week);
       await expect(hero(pw).getByRole('link', { name: C.call })).toHaveAttribute('href', TEL);
       await expect(hero(pw).getByRole('link', { name: C.dm })).toHaveAttribute('href', DM);
       await expect(hero(pw).getByRole('link', { name: C.dirs })).toBeVisible();
@@ -236,7 +238,6 @@ test.describe('hero parity', () => {
     await H.openPage(pw, path, { now: FRI_22 });
     const links = await hero(pw).getByRole('link').evaluateAll(as => as.map(a => ({ href: a.getAttribute('href'), target: a.getAttribute('target') })));
     const items = await slate(pw).getByRole('listitem').evaluateAll(lis => lis.map(li => ({
-      status: !!li.querySelector('[role="status"]'),
       links: [...li.querySelectorAll('a')].map(a => a.getAttribute('href')),
       numbers: (li.textContent.match(/\d+(?:[.,]\d+)?/g) || []).map(n => n.replace(',', '.')),
       images: [...li.querySelectorAll('img')].map(i => i.getAttribute('src').replace(/^(\.\.\/)+/, ''))

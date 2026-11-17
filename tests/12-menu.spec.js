@@ -59,7 +59,10 @@ for (const lang of ['bg', 'en']) {
       // lit: the title glows (a text-shadow halo), as a brand mark may
       expect(await h1.evaluate(el => getComputedStyle(el).textShadow)).not.toBe('none');
       await expect(main.getByText(L.euro, { exact: true })).toBeVisible();
-      await expect(main.getByRole('status')).toHaveText(L.open);
+      // the open-now line under the title is plain text: the page's one live region is the header's
+      const head = main.getByRole('region', { name: L.title });
+      await expect(head.getByText(L.open)).toBeVisible();
+      await expect(main.getByRole('status')).toHaveCount(0);
     });
 
     for (const [vp, size] of Object.entries(H.VIEWPORTS)) {
@@ -242,7 +245,7 @@ for (const lang of ['bg', 'en']) {
       await expect(page.getByRole('group', { name: L.filter })).toBeHidden();
       // the title, the euro label, and the week's hours in place of the live status
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(L.title);
-      await expect(page.getByRole('main').getByRole('status')).toContainText('18:00–23:30');
+      await expect(page.getByRole('main').getByRole('region', { name: L.title })).toContainText('18:00–23:30');
       await catbar(page, lang).getByRole('link', { name: L.shotsLink }).click();
       await expect(page).toHaveURL(/#shots$/);
       const b = await bars(page, lang);

@@ -81,7 +81,7 @@ const shownPreview = (page, lang) => indexSec(page, lang).evaluate(sec =>
 
 /** How a name and its row are drawn. */
 const look = loc => loc.evaluate(el => {
-  const nm = el.querySelector('span'), cs = getComputedStyle(el), ns = getComputedStyle(nm);
+  const nm = el.querySelector('a'), cs = getComputedStyle(el), ns = getComputedStyle(nm);
   return { color: ns.color, shadow: ns.textShadow, row: [cs.backgroundColor, cs.borderBottomColor, cs.borderBottomWidth, cs.boxShadow, cs.color].join(' | ') };
 });
 /** What the browser draws for a drink colour lit as a tube (the name's colour while pointed at). */
@@ -288,17 +288,18 @@ for (const lang of ['bg', 'en']) {
       await expect(page).toHaveURL(new RegExp(`${T.menuPath.replace(/\//g, '\\/')}$`));
     });
 
-    test('focusing a row swaps the preview and lights that name (the name only) in its drink colour', async ({ page }) => {
+    test('focusing a drink name swaps the preview and lights that name (the name only) in its drink colour', async ({ page }) => {
       await H.openPage(page, home(lang), { now: NOW });
       const idx = indexSec(page, lang);
       const rows = idx.getByRole('listitem');
       await idx.getByRole('link', { name: T.fullMenu }).focus();
       await page.keyboard.press('Tab');
-      await expect(rows.nth(0)).toBeFocused();
+      // the next stop is the first drink's name, a link to its card on the menu (the rows themselves take no focus)
+      await expect(rows.nth(0).getByRole('link')).toBeFocused();
       await expect.poll(() => shownPreview(page, lang)).toEqual(['taratorw.webp']);
       const before = await look(rows.nth(1));
       await page.keyboard.press('Tab');
-      await expect(rows.nth(1)).toBeFocused();
+      await expect(rows.nth(1).getByRole('link')).toBeFocused();
       await expect.poll(() => shownPreview(page, lang)).toEqual(['macr.webp']);
       const lit = litColour(page, DRINK.machree);
       await expect.poll(async () => (await look(rows.nth(1))).color).toBe(await lit);
@@ -309,8 +310,8 @@ for (const lang of ['bg', 'en']) {
       const first = await look(rows.nth(0));
       expect(first.shadow).toBe('none');
       expect(first.color).not.toBe(after.color);
-      // the focused row shows the focus ring
-      expect(await rows.nth(1).evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
+      // the focused name shows the focus ring
+      expect(await rows.nth(1).getByRole('link').evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none');
     });
 
     test('pointing at a row does the same', async ({ page }) => {
