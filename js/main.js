@@ -116,6 +116,38 @@ OC.renderAllStatus = () => {
 OC.renderAllStatus();
 if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
+/* ---------- a link to a part of a page lands on it, and stays there ----------
+   The browser jumps to #part as soon as it can, which can be before the web fonts arrive, the open-now lines are
+   filled and the menu filter appears; each of those moves what sits above. Chromium and Firefox keep the part in place
+   (scroll anchoring); WebKit doesn't, and it may also make its jump late, after the page has loaded, from a stale layout.
+   So until the visitor scrolls, presses a key or touches the page, and for two seconds after the page has loaded, the
+   part is brought back to its place whenever the fonts land, the page loads or the page is scrolled by anything else.
+   (When it is already in place this does nothing.) */
+if (location.hash.length > 1) {
+  const hash = location.hash;
+  let moved = false, until = Infinity, queued = false;
+  const mark = () => { moved = true; };
+  ['wheel', 'touchstart', 'keydown', 'pointerdown'].forEach(t => addEventListener(t, mark, { once: true, passive: true }));
+  const settle = () => {
+    queued = false;
+    if (moved || location.hash !== hash || performance.now() > until) return;
+    let el = null;
+    try { el = document.getElementById(decodeURIComponent(hash.slice(1))); } catch (_) { /* a malformed hash */ }
+    if (!el || !el.getClientRects().length) return;
+    // where it should be: just under the bars (its scroll-margin), measured now (WebKit's own scrollIntoView can use a
+    // layout from before the menu filter appeared)
+    const off = el.getBoundingClientRect().top - (parseFloat(getComputedStyle(el).scrollMarginTop) || 0);
+    if (Math.abs(off) > 1) scrollTo(scrollX, scrollY + off);
+  };
+  const queue = () => { if (!queued) { queued = true; requestAnimationFrame(settle); } };
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(queue);
+    if (document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', queue);   // each face as it lands
+  }
+  addEventListener('load', () => { until = performance.now() + 2000; queue(); });
+  addEventListener('scroll', queue, { passive: true });
+}
+
 /* ---------- the language switch keeps your place ----------
    The BG / EN links go to the top of the other page (that is all they do without script). Here they also carry the id
    of the part of the page you are reading: the last section, open accordion or cocktail card whose top has passed a
