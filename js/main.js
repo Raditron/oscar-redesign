@@ -140,6 +140,10 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
 // [#9 hero] hero flicker-on (only under prefers-reduced-motion: no-preference)
 {
+  /* Nothing to do here: the flicker-on is pure CSS ([#9 hero] in css/styles.css, inside
+     @media (prefers-reduced-motion:no-preference)), so it plays once as the page loads, with no flash of the lit sign
+     before a script could start it, and never under reduced motion. The hero's open-now line is a [data-oc-status]
+     element, filled by the shared status code above. */
 }
 // [/#9 hero]
 

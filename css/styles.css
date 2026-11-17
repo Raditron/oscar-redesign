@@ -316,6 +316,66 @@ body{margin:0;background:#000}
 /* [/#12 chrome] */
 
 /* [#9 hero] v2.css "1 · hero", plus the hero part of "motion" (flicker-on, glass rise) */
+/* the sign over the door. Phone first: a column — the sign, the glass, then the call button. Overlaid on a narrow
+   screen the glass cut through "YOURSELF" and the button; nothing may cover the text or the one action */
+.v2-hero{position:relative;padding:clamp(28px,4cqi,64px) var(--g) 0;isolation:isolate;display:flex;flex-direction:column}
+.v2-hero-h{order:1}.v2-hero-act{order:3}.v2-slate{order:4}
+.v2-hero-h{position:relative;z-index:2;font:400 clamp(44px,13cqi,220px)/.9 var(--f-disp);text-transform:uppercase;letter-spacing:.02em;margin-left:-.04em}
+.v2-hero-h span{display:block}
+/* the script tube: the slogan's own italic, lit in gold gas */
+.v2-hero-h .l3{font:italic 500 .58em/1 var(--f-voice);text-transform:none;letter-spacing:0;text-align:left;margin-top:.12em;color:var(--tube);text-shadow:0 0 .015em var(--tube),0 0 .07em var(--gas),0 0 .2em color-mix(in srgb,var(--gas) 70%,transparent),0 0 .55em color-mix(in srgb,var(--gas-2) 50%,transparent)}
+/* the glass: the only colour on the first screen. In the flow on a phone, beside the sign from 860px.
+   The box is sized by CSS (aspect-ratio), so nothing moves when the image or the fonts arrive */
+.v2-hero-glass{order:2;position:relative;z-index:1;align-self:center;width:min(84%,460px);aspect-ratio:1;margin-top:clamp(16px,5cqi,40px);pointer-events:none}
+.v2-hero-glass::before{content:"";position:absolute;inset:-6% 0 0;background:radial-gradient(closest-side,color-mix(in srgb,var(--drink) 42%,transparent),transparent 72%);filter:blur(24px)}
+.v2 .v2-hero-glass img{position:relative;width:100%;height:100%;object-fit:contain;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(ellipse 58% 60% at 50% 54%,#000 58%,transparent 100%);mask-image:radial-gradient(ellipse 58% 60% at 50% 54%,#000 58%,transparent 100%)}
+.v2-hero-act{position:relative;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:16px 28px;margin-top:clamp(32px,4.5cqi,72px)}
+.v2-hero-alt{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;font-size:15px;color:var(--ivory-3)}
+/* the slate: status, address, ratings, award. Plain type on one hairline, no glow (rule 3) */
+.v2-slate{position:relative;z-index:2;display:grid;gap:12px;margin-top:clamp(48px,7cqi,112px);padding-block:20px 22px;border-top:1px solid var(--hair);font-size:14px;color:var(--ivory-2)}
+.v2-slate li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.v2-slate b{font:600 15px/1 var(--f-body);color:var(--ivory)}
+.v2-slate img{width:28px;height:28px}
+@container site (min-width:860px){
+  .v2-slate{display:flex;flex-wrap:wrap;gap:12px 0}
+  .v2-slate li{padding-right:28px;margin-right:28px;border-right:1px solid var(--hair)}
+  .v2-slate li:last-child{border:0;margin-right:0;padding-right:0}
+  .v2-hero{display:block}
+  .v2-hero-act{max-width:54cqi}   /* the phone and Instagram links wrap under the button before they reach the glass */
+  /* wide enough for the glass to stand beside the headline without touching it (YOURSELF ends near 56cqi, the glass starts at 57cqi) */
+  .v2-hero-glass{position:absolute;right:clamp(-70px,-5cqi,-20px);top:clamp(40px,4cqi,80px);width:clamp(250px,48cqi,700px);margin:0}
+}
+/* fonts: no layout shift when the web fonts arrive. Until they do, the hero is set in local fallback faces scaled to
+   the web fonts' widths and vertical metrics (measured in Chromium against Onest, Poiret One and Cormorant), so lines
+   wrap at the same words and sit on the same baselines before and after the swap. local() only: nothing is downloaded */
+@font-face{font-family:"Onest fallback";font-weight:100 500;src:local("Arial"),local("ArialMT"),local("Helvetica"),local("Liberation Sans");size-adjust:104.2%;ascent-override:93.1%;descent-override:29.8%;line-gap-override:0%}
+@font-face{font-family:"Onest fallback";font-weight:501 900;src:local("Arial Bold"),local("Arial-BoldMT"),local("Helvetica Bold"),local("Liberation Sans Bold");size-adjust:101%;ascent-override:96%;descent-override:30.7%;line-gap-override:0%}
+@font-face{font-family:"Poiret One fallback";src:local("Arial"),local("ArialMT"),local("Helvetica"),local("Liberation Sans");size-adjust:83.4%;ascent-override:115.1%;descent-override:25.2%;line-gap-override:0%}
+@font-face{font-family:"Cormorant fallback";font-style:italic;font-weight:500;src:local("Georgia Italic"),local("Georgia-Italic");size-adjust:78.4%;ascent-override:117.3%;descent-override:37%;line-gap-override:0%}
+/* Onest's tabular figures (.tnum: the phone number, the review count) are wider than its default ones */
+@font-face{font-family:"Onest tnum fallback";font-weight:100 500;unicode-range:U+0030-0039;src:local("Arial"),local("ArialMT"),local("Helvetica"),local("Liberation Sans");size-adjust:120.9%;ascent-override:80.2%;descent-override:25.6%;line-gap-override:0%}
+@font-face{font-family:"Onest tnum fallback";font-weight:501 900;unicode-range:U+0030-0039;src:local("Arial Bold"),local("Arial-BoldMT"),local("Helvetica Bold"),local("Liberation Sans Bold");size-adjust:121%;ascent-override:80.2%;descent-override:25.6%;line-gap-override:0%}
+.v2-hero{
+  --f-body:"Onest","Onest fallback",ui-sans-serif,system-ui,sans-serif;
+  --f-disp:"Poiret One","Poiret One fallback","Tenor Sans",ui-sans-serif,sans-serif;
+  --f-voice:"Cormorant","Cormorant fallback","Cormorant Garamond",Georgia,serif;
+  font-family:var(--f-body)
+}
+.v2-hero .tnum{font-family:"Onest","Onest tnum fallback","Onest fallback",ui-sans-serif,system-ui,sans-serif}
+/* motion: the sign switches on once, as the page loads; each tube catches at its own moment, the glass rises into its
+   light. Pure CSS, so there is no flash before a script runs. Under reduced motion none of this exists: the sign is
+   simply lit. (The prototype gates it on a .intro class only because it re-renders screens; a real page loads once.) */
+@media (prefers-reduced-motion:no-preference){
+  .v2-hero-h span{animation:v2-flicker 1.25s linear backwards}
+  .v2-hero-h .l2{animation-delay:140ms}
+  .v2-hero-h .l3{animation-delay:380ms}
+  .v2-hero-glass{animation:v2-glass 1.5s var(--ease) backwards 120ms}
+  :is(.v2-hero-act,.v2-slate){animation:v2-fade .9s ease backwards 450ms}
+}
+/* an unlit tube is still visible glass: it dims to .16, never to nothing */
+@keyframes v2-flicker{0%,7%{opacity:.16;text-shadow:none}8%{opacity:1}11%{opacity:.3;text-shadow:none}13%,30%{opacity:1}31%{opacity:.45}33%,100%{opacity:1}}
+@keyframes v2-glass{from{opacity:0;transform:translateY(48px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes v2-fade{from{opacity:0}to{opacity:1}}
 /* [/#9 hero] */
 
 /* [#10 story] v2.css "2 · one sentence, in the voice" */
