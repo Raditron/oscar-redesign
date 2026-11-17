@@ -300,15 +300,104 @@ body{margin:0;background:#000}
 /* [/#10 index] */
 
 /* [#11 music] v2.css "5 · music" */
+/* a gig bill: the back room, a shade off the black. Dates as the headline type, the fee said before you get there */
+.v2-music{background:var(--bg-2);padding:clamp(80px,10cqi,160px) var(--g)}
+.v2-music-h{max-width:13ch;font-size:clamp(32px,5.6cqi,92px);line-height:1;letter-spacing:.02em}
+.v2-music-grid{display:grid;gap:clamp(32px,4cqi,64px);margin-top:clamp(40px,5cqi,80px)}
+/* crop to the chandelier and the decks: the flyer's baked-in text stays outside the frame */
+.v2-music-img{position:relative;overflow:hidden;aspect-ratio:480/300;margin:0 calc(var(--g) * -1)}
+.v2-music-img img{position:absolute;left:0;top:-58%;width:100%;height:auto;max-width:none}
+.v2-music-txt{display:grid;gap:clamp(28px,3cqi,40px);align-content:start;justify-items:start}
+.v2-gigs{width:100%;border-top:1px solid var(--hair-2)}
+.v2-gigs li{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:clamp(16px,2.4cqi,36px);align-items:baseline;padding-block:18px;border-bottom:1px solid var(--hair)}
+.v2-gigs .d{grid-row:1/3;font:400 clamp(44px,6.2cqi,96px)/.9 var(--f-disp);letter-spacing:.01em}
+.v2-gigs .n{font-weight:500;line-height:1.35}
+.v2-gigs .f{color:var(--ivory-3);font-size:14px}
+@container site (min-width:860px){
+  .v2-music-grid{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
+  .v2-music-img{grid-column:1/7;margin:0 0 0 calc(var(--g) * -1)}
+  .v2-music-txt{grid-column:8/13}
+}
 /* [/#11 music] */
 
 /* [#11 events] v2.css "6 · events" */
+/* the gold room: the one room with the house lights on (no neon here), and the only place brass is a surface.
+   Ink on brass: --on-brass 7.1:1, the .82 ink of the paragraph and the copy buttons 5.5:1 */
+.v2-events{background:var(--brass);color:var(--on-brass);padding:clamp(80px,11cqi,180px) var(--g);position:relative}
+.v2-ev-h{font:400 clamp(36px,7cqi,118px)/.98 var(--f-disp);text-transform:uppercase;letter-spacing:.01em;max-width:13ch;-webkit-text-stroke:.012em currentColor}   /* a hair of stroke so the single-line caps hold up on a bright ground */
+.v2-ev-h span{display:block;font:italic 500 1.08em/.95 var(--f-voice);text-transform:none;letter-spacing:-.01em;margin-top:.1em;-webkit-text-stroke:0}
+.v2-ev-cols{display:grid;gap:32px;margin-top:clamp(48px,6cqi,96px);padding-top:24px;border-top:1px solid rgba(10,9,8,.3)}
+.v2-ev-p{max-width:42ch;line-height:1.5;color:rgba(10,9,8,.82)}
+.v2-ev-types{display:grid;gap:6px;font:400 clamp(18px,1.6cqi,22px)/1.25 var(--f-disp);text-transform:uppercase;letter-spacing:.08em;-webkit-text-stroke:.015em currentColor}
+.v2-ev-contact{display:grid;gap:10px;justify-items:start;align-content:start}
+.v2-ev-mail{font:600 clamp(18px,1.9cqi,28px)/1.2 var(--f-body);letter-spacing:-.02em;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:.22em;overflow-wrap:anywhere}
+.v2-ev-mail:hover{text-decoration-thickness:4px}
+.v2-ev-tel{font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
+.v2-events :focus-visible{outline-color:var(--on-brass)}
+/* each contact on its own line, its copy button after it (shown by js/main.js only when the clipboard is there).
+   A plain ink word, not a tile: the value is the thing, the button only repeats it to the clipboard */
+.v2-ev-line{display:flex;flex-wrap:wrap;align-items:center;gap:2px 14px;min-width:0;max-width:100%}
+.v2-ev-line a{min-width:0}
+.v2 .v2-copy{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 4px;margin-left:-4px;background:none;border:0;border-radius:2px;color:rgba(10,9,8,.82);font:600 13.5px/1 var(--f-body);cursor:pointer}
+.v2 .v2-copy:hover{color:var(--on-brass)}
+.v2 .v2-copy:hover span{text-decoration:underline;text-underline-offset:.25em}
+.v2 .v2-copy[hidden]{display:none}
+/* the confirmation, said out loud (role="status") and shown under the contacts */
+.v2-copied{min-height:1.5em;font-size:14px;font-weight:600;color:var(--on-brass)}
+@container site (min-width:860px){
+  .v2-ev-cols{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
+  .v2-ev-p{grid-column:1/5}.v2-ev-types{grid-column:5/8;padding-left:var(--col)}.v2-ev-contact{grid-column:8/13}
+}
 /* [/#11 events] */
 
 /* [#11 hours] v2.css "7 · visit": the week as a picture (.v2-week-wrap … .v2-nowline) */
+.v2-hours-h{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;margin-bottom:24px}
+/* the open-now line here is filled by script; without it the week below says everything, so the empty line goes */
+.v2-hours-h .v2-now:empty{display:none}
+.v2-hours>.v2-dim{margin-top:16px;font-size:14px}
+/* every night starts at 18:00, the bars show how late it runs (18:00 → 03:00 across the full width) */
+.v2-week-wrap{position:relative;padding-top:26px}
+.v2-axis{position:absolute;top:0;left:calc(7.5em + 16px);right:0;height:18px;font-size:12.5px;color:var(--ivory-3);font-variant-numeric:tabular-nums}
+.v2-axis span{position:absolute;transform:translateX(-50%)}
+.v2-axis span:first-child{transform:none}.v2-axis span:last-child{transform:translateX(-100%)}
+.v2-week{width:100%;border-collapse:collapse}
+.v2-week th{width:7.5em;padding:6px 16px 6px 0;text-align:left;font-weight:500;font-size:14.5px;color:var(--ivory-2);white-space:nowrap}
+.v2-week td{padding:6px 0}
+.v2-bar{position:relative;height:30px;background:repeating-linear-gradient(90deg,var(--hair) 0 1px,transparent 1px calc(100% / 9))}
+.v2-bar i{position:absolute;top:0;bottom:0;left:var(--a);width:var(--w);background:color-mix(in srgb,var(--ivory) 13%,transparent);border-radius:1px}
+.v2-bar span{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13.5px;color:var(--ivory);white-space:nowrap}
+/* tonight (marked by script, aria-current="date"): today's hours are brass */
+.v2-week tr.today th{color:var(--ivory);font-weight:600}
+.v2-week tr.today .v2-bar i{background:var(--brass-hi)}
+.v2-week tr.today .v2-bar span{color:var(--on-brass);font-weight:600}
+.v2-nowline{position:absolute;top:-5px;bottom:-5px;left:var(--x);width:2px;background:var(--ivory);box-shadow:0 0 0 2px var(--bg)}
 /* [/#11 hours] */
 
 /* [#11 visit] v2.css "7 · visit": address, sign, contacts */
+/* the address as the headline (it is the directions link), the sign over the door beside it */
+.v2-visit{padding:clamp(96px,12cqi,200px) var(--g) clamp(80px,9cqi,140px)}
+.v2-visit-top{display:grid;gap:24px;align-items:end}
+.v2-addr{font:400 clamp(34px,6.2cqi,108px)/.95 var(--f-disp);text-transform:uppercase;letter-spacing:.02em;margin-left:-.04em}
+.v2-addr a{display:block;text-decoration:none}
+.v2-addr a:hover{text-decoration:underline;text-decoration-thickness:.02em;text-underline-offset:.12em}
+.v2-addr span{display:block}
+.v2-addr span:last-child{font-size:2.6em;line-height:.85;letter-spacing:0}
+.v2-sign{position:relative;aspect-ratio:16/9;overflow:hidden;margin:0;max-width:560px}
+.v2-sign img{width:100%;height:100%;object-fit:cover;object-position:50% 0}
+.v2-visit-p{margin-top:clamp(20px,2.4cqi,36px)}
+.v2-visit-grid{display:grid;gap:56px;margin-top:clamp(56px,7cqi,112px)}
+@container site (min-width:860px){
+  .v2-visit-top{grid-template-columns:minmax(0,1fr) minmax(0,.62fr)}
+  .v2-visit-grid{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
+  .v2-hours{grid-column:1/8}.v2-contact{grid-column:9/13}
+}
+.v2-dl{display:grid;border-top:1px solid var(--hair-2)}
+.v2-dl div{display:grid;grid-template-columns:7em minmax(0,1fr);gap:16px;padding-block:13px;border-bottom:1px solid var(--hair)}
+.v2-dl dt{font-size:14px;color:var(--ivory-3)}
+.v2-dl dd{margin:0;overflow-wrap:anywhere}
+.v2-dl a{text-decoration:none;background:linear-gradient(var(--hair-2),var(--hair-2)) 0 100%/100% 1px no-repeat;padding-bottom:1px}
+.v2-dl a:hover{background-image:linear-gradient(var(--ivory),var(--ivory))}
+.v2-visit-act{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:28px;font-size:14px}
 /* [/#11 visit] */
 
 /* [#12 menu-head] components.css: menu title, euro label, status pill */

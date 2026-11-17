@@ -151,11 +151,75 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
 // [#11 events] copy-to-clipboard on the events contacts
 {
+  /* The copy buttons ship hidden: without script (or without any way to copy) the contacts are plain tel:/mailto:
+     links. The result is said once in the role="status" line under the contacts, and shown there for a few seconds. */
+  const status = document.querySelector('[data-copy-status]');
+  const buttons = document.querySelectorAll('button[data-copy]');
+  const asyncCopy = !!(navigator.clipboard && navigator.clipboard.writeText);
+  const legacyCopy = v => {
+    const ta = document.createElement('textarea');
+    ta.value = v; ta.setAttribute('readonly', ''); ta.setAttribute('aria-hidden', 'true');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
+    ta.remove();
+    return ok;
+  };
+  const canLegacy = (() => { try { return document.queryCommandSupported('copy'); } catch (_) { return false; } })();
+  if (status && buttons.length && (asyncCopy || canLegacy)) {
+    let clear;
+    const say = msg => {
+      clearTimeout(clear);
+      status.textContent = '';   /* empty first, so the same message twice is announced twice */
+      setTimeout(() => { status.textContent = msg; clear = setTimeout(() => { status.textContent = ''; }, 6000); }, 50);
+    };
+    const copy = v => (asyncCopy ? navigator.clipboard.writeText(v) : Promise.reject(new Error('no async clipboard')))
+      .catch(() => { if (!legacyCopy(v)) throw new Error('copy failed'); });
+    buttons.forEach(b => {
+      b.hidden = false;
+      b.addEventListener('click', () => {
+        const v = b.dataset.copy;
+        copy(v).then(
+          () => say(OC.t({ bg: `Копирано: ${v}`, en: `Copied: ${v}` })),
+          () => say(OC.t({ bg: 'Не се копира. Маркирай текста и го копирай ръчно.', en: 'Couldn’t copy. Select the text and copy it yourself.' }))
+        ).then(() => { if (document.activeElement !== b) b.focus(); });
+      });
+    });
+  }
 }
 // [/#11 events]
 
 // [#11 hours] mark tonight's row in the week (OC.nightOf) and the now-line
 {
+  /* Without script no row is marked and the whole week stands as it is. With it, the night it is now (after midnight on
+     a late night that is still the previous day) gets the brass bar and aria-current="date", and while the bar is open
+     an ivory line shows where in the night we are. The open-now line beside the heading is [data-oc-status] (skeleton). */
+  const rows = document.querySelectorAll('#visit tr[data-day]');
+  if (rows.length) {
+    const nowTitle = OC.t({ bg: 'сега', en: 'now' });
+    const mark = () => {
+      const now = OC.sofiaNow(), night = OC.nightOf(now), open = OC.status(now).state !== 'closed';
+      rows.forEach(tr => {
+        const on = +tr.dataset.day === night;
+        tr.classList.toggle('today', on);
+        if (on) tr.setAttribute('aria-current', 'date'); else tr.removeAttribute('aria-current');
+        const bar = tr.querySelector('.v2-bar');
+        let line = bar && bar.querySelector('.v2-nowline');
+        if (bar && on && open) {
+          const m = night === now.d ? now.m : now.m + 1440;   /* 18:00 → 03:00 is the bar's full width */
+          if (!line) {
+            line = document.createElement('em');
+            line.className = 'v2-nowline'; line.title = nowTitle; line.setAttribute('aria-hidden', 'true');
+            bar.appendChild(line);
+          }
+          line.style.setProperty('--x', `${Math.max(0, Math.min(100, (m - 1080) / 540 * 100))}%`);
+        } else if (line) line.remove();
+      });
+    };
+    mark();
+    if (OC.clock === 'live') setInterval(mark, 60 * 1000);
+  }
 }
 // [/#11 hours]
 
