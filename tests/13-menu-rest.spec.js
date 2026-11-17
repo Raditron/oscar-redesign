@@ -244,6 +244,30 @@ for (const lang of ['bg', 'en']) {
       expect(look.pbg).toBe('rgba(0, 0, 0, 0)');
     });
 
+    // #20: the logo and the text sit centred between the strip's hairlines as one group (as home's story section centres
+    // its pair), not hugging the left edge; at phone width they fill the column, with nothing spilling out
+    for (const vp of ['phone', 'tablet', 'desktop']) {
+      test(`${vp}: the NX0 strip is centred in the page column`, async ({ page }) => {
+        await page.setViewportSize(H.VIEWPORTS[vp]);
+        await H.openPage(page, P.path);
+        await page.locator('#nx0').scrollIntoViewIfNeeded();
+        const m = await page.locator('#nx0').evaluate(s => {
+          const sr = s.getBoundingClientRect();
+          const parts = [s.querySelector('.v2-nx0-txt'), s.querySelector('.v2-nx0-mark')].map(e => e.getBoundingClientRect());
+          const left = Math.min(...parts.map(r => r.left)), right = Math.max(...parts.map(r => r.right));
+          return { spaceL: left - sr.left, spaceR: sr.right - right, secL: sr.left, secR: innerWidth - sr.right, scroll: document.documentElement.scrollWidth - innerWidth };
+        });
+        // the strip keeps the side gutter on both sides
+        expect(Math.abs(m.secL - m.secR)).toBeLessThan(2);
+        // the group has (near) equal room either side, and never spills over the hairlines
+        expect(Math.abs(m.spaceL - m.spaceR)).toBeLessThan(2);
+        expect(m.spaceL).toBeGreaterThanOrEqual(-0.5);
+        expect(m.scroll).toBe(0);
+        // on a wide screen there is real room either side: it is centred, not stretched to fill
+        if (vp === 'desktop') expect(m.spaceL).toBeGreaterThan(100);
+      });
+    }
+
     for (const vp of ['phone', 'desktop']) {
       test(`${vp}: gold stays on the call: no other control on the menu page is painted gold`, async ({ page }) => {
         await page.setViewportSize(H.VIEWPORTS[vp]);
