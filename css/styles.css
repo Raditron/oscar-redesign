@@ -285,6 +285,34 @@ body{margin:0;background:#000}
 
 /* [#12 chrome] menu page only: the pinned header (v2.css "header": .v2-hdr.is-pinned) and the v1 menu inside the v2
    room (v2.css "menu page"). The menu pages' header already carries class="v2-hdr is-pinned". */
+/* the menu keeps the header pinned so the nav follows a long list (issue #6). Its height is --hdr-h: 64px, re-measured by
+   js/main.js ([#12 chrome]) so the category bar and the anchors below always line up with it */
+.v2-hdr.is-pinned{position:sticky;top:var(--stick-top,0px)}
+/* the v1 menu body in the same pure-black room as the rest of v2: no seam under the header or above the footer */
+.v2 .v2-v1menu{--ink-0:#000}
+
+/* the v1 base the whole menu body uses (components.css "type" + "sections"; #13 builds on these too) */
+.inner{max-width:var(--max);margin-inline:auto;padding-inline:var(--gutter)}
+.disp{font-family:var(--font-display);font-weight:var(--display-weight);text-transform:var(--display-case);letter-spacing:var(--display-track);font-style:var(--display-style);line-height:var(--lh-tight);text-wrap:balance;color:var(--ivory)}
+.h1{font-size:var(--fs-h1)}
+.h2{font-size:var(--fs-h2)}
+.h3{font-size:var(--fs-h3);line-height:var(--lh-snug)}
+/* .kick and .cc-meta are set as the prototype renders them: its own page styles (prototype.css `.kick` and
+   `.wrap :where(p){margin:0}`) reach these two there, so the approved look has the label at line-height 1 with 10px
+   under it, and the card's size/price line straight under the ingredients. The label keeps the menu's face (Onest) */
+.kick{display:inline-flex;align-items:center;gap:var(--s-3);margin-bottom:10px;font:600 var(--fs-label)/1 var(--font-label);letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--gold)}
+.kick::before{content:"";width:28px;height:1px;background:var(--rule)}
+.lede{font-size:var(--fs-lead);color:var(--ivory-2);max-width:var(--measure);text-wrap:pretty}
+/* Neon Deco: the display type is lit, the labels are flyer gold */
+.site[data-style="neon"] .disp{color:var(--ivory);text-shadow:0 0 .35em color-mix(in srgb,var(--gold-hi) 45%,transparent)}
+.site[data-style="neon"] .kick{color:var(--gold-hi)}
+.sec{padding-block:var(--gap-section)}
+.band{background:var(--ink-1)}
+.sec-h{display:grid;gap:var(--s-4);margin-bottom:var(--s-7);justify-items:start}
+
+/* anchors land clear of the pinned header; below the category bar, clear of both bars (v2.css: 64 + 80 = 144px) */
+.v2-hdr.is-pinned ~ main [id]{scroll-margin-top:calc(var(--stick-top,0px) + var(--hdr-h,64px) + 20px)}
+.v2-hdr.is-pinned ~ main .catnav ~ [id],.v2-hdr.is-pinned ~ main .catnav ~ * [id]{scroll-margin-top:calc(var(--stick-top,0px) + var(--hdr-h,64px) + var(--cat-h,69px) + 11px)}
 /* [/#12 chrome] */
 
 /* [#9 hero] v2.css "1 · hero", plus the hero part of "motion" (flicker-on, glass rise) */
@@ -401,12 +429,73 @@ body{margin:0;background:#000}
 /* [/#11 visit] */
 
 /* [#12 menu-head] components.css: menu title, euro label, status pill */
+/* the euro label (.kick), the lit title (.disp.h1, neon: it is a brand mark) and the open-now pill, stacked left */
+.menu-head{padding-bottom:var(--s-6)}
+.menu-head .inner{display:grid;gap:var(--s-4);justify-items:start}
+/* open-now pill (components.css "status"). Markup: <p class="status" role="status" data-oc-status="pill">[no-JS: the
+   week's hours]</p>; js/main.js fills it with <i></i><b>label</b> <span>· detail</span> and sets data-state */
+.status{display:inline-flex;align-items:center;gap:var(--s-2);padding:7px 14px 7px 12px;border-radius:var(--r-pill);border:1px solid var(--line-2);font:500 var(--fs-sm)/1.2 var(--font-body);color:var(--ivory)}
+.status b{font-weight:700}
+.status i{width:8px;height:8px;border-radius:50%;background:var(--c,var(--closed));flex:none;position:relative}
+.status[data-state="open"]{--c:var(--open)}
+.status[data-state="soon"]{--c:var(--soon)}
+.status[data-state="closed"]{--c:var(--closed)}
+.status b{color:var(--c)}
+/* the no-JS fallback (the week's hours) may wrap on a phone, so its outline is a soft rectangle, not a pill */
+.status:not([data-state]){border-radius:var(--r-md);color:var(--ivory-2)}
+@media (prefers-reduced-motion:no-preference){
+  .status[data-state="open"] i::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--open);opacity:0;animation:oc-ping 2.4s var(--ease-out) infinite}
+}
 /* [/#12 menu-head] */
 
 /* [#12 catbar] components.css: .catnav and its chips */
+/* chips: the category links and the base-spirit filter share them (components.css "chips + filter") */
+.chips{display:flex;flex-wrap:wrap;gap:var(--gap-inline)}
+.chip{display:inline-flex;align-items:center;gap:var(--s-2);min-height:44px;padding:0 var(--s-4);border-radius:var(--r-pill);border:1px solid var(--line-2);background:transparent;color:var(--ivory-2);font:600 var(--fs-sm)/1 var(--font-label);cursor:pointer;text-decoration:none;white-space:nowrap;transition:color var(--dur-1),border-color var(--dur-1),background-color var(--dur-1)}
+.chip:hover{color:var(--ivory);border-color:var(--gold-lo)}
+.chip small{font-size:12px;color:var(--ivory-3);font-weight:600}
+.chip[aria-pressed="true"],.chip[aria-current="true"]{color:var(--gold-hi);border-color:var(--gold-hi);background:color-mix(in srgb,var(--gold-hi) 10%,transparent)}
+.chip[aria-pressed="true"] small{color:var(--gold)}
+.site[data-style="neon"] .chip{text-transform:uppercase;letter-spacing:.1em}
+/* the category bar: one row that scrolls sideways on a phone, stuck right under the pinned header (v2.css "menu page") */
+.catnav{position:sticky;top:calc(var(--stick-top,0px) + var(--hdr-h,64px));z-index:15;background:color-mix(in srgb,var(--ink-0) 90%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.catnav .chips{flex-wrap:nowrap;overflow-x:auto;padding-block:var(--s-3);scrollbar-width:none;margin-inline:calc(var(--gutter) * -1);padding-inline:var(--gutter)}
+.catnav .chips::-webkit-scrollbar{display:none}
 /* [/#12 catbar] */
 
 /* [#12 cocktails] components.css: base-spirit filter, cocktail cards */
+.sig{padding-top:var(--s-7)}
+/* the filter sits just under the heading (it is hidden until js/main.js can make it work) */
+.sig-filter{margin:calc(var(--s-7) * -1 + var(--s-5)) 0 var(--s-6)}
+/* cocktail card (components.css "cocktail card"). The glass stands in front of a low frame and rises out of it: the frame
+   is a ::before set 34% down the well, the photo is never cropped and its cut edges fade out. No isolation here: the
+   lighten blend must reach the room behind the card, or the photo's pure black shows as a box above the frame */
+.cc{display:grid;gap:var(--s-4);align-content:start;min-width:0;--d:var(--drink)}
+.cc[hidden]{display:none}   /* filtered out (the display above would otherwise outrank the hidden attribute) */
+.cc-well{position:relative;aspect-ratio:4/5}
+/* the frame: black stage, the drink's light pooled on its floor, a hairline edge */
+.cc-well::before{content:"";position:absolute;inset:34% 0 0;border-radius:var(--card-radius);background:radial-gradient(40% 9% at 50% 95%,color-mix(in srgb,var(--d) 50%,transparent),transparent),radial-gradient(80% 70% at 50% 78%,color-mix(in srgb,var(--d) var(--glow-k),transparent),transparent 74%),var(--photo-black);border:1px solid color-mix(in srgb,var(--d) 36%,transparent)}
+/* the glow: the same arch lit in the drink's colour. Embers at rest, full on hover or press (opacity only, 150ms) */
+.cc-well::after{content:"";position:absolute;inset:34% 0 0;border-radius:var(--card-radius);pointer-events:none;border:1px solid var(--d);background:radial-gradient(75% 65% at 50% 72%,color-mix(in srgb,var(--d) 34%,transparent),transparent 78%);box-shadow:0 0 16px 0 color-mix(in srgb,var(--d) 75%,transparent),0 0 64px 4px color-mix(in srgb,var(--d) 42%,transparent),inset 0 0 48px -6px color-mix(in srgb,var(--d) 60%,transparent);opacity:.22;transition:opacity var(--dur-1) var(--ease-out)}
+@media (hover:none){.cc-well::after{opacity:.5}}   /* phones never hover: a little more light at rest */
+.cc:hover .cc-well::after,.cc:focus-within .cc-well::after,.cc:active .cc-well::after{opacity:1}
+.cc-well img{position:absolute;z-index:1;left:0;right:0;bottom:3%;width:100%;height:auto;mix-blend-mode:lighten;-webkit-mask-image:linear-gradient(#0000,#000 3%,#000 92%,#0000),linear-gradient(90deg,#0000,#000 7%,#000 93%,#0000);-webkit-mask-composite:source-in;mask-image:linear-gradient(#0000,#000 3%,#000 92%,#0000),linear-gradient(90deg,#0000,#000 7%,#000 93%,#0000);mask-composite:intersect;transform-origin:50% 100%;transition:transform var(--dur-2) var(--ease-out)}
+.cc-body{display:grid;gap:var(--gap-tight)}
+.cc-name{font-family:var(--font-display);font-weight:var(--display-weight);font-style:var(--display-style);text-transform:var(--display-case);letter-spacing:var(--display-track);font-size:var(--fs-h3);line-height:1.15;color:var(--ivory)}
+.cc-ing{font-size:var(--fs-sm);color:var(--ivory-2);line-height:1.45}
+.cc-meta{display:flex;align-items:baseline;gap:var(--s-2);font-size:var(--fs-sm);color:var(--ivory-3)}
+.cc-meta::before{content:"";order:1;flex:1;border-bottom:1px dotted var(--line-2);transform:translateY(-4px)}
+.cc-meta .price{order:2;font:700 var(--fs-body)/1 var(--font-label);color:var(--gold-hi)}
+.site[data-style="neon"] .cc-well::after{border-width:1.5px}
+.site[data-style="neon"] .cc-well::before{border:1.5px solid color-mix(in srgb,var(--d) 75%,transparent);box-shadow:0 0 18px color-mix(in srgb,var(--d) 35%,transparent),inset 0 0 18px color-mix(in srgb,var(--d) 18%,transparent)}
+.site[data-style="neon"] .cc-name{font-size:calc(var(--fs-h3) * .92)}
+/* 2 across on a phone, 3 on a tablet, 4 on a desktop */
+.cc-grid{display:grid;gap:var(--s-7) var(--gap-grid);grid-template-columns:repeat(2,minmax(0,1fr))}
+@container site (min-width:760px){.cc-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@container site (min-width:1100px){.cc-grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (prefers-reduced-motion:no-preference){
+  .cc:hover .cc-well img,.cc:focus-within .cc-well img{transform:translateY(-8px) scale(1.03)}   /* the glass lifts toward the light */
+}
 /* [/#12 cocktails] */
 
 /* [#13 shots] components.css: shots and shot sets */

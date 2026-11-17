@@ -121,6 +121,20 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
 // [#12 chrome] menu page only: anything the pinned header needs (e.g. measuring it for the category bar)
 {
+  // The CSS assumes the v2 header is 64px (--hdr-h) and the category bar 69px (--cat-h). Measure both and keep them
+  // current, so the bar sticks exactly under the header and anchors clear both, whatever the width or font metrics.
+  const hdr = document.querySelector('.v2-hdr.is-pinned');
+  const room = hdr && hdr.closest('.v2');
+  if (room) {
+    const cat = document.querySelector('.catnav');
+    const measure = () => {
+      room.style.setProperty('--hdr-h', hdr.getBoundingClientRect().height + 'px');
+      if (cat) room.style.setProperty('--cat-h', cat.getBoundingClientRect().height + 'px');
+    };
+    measure();
+    if ('ResizeObserver' in window) { const ro = new ResizeObserver(measure); ro.observe(hdr); if (cat) ro.observe(cat); }
+    else addEventListener('resize', measure);
+  }
 }
 // [/#12 chrome]
 
@@ -235,11 +249,65 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
 // [#12 catbar] the category bar follows the scroll
 {
+  const bar = document.querySelector('.catnav');
+  const row = bar && bar.querySelector('nav');
+  if (row) {
+    const links = [...row.querySelectorAll('a[href^="#"]')];
+    const id = a => decodeURIComponent(a.hash.slice(1));
+    // a category that is an accordion (<details>, #13) opens when you jump to it
+    const openTarget = name => { const el = name && document.getElementById(name); if (el && el.tagName === 'DETAILS') el.open = true; };
+    row.addEventListener('click', e => { const a = e.target.closest('a[href^="#"]'); if (a) openTarget(id(a)); });
+    addEventListener('hashchange', () => openTarget(decodeURIComponent(location.hash.slice(1))));
+    openTarget(decodeURIComponent(location.hash.slice(1)));
+
+    // scroll-spy: the current category is the last one whose top has passed just under the bar
+    let current = null, queued = false;
+    const mark = a => {
+      if (a === current) return;
+      current = a;
+      links.forEach(x => { if (x === a) x.setAttribute('aria-current', 'true'); else x.removeAttribute('aria-current'); });
+      // on a phone the row scrolls sideways: bring the marked chip to the middle
+      if (a && row.scrollWidth > row.clientWidth) {
+        const r = row.getBoundingClientRect(), c = a.getBoundingClientRect();
+        row.scrollTo({ left: row.scrollLeft + c.left - r.left - (r.width - c.width) / 2, behavior: OC.reducedMotion() ? 'auto' : 'smooth' });
+      }
+    };
+    const spy = () => {
+      queued = false;
+      const line = bar.getBoundingClientRect().bottom + 32;
+      let on = null;
+      for (const a of links) {
+        const el = document.getElementById(id(a));
+        if (el && el.getBoundingClientRect().top <= line) on = a;
+      }
+      mark(on || links[0]);
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(spy); } };
+    addEventListener('scroll', queue, { passive: true });
+    addEventListener('resize', queue);
+    document.addEventListener('toggle', queue, true);   // an accordion opening moves everything below it
+    spy();
+  }
 }
 // [/#12 catbar]
 
 // [#12 cocktails] base-spirit filter
 {
+  // The filter is hidden in the HTML (it can't work without script) and every card shows; here it appears and works.
+  const box = document.querySelector('[data-oc-filter]');
+  const grid = document.querySelector('[data-oc-grid]');
+  if (box && grid) {
+    const wrap = box.closest('[hidden]');
+    if (wrap) wrap.hidden = false;
+    const buttons = [...box.querySelectorAll('button[data-base]')];
+    box.addEventListener('click', e => {
+      const b = e.target.closest('button[data-base]');
+      if (!b) return;
+      const k = b.dataset.base;
+      buttons.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      grid.querySelectorAll('[data-base]').forEach(card => { card.hidden = !(k === 'all' || card.dataset.base === k); });
+    });
+  }
 }
 // [/#12 cocktails]
 

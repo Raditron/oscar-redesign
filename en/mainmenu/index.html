@@ -104,18 +104,111 @@
 <div class="site v2-v1menu" data-style="neon">
 
 <!-- [#12 menu-head] -->
-<section class="sec" id="top" aria-labelledby="menu-h">
-  <h1 id="menu-h">Menu</h1>
+<section class="sec menu-head" id="top" aria-labelledby="menu-h">
+  <div class="inner">
+    <p class="kick">All prices are in euro</p>
+    <h1 class="disp h1" id="menu-h">Menu</h1>
+    <p class="status" role="status" data-oc-status="pill"><span class="v2-now-week"><span>Mon–Wed &amp; Sun 18:00–23:30</span> · <span>Thu to 02:00</span> · <span>Fri–Sat to 03:00</span></span></p>
+  </div>
 </section>
 <!-- [/#12 menu-head] -->
 
 <!-- [#12 catbar] -->
-<div class="catnav"></div>
+<div class="catnav">
+  <div class="inner">
+    <nav class="chips" aria-label="Categories">
+      <a class="chip" href="#cocktails">Signature cocktails</a>
+      <a class="chip" href="#shots">Shots</a>
+      <a class="chip" href="#vodka">Vodka</a>
+      <a class="chip" href="#gin">Gin</a>
+      <a class="chip" href="#tequila">Tequila</a>
+      <a class="chip" href="#whisky">Scotch whisky</a>
+      <a class="chip" href="#irish">Irish whiskey</a>
+      <a class="chip" href="#bourbon">Bourbon</a>
+      <a class="chip" href="#digestif">Digestif</a>
+      <a class="chip" href="#wine">Wine</a>
+      <a class="chip" href="#beer">Beer</a>
+      <a class="chip" href="#soft">Soft drinks</a>
+    </nav>
+  </div>
+</div>
 <!-- [/#12 catbar] -->
 
 <!-- [#12 cocktails] -->
-<section class="sec" id="cocktails" aria-labelledby="sig-h2">
-  <h2 id="sig-h2">13 cocktails, €6 to €12. Pick by the spirit you drink.</h2>
+<section class="sec sig" id="cocktails" aria-labelledby="sig-h2">
+  <div class="inner">
+    <div class="sec-h">
+      <p class="kick">Signature cocktails</p>
+      <h2 class="disp h2" id="sig-h2">13 cocktails, €6 to €12. Pick by the spirit you drink.</h2>
+    </div>
+    <!-- the filter only works with JS, so it stays hidden until js/main.js shows it; without JS every card shows -->
+    <div class="sig-filter" hidden>
+      <div class="chips" role="group" aria-label="By base spirit" data-oc-filter>
+        <button type="button" class="chip" data-base="all" aria-pressed="true">All <small>13</small></button>
+        <button type="button" class="chip" data-base="vodka" aria-pressed="false">Vodka <small>3</small></button>
+        <button type="button" class="chip" data-base="whiskey" aria-pressed="false">Whiskey <small>2</small></button>
+        <button type="button" class="chip" data-base="rum" aria-pressed="false">Rum <small>2</small></button>
+        <button type="button" class="chip" data-base="tequila" aria-pressed="false">Tequila <small>2</small></button>
+        <button type="button" class="chip" data-base="gin" aria-pressed="false">Gin <small>2</small></button>
+        <button type="button" class="chip" data-base="cognac" aria-pressed="false">Cognac <small>1</small></button>
+        <button type="button" class="chip" data-base="soju" aria-pressed="false">Soju <small>1</small></button>
+      </div>
+    </div>
+    <div class="cc-grid four" data-oc-grid>
+      <article class="cc" style="--drink:var(--d-garden)" data-base="vodka">
+        <div class="cc-well"><img src="../../assets/img/cocktails/taratorw.webp" alt="Tarator: vodka, Skinos, lemon, bitters" width="560" height="566" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Tarator</h3><p class="cc-ing">vodka, Skinos, lemon, bitters</p><p class="cc-meta"><span class="tnum">280 ml</span><b class="price tnum">€10</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-berry)" data-base="whiskey">
+        <div class="cc-well"><img src="../../assets/img/cocktails/macr.webp" alt="Machree: whiskey, strawberry, cassis, lemon" width="560" height="552" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Machree</h3><p class="cc-ing">whiskey, strawberry, cassis, lemon</p><p class="cc-meta"><span class="tnum">330 ml</span><b class="price tnum">€8</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-champagne)" data-base="vodka">
+        <div class="cc-well"><img src="../../assets/img/cocktails/much.webp" alt="Mucho Bien: vodka, Licor 43, Malibu, condensed milk, lemon" width="560" height="568" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Mucho Bien</h3><p class="cc-ing">vodka, Licor 43, Malibu, condensed milk, lemon</p><p class="cc-meta"><span class="tnum">220 ml</span><b class="price tnum">€8</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-curacao)" data-base="rum">
+        <div class="cc-well"><img src="../../assets/img/cocktails/blue.webp" alt="Blue’s’our: rum, blue curaçao, lemon, chamomile bitters" width="560" height="566" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Blue’s’our</h3><p class="cc-ing">rum, blue curaçao, lemon, chamomile bitters</p><p class="cc-meta"><span class="tnum">280 ml</span><b class="price tnum">€6</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-garden)" data-base="tequila">
+        <div class="cc-well"><img src="../../assets/img/cocktails/trop.webp" alt="Tropilita: tequila, kiwi, piña colada mix, lemon, bitters" width="560" height="574" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Tropilita</h3><p class="cc-ing">tequila, kiwi, piña colada mix, lemon, bitters</p><p class="cc-meta"><span class="tnum">180 ml</span><b class="price tnum">€6</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-berry)" data-base="cognac">
+        <div class="cc-well"><img src="../../assets/img/cocktails/better.webp" alt="Better Taste: cognac, cherry brandy, balsamic, honey, apple cordial" width="560" height="568" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Better Taste</h3><p class="cc-ing">cognac, cherry brandy, balsamic, honey, apple cordial</p><p class="cc-meta"><span class="tnum">280 ml</span><b class="price tnum">€12</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-champagne)" data-base="soju">
+        <div class="cc-well"><img src="../../assets/img/cocktails/sojuw.webp" alt="Soju Spritz: soju, lemon soda, prosecco" width="560" height="594" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Soju Spritz</h3><p class="cc-ing">soju, lemon soda, prosecco</p><p class="cc-meta"><span class="tnum">280 ml</span><b class="price tnum">€8</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-amber)" data-base="gin">
+        <div class="cc-well"><img src="../../assets/img/cocktails/edenw.webp" alt="Eden Garden: gin, pear, lychee, caramel, grapefruit" width="560" height="570" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Eden Garden</h3><p class="cc-ing">gin, pear, lychee, caramel, grapefruit</p><p class="cc-meta"><span class="tnum">220 ml</span><b class="price tnum">€8</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-garden)" data-base="whiskey">
+        <div class="cc-well"><img src="../../assets/img/cocktails/spraiow.webp" alt="Spraoi: whiskey, kiwi, Granny Smith apple" width="560" height="572" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Spraoi</h3><p class="cc-ing">whiskey, kiwi, Granny Smith apple</p><p class="cc-meta"><span class="tnum">330 ml</span><b class="price tnum">€8</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-champagne)" data-base="gin">
+        <div class="cc-well"><img src="../../assets/img/cocktails/69.webp" alt="French 69: gin, pear, elderflower, lemon, prosecco" width="560" height="558" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">French 69</h3><p class="cc-ing">gin, pear, elderflower, lemon, prosecco</p><p class="cc-meta"><span class="tnum">175 ml</span><b class="price tnum">€6</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-hibiscus)" data-base="rum">
+        <div class="cc-well"><img src="../../assets/img/cocktails/kissme.webp" alt="Kiss Me: rum, hibiscus, sour cherry, lemon" width="560" height="512" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Kiss Me</h3><p class="cc-ing">rum, hibiscus, sour cherry, lemon</p><p class="cc-meta"><span class="tnum">250 ml</span><b class="price tnum">€8</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-hibiscus)" data-base="vodka">
+        <div class="cc-well"><img src="../../assets/img/cocktails/cherry.webp" alt="Cherry Lady: vodka, Skinos, cherry brandy, lemon" width="560" height="570" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Cherry Lady</h3><p class="cc-ing">vodka, Skinos, cherry brandy, lemon</p><p class="cc-meta"><span class="tnum">250 ml</span><b class="price tnum">€10</b></p></div>
+      </article>
+      <article class="cc" style="--drink:var(--d-amber)" data-base="tequila">
+        <div class="cc-well"><img src="../../assets/img/cocktails/fridge.webp" alt="Fridge Cigarette: tequila, mezcal, raspberry, bitters" width="560" height="514" loading="lazy" decoding="async"></div>
+        <div class="cc-body"><h3 class="cc-name">Fridge Cigarette</h3><p class="cc-ing">tequila, mezcal, raspberry, bitters</p><p class="cc-meta"><span class="tnum">180 ml</span><b class="price tnum">€6</b></p></div>
+      </article>
+    </div>
+  </div>
 </section>
 <!-- [/#12 cocktails] -->
 
