@@ -752,3 +752,8 @@ body{margin:0;background:#000}
 /* the v1 menu body ends on its own section padding; the strip keeps its side gutter there too */
 .v2-v1menu + .v2-nx0{margin-top:var(--gap-section)}
 /* [/#13 nx0] */
+/* the marker "Питай бара" / "Ask the bar" for a fact the bar has not confirmed: set apart by weight and size, in ivory
+   like the rest of the type: no status colour (colour is for drinks), as the menu marks Averna's price. Not a button and
+   not gold: gold stays on the call (rule 2). It ends the happy-hour line under the week ([#11 hours]) and under the
+   menu's open-now pill ([#12 menu-head]): only the time is confirmed there, the days, drinks and prices are not */
+.v2-ask{font-size:14px;font-weight:650;letter-spacing:.02em;color:var(--ivory)}
