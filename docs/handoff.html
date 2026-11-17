@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Новият сайт на Оскар клуб · как да го качите</title>
+<!-- Hand-off note for the bar. Source: docs/handoff.html. `npm run package` copies it to dist/README-handoff.html,
+     next to the upload folder (not inside it, so it never goes on the server). Self-contained on purpose: it opens
+     with a double-click, offline, and loads nothing from anywhere. -->
+<style>
+  :root { color-scheme: light; --ink: #1b1915; --dim: #5d574c; --rule: #e3dccd; --brass: #8a6d2c; --paper: #fdfbf6; --warn: #fff4dc; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  main { max-width: 44rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+  h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 .25rem; }
+  h2 { font-size: 1.25rem; margin: 2.25rem 0 .5rem; padding-top: .25rem; border-top: 2px solid var(--brass); }
+  h3 { font-size: 1.05rem; margin: 1.25rem 0 .25rem; }
+  p, li { margin: .4rem 0; }
+  ol, ul { padding-left: 1.4rem; }
+  code { font: .95em/1.4 ui-monospace, Consolas, Menlo, monospace; background: #f1ebde; padding: .05em .3em; border-radius: 3px; }
+  .lead { color: var(--dim); margin: 0 0 1.5rem; }
+  .lang { font-size: .95rem; color: var(--dim); }
+  .lang a { color: var(--brass); }
+  .warn { background: var(--warn); border-left: 4px solid var(--brass); padding: .75rem 1rem; margin: 1rem 0; }
+  .tree { font: .95rem/1.5 ui-monospace, Consolas, Menlo, monospace; background: #f1ebde; padding: .75rem 1rem; white-space: pre; overflow-x: auto; }
+  .ask { font-weight: 600; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 3.5rem 0 2rem; }
+  a { color: var(--brass); }
+  @media print { body { background: #fff; font-size: 12pt; } main { padding: 0; } hr { break-before: page; } }
+</style>
+</head>
+<body>
+<main>
+
+<!-- ======================================================= БЪЛГАРСКИ ======================================================= -->
+<article lang="bg" id="bg">
+  <p class="lang">Български · <a href="#en">English below</a></p>
+  <h1>Новият сайт на Оскар клуб: как да го качите</h1>
+  <p class="lead">Това е всичко, което трябва да направите. Отнема около 10 минути.</p>
+
+  <h2>1. Какво получавате</h2>
+  <p>В архива има две неща:</p>
+  <ul>
+    <li>папка <code>oscarclubsofia.com</code>: това е новият сайт;</li>
+    <li>тази бележка (<code>README-handoff.html</code>). Тя е само за вас и <strong>не</strong> се качва.</li>
+  </ul>
+  <p>Вътре в папката <code>oscarclubsofia.com</code> има:</p>
+  <div class="tree">index.html          ← началната страница (на български)
+mainmenu/index.html ← менюто (на български)
+en/                 ← английската версия (нова)
+css/  js/  assets/  ← оформлението, шрифтовете и снимките (нови)</div>
+
+  <h2>2. Какво да качите</h2>
+  <ol>
+    <li>Отворете сървъра на сайта както досега (с FTP програма, например FileZilla, или с файловия мениджър на хостинга).</li>
+    <li>Влезте в главната папка на сайта. Това е папката, в която сега стоят <code>index.html</code> и <code>logoOscar.png</code>
+      (често се казва <code>public_html</code>, <code>www</code> или <code>htdocs</code>).</li>
+    <li>Качете там <strong>всичко, което е вътре</strong> в папката <code>oscarclubsofia.com</code>. Не самата папка, а съдържанието ѝ.</li>
+    <li>Когато програмата пита дали да замени файл, който вече съществува, отговорете <strong>„Да“ / „Замени“</strong>.
+      Така се сменят само двете стари страници <code>index.html</code> и <code>mainmenu/index.html</code>.</li>
+    <li>Ако програмата пита какво да прави с папката <code>mainmenu</code>, изберете <strong>„Обедини“</strong> (Merge),
+      а не „Замени папката“. Старите снимки в нея трябва да останат.</li>
+  </ol>
+
+  <h2>3. Какво да НЕ изтривате</h2>
+  <div class="warn">
+    <p><strong>Не трийте нищо на сървъра.</strong> Новият сайт само добавя файлове и заменя двете стари страници.</p>
+  </div>
+  <p>Особено тези файлове и папки трябва да останат на мястото си, защото стари линкове и публикации в социалните мрежи сочат към тях:</p>
+  <ul>
+    <li><code>/logoOscar.png</code></li>
+    <li><code>/prizeyear.png</code></li>
+    <li><code>/menu3.png</code></li>
+    <li>папката <code>/mainmenu/png/</code> и всичко в нея</li>
+    <li>папката <code>/mainmenu/food/</code> и всичко в нея</li>
+  </ul>
+  <p>Новият сайт не съдържа файлове с тези имена, така че качването не може да ги промени.</p>
+
+  <h2>4. Три проверки след качването</h2>
+  <p>Ако виждате още стария сайт, презаредете страницата (или я отворете в нов „частен“ прозорец).</p>
+  <h3>Проверка 1: страниците се отварят на телефона</h3>
+  <p>Отворете <code>oscarclubsofia.com</code> на телефона. Най-горе трябва да пише дали барът е отворен в момента
+    (например „Отворено до 03:00“). Натиснете <strong>EN</strong> горе: трябва да се появи същата страница на английски.
+    Натиснете <strong>Меню</strong>: трябва да се отвори менюто с коктейлите.</p>
+  <h3>Проверка 2: номерът звъни</h3>
+  <p>Натиснете телефонния номер или златния бутон „Обади се за маса“. Телефонът трябва да предложи обаждане на <strong>+359 899 666 633</strong>.</p>
+  <h3>Проверка 3: линкът изглежда добре, когато го пратите</h3>
+  <p>Изпратете <code>https://oscarclubsofia.com/</code> в чат (Viber, WhatsApp, Messenger). Под линка трябва да се появи
+    картинка (светещият знак OC и син коктейл) и заглавието „Оскар клуб“.
+    Понякога чатът помни старата картинка няколко часа или дни; това не е грешка.</p>
+  <h3>И още една, за Google (по желание)</h3>
+  <p>Отворете в браузъра <code>https://search.google.com/test/rich-results</code>, поставете <code>https://oscarclubsofia.com/</code>
+    и натиснете „Тестване на URL адреса“. Трябва да се покаже, че страницата е валидна (бар с адрес, телефон и работно време), без грешки.</p>
+
+  <h2>5. „Питай бара“: какво още ни трябва от вас</h2>
+  <p>Тези неща не можахме да потвърдим сами, затова на сайта или ги няма, или пише <span class="ask">„Питай бара“</span>.
+    Изпратете ни отговорите и ще ги добавим.</p>
+  <ol>
+    <li><strong>Линк за изтегляне на NX0.</strong> В менюто, при NX0, вместо линк пише „Питай бара“. Трябва ни точният линк за изтегляне
+      на приложението и потвърждение на условията на партньорството.</li>
+    <li><strong>Името на основателя.</strong> Историята на бара засега не споменава име. Ако искате да има, напишете ни името
+      точно както трябва да изглежда, на български и на английски.</li>
+    <li><strong>Работното време.</strong> Сайтът показва: понеделник–сряда и неделя 18:00–23:30, четвъртък 18:00–02:00,
+      петък и събота 18:00–03:00 (по Google, ноември 2026). Променило ли се е? Има ли празнично или сезонно работно време?</li>
+    <li><strong>Оценките.</strong> Google 4,7 (671 отзива) и Tripadvisor 4,8 (141 отзива) са записани към ноември 2026 и
+      не се обновяват сами. Кажете ни, когато искате да ги освежим.</li>
+    <li><strong>Цената на Averna.</strong> На стария сайт тя е в лева, затова в новото меню засега стои „—“. Трябва ни цената в евро.</li>
+  </ol>
+  <p>Всички останали цени в менюто са в евро, както в новия дизайн.</p>
+</article>
+
+<hr>
+
+<!-- ======================================================= ENGLISH ======================================================= -->
+<article lang="en" id="en">
+  <p class="lang">English · <a href="#bg">Български по-горе</a></p>
+  <h1>The new Oscar Club website: how to upload it</h1>
+  <p class="lead">This is everything you need to do. It takes about 10 minutes.</p>
+
+  <h2>1. What you get</h2>
+  <p>The archive holds two things:</p>
+  <ul>
+    <li>a folder called <code>oscarclubsofia.com</code>: this is the new website;</li>
+    <li>this note (<code>README-handoff.html</code>). It is just for you and does <strong>not</strong> get uploaded.</li>
+  </ul>
+  <p>Inside the <code>oscarclubsofia.com</code> folder:</p>
+  <div class="tree">index.html          ← the home page (Bulgarian)
+mainmenu/index.html ← the menu (Bulgarian)
+en/                 ← the English version (new)
+css/  js/  assets/  ← the styling, fonts and pictures (new)</div>
+
+  <h2>2. What to upload</h2>
+  <ol>
+    <li>Open the website's server the way you always do (with an FTP program such as FileZilla, or the hosting's file manager).</li>
+    <li>Go to the website's main folder. It is the folder where <code>index.html</code> and <code>logoOscar.png</code> are now
+      (it is often called <code>public_html</code>, <code>www</code> or <code>htdocs</code>).</li>
+    <li>Upload <strong>everything inside</strong> the <code>oscarclubsofia.com</code> folder into it. Not the folder itself, only what is inside it.</li>
+    <li>When the program asks whether to replace a file that is already there, answer <strong>“Yes” / “Overwrite”</strong>.
+      Only the two old pages, <code>index.html</code> and <code>mainmenu/index.html</code>, get replaced.</li>
+    <li>If the program asks what to do with the <code>mainmenu</code> folder, choose <strong>“Merge”</strong>,
+      not “Replace folder”. The old pictures in it must stay.</li>
+  </ol>
+
+  <h2>3. What NOT to delete</h2>
+  <div class="warn">
+    <p><strong>Don't delete anything on the server.</strong> The new site only adds files and replaces the two old pages.</p>
+  </div>
+  <p>These files and folders especially must stay where they are, because old links and social media posts point to them:</p>
+  <ul>
+    <li><code>/logoOscar.png</code></li>
+    <li><code>/prizeyear.png</code></li>
+    <li><code>/menu3.png</code></li>
+    <li>the <code>/mainmenu/png/</code> folder and everything in it</li>
+    <li>the <code>/mainmenu/food/</code> folder and everything in it</li>
+  </ul>
+  <p>The new site has no files with these names, so the upload cannot change them.</p>
+
+  <h2>4. Three checks after the upload</h2>
+  <p>If you still see the old site, reload the page (or open it in a new “private” window).</p>
+  <h3>Check 1: the pages open on a phone</h3>
+  <p>Open <code>oscarclubsofia.com</code> on your phone. At the top it should say whether the bar is open right now
+    (for example “Отворено до 03:00”, “open until 03:00”). Tap <strong>EN</strong> at the top: the same page should appear in English.
+    Tap <strong>Menu</strong>: the menu with the cocktails should open.</p>
+  <h3>Check 2: the number rings</h3>
+  <p>Tap the phone number or the gold “Call to book a table” button. The phone should offer to call <strong>+359 899 666 633</strong>.</p>
+  <h3>Check 3: the link looks right when you share it</h3>
+  <p>Send <code>https://oscarclubsofia.com/</code> in a chat (Viber, WhatsApp, Messenger). Under the link you should see
+    a picture (the lit OC sign and a blue cocktail) and the title “Оскар клуб”.
+    Sometimes a chat remembers the old picture for a few hours or days; that is not a fault.</p>
+  <h3>One more, for Google (optional)</h3>
+  <p>Open <code>https://search.google.com/test/rich-results</code> in a browser, paste <code>https://oscarclubsofia.com/</code>
+    and press “Test URL”. It should say the page is valid (a bar with its address, phone and opening hours), with no errors.</p>
+
+  <h2>5. “Ask the bar”: what we still need from you</h2>
+  <p>We could not confirm these ourselves, so on the site they are either left out or marked <span class="ask">“Питай бара” / “Ask the bar”</span>.
+    Send us the answers and we will add them.</p>
+  <ol>
+    <li><strong>The NX0 download link.</strong> On the menu, next to NX0, it says “Ask the bar” instead of a link. We need the exact
+      link to download the app, and confirmation of the partnership terms.</li>
+    <li><strong>The founder's name.</strong> The bar's story doesn't name anyone for now. If you want it to, send us the name
+      exactly as it should appear, in Bulgarian and in English.</li>
+    <li><strong>Opening hours.</strong> The site shows: Monday–Wednesday and Sunday 18:00–23:30, Thursday 18:00–02:00,
+      Friday and Saturday 18:00–03:00 (from Google, November 2026). Have they changed? Are there holiday or seasonal hours?</li>
+    <li><strong>The ratings.</strong> Google 4.7 (671 reviews) and Tripadvisor 4.8 (141 reviews) were noted in November 2026 and
+      don't update by themselves. Tell us when you'd like them refreshed.</li>
+    <li><strong>The Averna price.</strong> The old site lists it in leva, so the new menu shows “—” for now. We need the price in euro.</li>
+  </ol>
+  <p>Every other price on the menu is in euro, as in the new design.</p>
+</article>
+
+</main>
+</body>
+</html>
