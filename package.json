@@ -4,7 +4,9 @@
   "description": "Dev-only tooling for the Oscar Club site (tests, packaging, font sources). Nothing here is uploaded.",
   "scripts": {
     "pretest": "playwright install chromium",
-    "test": "playwright test",
+    "test": "playwright test --project=chromium",
+    "pretest:all": "playwright install chromium firefox webkit",
+    "test:all": "playwright test",
     "package": "node tools/package.js",
     "pretest:dist": "playwright install chromium",
     "test:dist": "node tools/test-dist.js",

@@ -22,8 +22,33 @@ const CHROME = {
   en: { mainNav: 'Main', langGroup: 'Language', quick: 'Quick actions', skip: 'Skip to content' }
 };
 
+/**
+ * Firefox workaround (test tooling only, nothing to do with the site). In Playwright 1.65's Firefox, a multi-element
+ * read (locator.evaluateAll / allTextContents / allInnerTexts) on a locator inside a region named by aria-labelledby
+ * crashes the page once that region has been queried before ("Page crashed"; reproduced on a 3-element page with no CSS
+ * or script). Reading the same elements through their handles does not, so in Firefox those three calls take that
+ * route. The result is identical; Chromium and WebKit use Playwright's own calls. Installed by openPage().
+ */
+function patchFirefoxLocators(pw) {
+  const proto = Object.getPrototypeOf(pw.locator('html'));
+  if (proto.__ocFirefoxPatch) return;
+  proto.__ocFirefoxPatch = true;
+  const inFirefox = loc => { const b = loc.page().context().browser(); return !!b && b.browserType().name() === 'firefox'; };
+  const { evaluateAll, allTextContents, allInnerTexts } = proto;
+  proto.evaluateAll = async function (fn, arg) {
+    if (!inFirefox(this)) return evaluateAll.call(this, fn, arg);
+    const handles = await this.elementHandles();
+    try {
+      return await this.page().evaluate(([src, els, a]) => (0, eval)(`(${src})`)(els, a), [String(fn), handles, arg]);
+    } finally { await Promise.all(handles.map(h => h.dispose())); }
+  };
+  proto.allTextContents = function () { return inFirefox(this) ? this.evaluateAll(els => els.map(e => e.textContent || '')) : allTextContents.call(this); };
+  proto.allInnerTexts = function () { return inFirefox(this) ? this.evaluateAll(els => els.map(e => e.innerText)) : allInnerTexts.call(this); };
+}
+
 /** Open a page. `now` sets the clock as Sofia local time ('2026-11-20T01:30'); `query` adds more parameters. */
 async function openPage(pw, path, { now, query } = {}) {
+  patchFirefoxLocators(pw);
   const params = new URLSearchParams(query || {});
   if (now) params.set('now', now);
   const qs = params.toString();
@@ -130,8 +155,16 @@ async function tabThrough(pw, max = 80) {
   return seen;
 }
 
+/**
+ * Why the tests that walk the page with the Tab key skip WebKit: Playwright's WebKit keeps Safari's default, where Tab
+ * moves between form controls and buttons only and links are reached with Option+Tab, a key the WebKit build Playwright
+ * runs here does not map. Chromium and Firefox walk every link; WebKit still runs every other check, focus rings included
+ * where a test focuses an element directly. Use: test.skip(browserName === 'webkit', H.WEBKIT_TAB).
+ */
+const WEBKIT_TAB = 'WebKit (as Safari by default) does not move Tab through links; see helpers.js';
+
 module.exports = {
   SITE, PAGES, VIEWPORTS, CHROME, page,
   openPage, headerStatus, watchNetwork, expectCleanNetwork, scrollThrough, expectLocalReferencesResolve,
-  expectNoSeriousA11yViolations, tabThrough
+  expectNoSeriousA11yViolations, tabThrough, WEBKIT_TAB
 };

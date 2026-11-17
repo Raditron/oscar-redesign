@@ -57,15 +57,21 @@ Dev-only tooling; none of it is uploaded. Needs Node 18 or newer.
 ```
 npm install
 npm test                   # installs Chromium for Playwright if needed, then runs tests/*.spec.js on the working tree
-npm run test:dist          # packages (below), then runs the same suite against dist/oscarclubsofia.com
+npm run test:all           # the same suite in all three engines: Chromium, Firefox and WebKit (Safari's engine)
+npm run test:dist          # packages (below), then runs the same suite against dist/oscarclubsofia.com (Chromium)
 ```
+
+`npm test` stays on Chromium so it is quick; run `npm run test:all` before a release. The few checks an engine can't
+make (e.g. reading the clipboard back) are skipped there with the reason written next to the skip. The dist run takes
+engines too: `npm run test:dist -- --project=chromium --project=firefox --project=webkit`.
 
 The suite opens the pages in a real browser and checks only what a visitor sees and can do: the open-now status by
 Sofia time, both languages side by side, every link and file resolving with no third-party requests, no-JS and
 reduced-motion behaviour, the carousel, index, filter and category bar, axe accessibility scans, titles, link
 previews and JSON-LD. `tests/15-package.spec.js` checks the upload itself (see Package).
 
-Run one file with `npx playwright test tests/12-menu.spec.js`; pass the same arguments to the dist run with
+Run one file with `npx playwright test tests/12-menu.spec.js --project=chromium` (leave out `--project` for all three
+engines); pass the same arguments to the dist run with
 `npm run test:dist -- tests/12-menu.spec.js`. `SITE_ROOT=<folder>` makes the test server serve another folder.
 
 ## Package

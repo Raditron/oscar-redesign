@@ -10,7 +10,10 @@ const REPO = path.resolve(__dirname, '..');
 try { build({ log: s => console.log(s) }); } catch (e) { console.error(e.message); process.exit(1); }
 
 const cli = require.resolve('@playwright/test/cli', { paths: [REPO] });
-const run = spawnSync(process.execPath, [cli, 'test', ...process.argv.slice(2)], {
+// Chromium, like `npm test`, unless the arguments name engines (`-- --project=firefox --project=webkit`)
+const args = process.argv.slice(2);
+if (!args.some(a => a.startsWith('--project'))) args.unshift('--project=chromium');
+const run = spawnSync(process.execPath, [cli, 'test', ...args], {
   cwd: REPO, stdio: 'inherit', env: { ...process.env, SITE_ROOT: `dist/${SITE_DIR}` }
 });
 process.exit(run.status === null ? 1 : run.status);

@@ -72,6 +72,14 @@ const expectedShots = lang => [
 ];
 const expectedSpirits = () => DATA.menu.flatMap(m => m.items.map(([n, p]) => ({ name: n, price: p })));
 
+/** Wait until the category row has stopped scrolling sideways (after a jump it glides the current chip into view;
+ *  clicking while it glides could hit the chip next to the one meant). */
+const settled = nav => nav.evaluate(async row => {
+  const frame = () => new Promise(r => requestAnimationFrame(r));
+  let last = NaN;
+  for (let i = 0; i < 120; i++) { await frame(); await frame(); if (row.scrollLeft === last) return; last = row.scrollLeft; }
+});
+
 /** Where the category bar ends (the pinned header + the bar), in viewport px. */
 const barBottom = async (pw, lang) => {
   const c = await pw.getByRole('navigation', { name: T[lang].cats }).boundingBox();
@@ -159,6 +167,7 @@ for (const lang of ['bg', 'en']) {
         for (const id of ['shots', ...CATS]) {
           await page.evaluate(() => scrollTo(0, 0));
           if (id !== 'shots' && id !== 'vodka') await expect(page.locator(`#${id}`)).toHaveJSProperty('open', false);
+          await settled(nav);
           await nav.locator(`a[href="#${id}"]`).click();
           await expect(page).toHaveURL(new RegExp(`#${id}$`));
           const head = id === 'shots' ? page.locator('#shots h2') : page.locator(`#${id} > summary`);
@@ -272,24 +281,25 @@ for (const lang of ['bg', 'en']) {
 
   test.describe(`${P.name} without JavaScript`, () => {
     test.use({ javaScriptEnabled: false });
+    // an accordion's state is read from its open attribute here: with JavaScript off, Firefox can't read DOM properties
 
     test('every shot, set and drink is in the page, and the accordions still open by click and keyboard', async ({ page }) => {
       await H.openPage(page, P.path);
       expect(await priceRows(page, 'shots')).toEqual(expectedShots(lang));
       expect(await priceRows(page, 'spirits')).toEqual(expectedSpirits());
-      await expect(page.locator('#vodka')).toHaveJSProperty('open', true);
+      await expect(page.locator('#vodka')).toHaveAttribute('open', '');
       await expect(page.locator('#spirits').getByText('Skyy', { exact: true })).toBeVisible();
       // click
       await page.locator('#wine > summary').click();
-      await expect(page.locator('#wine')).toHaveJSProperty('open', true);
+      await expect(page.locator('#wine')).toHaveAttribute('open', '');
       await expect(page.locator('#spirits').getByText('Cinzano', { exact: true })).toBeVisible();
       // Enter and Space
       await page.locator('#beer > summary').focus();
       await page.keyboard.press('Enter');
-      await expect(page.locator('#beer')).toHaveJSProperty('open', true);
+      await expect(page.locator('#beer')).toHaveAttribute('open', '');
       await expect(page.locator('#spirits').getByText('Schöfferhofer', { exact: true })).toBeVisible();
       await page.keyboard.press('Space');
-      await expect(page.locator('#beer')).toHaveJSProperty('open', false);
+      await expect(page.locator('#beer')).not.toHaveAttribute('open');
       // the category bar still jumps to an accordion (it lands on its row, ready to open)
       await page.getByRole('navigation', { name: L.cats }).locator('a[href="#soft"]').click();
       await expect(page).toHaveURL(/#soft$/);

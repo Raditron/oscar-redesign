@@ -68,6 +68,13 @@ const recordMotion = (page, lang) => carousel(page, lang).evaluate(el => {
   for (const t of ['transitionrun', 'animationstart']) el.addEventListener(t, e => window.__motion.push(`${t} ${e.propertyName || e.animationName}`));
 });
 const motionSeen = page => page.evaluate(() => window.__motion);
+/** Rest the mouse off the carousel, wherever the page has scrolled to. (Focusing a control can scroll the carousel under
+ *  a resting mouse; WebKit then reports the mouse as over it, as Safari does, and the carousel rightly holds still.) */
+async function mouseAway(page, lang) {
+  const r = await carousel(page, lang).evaluate(el => { const b = el.getBoundingClientRect(); return { top: b.top, bottom: b.bottom }; });
+  const h = page.viewportSize().height;
+  await page.mouse.move(8, r.top > 40 ? r.top / 2 : r.bottom + 20 < h ? r.bottom + 10 : h - 4);
+}
 /** Show the carousel and wait until it is actually running (it only starts once it is on screen). */
 async function showRunningCarousel(page, lang) {
   await showCarousel(page, lang);
@@ -216,6 +223,7 @@ for (const lang of ['bg', 'en']) {
       // focus leaves (Tab would also scroll the page on to the index, and off screen it holds still anyway)
       await page.evaluate(() => document.activeElement.blur());
       await expect(carousel(page, lang).getByRole('button', { name: T.pause })).not.toBeFocused();
+      await mouseAway(page, lang);
       await expect.poll(() => hairlineRuns(page, lang)).toBe(true);
       await page.clock.runFor(dwell(T.slides[0]) + 100);
       await expect(slogan(page, lang, 1)).toBeVisible();
@@ -233,8 +241,8 @@ for (const lang of ['bg', 'en']) {
       await expect(slogan(page, lang, 0)).toBeVisible();
       await car.getByRole('button', { name: T.play }).click();
       await expect(car.getByRole('button', { name: T.pause })).toBeVisible();
-      await page.mouse.move(8, 120);
       await page.evaluate(() => document.activeElement.blur());
+      await mouseAway(page, lang);
       await expect.poll(() => hairlineRuns(page, lang)).toBe(true);
       await page.clock.runFor(dwell(T.slides[0]) + 100);
       await expect(slogan(page, lang, 1)).toBeVisible();
@@ -288,7 +296,8 @@ for (const lang of ['bg', 'en']) {
       await expect(page).toHaveURL(new RegExp(`${T.menuPath.replace(/\//g, '\\/')}$`));
     });
 
-    test('focusing a drink name swaps the preview and lights that name (the name only) in its drink colour', async ({ page }) => {
+    test('focusing a drink name swaps the preview and lights that name (the name only) in its drink colour', async ({ page, browserName }) => {
+      test.skip(browserName === 'webkit', H.WEBKIT_TAB);   // (tests/17-parity.spec.js focuses the names directly, in every engine)
       await H.openPage(page, home(lang), { now: NOW });
       const idx = indexSec(page, lang);
       const rows = idx.getByRole('listitem');
@@ -399,10 +408,11 @@ for (const lang of ['bg', 'en']) {
       test(`${vp}: axe stays clean after using the carousel and the index`, async ({ page }) => {
         await page.setViewportSize(H.VIEWPORTS[vp]);
         await H.openPage(page, home(lang), { now: NOW });
-        const car = carousel(page, lang);
-        await car.scrollIntoViewIfNeeded();
-        await car.getByRole('button', { name: T.next }).click();
-        await indexSec(page, lang).getByRole('listitem').nth(3).focus();
+        // the controls are found page-wide here, not inside their named sections: in Playwright's Firefox, querying inside
+        // a region named by aria-labelledby and then running axe crashes the page (see patchFirefoxLocators in helpers.js)
+        await page.locator('#cocktails').scrollIntoViewIfNeeded();
+        await page.getByRole('button', { name: T.next }).click();
+        await page.getByRole('link', { name: 'Kiss Me', exact: true }).focus();
         await H.expectNoSeriousA11yViolations(page);
       });
     }

@@ -206,7 +206,8 @@ test.describe('accessibility', () => {
   }
 
   for (const p of [H.page('bg', 'home'), H.page('en', 'menu')]) {
-    test(`${p.name}: the skip link is the first stop, shows on focus and moves focus to the content`, async ({ page }) => {
+    test(`${p.name}: the skip link is the first stop, shows on focus and moves focus to the content`, async ({ page, browserName }) => {
+      test.skip(browserName === 'webkit', H.WEBKIT_TAB);
       await page.setViewportSize(H.VIEWPORTS.phone);
       await H.openPage(page, p.path);
       await page.keyboard.press('Tab');
@@ -220,7 +221,8 @@ test.describe('accessibility', () => {
 
   for (const p of H.PAGES) {
     for (const vp of ['phone', 'desktop']) {
-      test(`${p.name} · ${vp}: every link reached by Tab shows a focus ring`, async ({ page }) => {
+      test(`${p.name} · ${vp}: every link reached by Tab shows a focus ring`, async ({ page, browserName }) => {
+        test.skip(browserName === 'webkit', H.WEBKIT_TAB);
         await page.setViewportSize(H.VIEWPORTS[vp]);
         await H.openPage(page, p.path);
         const stops = await H.tabThrough(page);

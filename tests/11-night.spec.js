@@ -89,6 +89,8 @@ test.describe('the three sections', () => {
       await H.scrollThrough(page);
       for (const id of ['music', 'visit']) {
         const img = page.locator(`#${id} img`);
+        // lazy: it loads once it comes on screen (WebKit skips the ones a fast scroll only flew past)
+        await img.scrollIntoViewIfNeeded();
         await expect.poll(() => img.evaluate(i => i.complete && i.naturalWidth)).toBeGreaterThan(0);
       }
     }
@@ -154,10 +156,16 @@ test.describe('without JavaScript', () => {
   }
 });
 
+// Clipboard permissions exist in Chromium only (Firefox and WebKit reject the names). The page copies without them in
+// every engine (a click is enough to write); reading the clipboard back to check the value is Chromium-only (Firefox and
+// WebKit allow a page to read it only through their own paste prompt).
+const CLIPBOARD = { permissions: async ({ browserName }, use) => use(browserName === 'chromium' ? ['clipboard-read', 'clipboard-write'] : []) };
+const canReadBack = browserName => browserName === 'chromium';
+
 test.describe('copy buttons on the events contacts', () => {
-  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+  test.use(CLIPBOARD);
   for (const lang of ['bg', 'en']) {
-    test(`${lang.toUpperCase()}: each copies the exact value and says so`, async ({ page }) => {
+    test(`${lang.toUpperCase()}: each copies the exact value and says so`, async ({ page, browserName }) => {
       await H.openPage(page, H.page(lang, 'home').path);
       const t = T[lang];
       const events = section(page, lang, 'events');
@@ -168,22 +176,22 @@ test.describe('copy buttons on the events contacts', () => {
         await expect(btn).toBeVisible();
         await btn.click();
         await expect(status).toHaveText(`${t.copied}: ${value}`);
-        expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(value);
+        if (canReadBack(browserName)) expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(value);
         await expect(btn).toBeFocused();
       }
     });
   }
 
-  test('works from the keyboard, and the same copy twice is said again', async ({ page }) => {
+  test('works from the keyboard, and the same copy twice is said again', async ({ page, browserName }) => {
     await H.openPage(page, '/en/index.html');
     const events = section(page, 'en', 'events');
     const btn = events.getByRole('button', { name: T.en.copyTel });
     await btn.focus();
     await page.keyboard.press('Enter');
     await expect(events.getByRole('status')).toHaveText(`Copied: ${EVENTS_TEL}`);
-    await page.evaluate(() => navigator.clipboard.writeText('something else'));
+    if (canReadBack(browserName)) await page.evaluate(() => navigator.clipboard.writeText('something else'));
     await page.keyboard.press('Space');
-    await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(EVENTS_TEL);
+    if (canReadBack(browserName)) await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(EVENTS_TEL);
     await expect(events.getByRole('status')).toHaveText(`Copied: ${EVENTS_TEL}`);
   });
 });
@@ -269,20 +277,23 @@ test.describe('BG and EN parity', () => {
 });
 
 test.describe('accessibility', () => {
-  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+  test.use(CLIPBOARD);
   for (const lang of ['bg', 'en']) {
     for (const vp of ['phone', 'desktop']) {
       test(`${lang.toUpperCase()} home at ${vp}: axe clean with tonight marked and a copy confirmed`, async ({ page }) => {
         await page.setViewportSize(H.VIEWPORTS[vp]);
         await H.openPage(page, H.page(lang, 'home').path, { now: '2026-11-20T23:10' });
-        await section(page, lang, 'events').getByRole('button', { name: T[lang].copyMail }).click();
-        await expect(section(page, lang, 'events').getByRole('status')).not.toBeEmpty();
+        // the copy is pressed and its confirmation awaited in the page itself, without Playwright's role queries: in
+        // Playwright's Firefox, role queries followed by an axe run crash the page (see patchFirefoxLocators in helpers.js)
+        await page.evaluate(name => [...document.querySelectorAll('button')].find(b => b.getAttribute('aria-label') === name).click(), T[lang].copyMail);
+        await page.waitForFunction(word => [...document.querySelectorAll('[role="status"]')].some(s => s.textContent.startsWith(word)), T[lang].copied);
         await H.expectNoSeriousA11yViolations(page);
       });
     }
   }
 
-  test('the copy buttons and contacts get a visible focus ring', async ({ page }) => {
+  test('the copy buttons and contacts get a visible focus ring', async ({ page, browserName }) => {
+    test.skip(browserName === 'webkit', H.WEBKIT_TAB);
     await H.openPage(page, '/index.html');
     const seen = await H.tabThrough(page, 120);
     const mine = seen.filter(s => /Копирай|events@|883 30|Маршрут|oscarclub\.sf|OscarClub\.sf|Славянска/.test(s.name));

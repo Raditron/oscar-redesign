@@ -101,10 +101,14 @@ test.describe('the cocktail index links each drink to its card on the menu', () 
         await expect(page).toHaveURL(new RegExp(`${menu.path.replace(/\./g, '\\.')}#spraoi$`));
         const card = page.locator('#spraoi');
         await expect(card.getByRole('heading', { name: 'Spraoi' })).toBeInViewport();
+        // once the page has loaded and its fonts are in (in WebKit, which keeps no scroll anchor, the page brings the card
+        // back into place then: js/main.js)
+        await page.waitForLoadState('load');
+        await page.evaluate(() => document.fonts.ready);
         const bar = await page.getByRole('navigation', { name: T[lang].cats }).boundingBox();
-        const top = (await card.boundingBox()).y;
-        expect(top, 'the card starts below the pinned header and the category bar').toBeGreaterThanOrEqual(bar.y + bar.height - 0.5);
-        expect(top).toBeLessThan(bar.y + bar.height + 60);
+        await expect.poll(async () => (await card.boundingBox()).y, 'the card starts just below the pinned header and the category bar')
+          .toBeGreaterThanOrEqual(bar.y + bar.height - 0.5);
+        await expect.poll(async () => (await card.boundingBox()).y).toBeLessThan(bar.y + bar.height + 60);
       });
     }
 

@@ -165,9 +165,10 @@ for (const lang of ['bg', 'en']) {
       const pw = await ctx.newPage();
       await H.openPage(pw, P.path);
       const h1 = pw.getByRole('heading', { level: 1 });
-      const names = await h1.evaluate(el => el.getAnimations({ subtree: true }).map(a => a.animationName));
+      // each tube of the sign runs the flicker once (read from the style, so a slow load that lets it finish first still counts)
+      const names = await h1.evaluate(el => [...el.children].map(e => `${getComputedStyle(e).animationName} ×${getComputedStyle(e).animationIterationCount}`));
       expect(names.length).toBeGreaterThan(0);
-      expect(new Set(names)).toEqual(new Set(['v2-flicker']));
+      expect(new Set(names)).toEqual(new Set(['v2-flicker ×1']));
       // it plays once, then the sign stays lit
       await h1.evaluate(el => Promise.all(el.getAnimations({ subtree: true }).map(a => a.finished)));
       const after = await h1.evaluate(el => [...el.children].map(e => getComputedStyle(e).opacity));
@@ -221,7 +222,8 @@ for (const lang of ['bg', 'en']) {
       });
     }
 
-    test('every hero link and the call button are reachable by keyboard with a visible ring', async ({ page }) => {
+    test('every hero link and the call button are reachable by keyboard with a visible ring', async ({ page, browserName }) => {
+      test.skip(browserName === 'webkit', H.WEBKIT_TAB);
       await H.openPage(page, P.path, { now: FRI_22 });
       const seen = await H.tabThrough(page);
       for (const name of [C.call, C.phone, C.dm, C.dirs]) {

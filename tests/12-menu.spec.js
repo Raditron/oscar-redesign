@@ -27,6 +27,14 @@ const cards = (pw, lang) => cocktails(pw, lang).getByRole('article');
 const cardNames = (pw, lang) => cocktails(pw, lang).getByRole('heading', { level: 3 });
 const chip = (pw, lang, label) => pw.getByRole('group', { name: T[lang].filter }).getByRole('button', { name: new RegExp(`^${label} \\d+$`) });
 
+/** Wait until the category row has stopped scrolling sideways (after a jump it glides the current chip into view;
+ *  clicking while it glides could hit the chip next to the one meant). */
+const settled = nav => nav.evaluate(async row => {
+  const frame = () => new Promise(r => requestAnimationFrame(r));
+  let last = NaN;
+  for (let i = 0; i < 120; i++) { await frame(); await frame(); if (row.scrollLeft === last) return; last = row.scrollLeft; }
+});
+
 /** Where the pinned header ends and the category bar begins and ends, in viewport px. */
 async function bars(pw, lang) {
   const h = await pw.getByRole('banner').boundingBox();
@@ -123,6 +131,7 @@ for (const lang of ['bg', 'en']) {
           const target = page.locator(`#${id}`);
           if (!(await target.count())) { pending.push(id); continue; }   // an accordion #13 has not built yet
           await page.evaluate(() => scrollTo(0, 0));
+          await settled(catbar(page, lang));
           await links.nth(i).click();
           await expect(page).toHaveURL(new RegExp(`#${id}$`));
           // the section's heading (or the accordion's summary row)
@@ -191,6 +200,8 @@ for (const lang of ['bg', 'en']) {
         await expect(img).toHaveAttribute('height', /^\d+$/);
       }
       await H.scrollThrough(page);
+      // lazy: each loads once it comes on screen (WebKit skips the ones a fast scroll only flew past)
+      for (const img of await imgs.all()) { await img.scrollIntoViewIfNeeded(); await expect.poll(() => img.evaluate(i => i.complete && i.naturalWidth > 0)).toBe(true); }
       await expect.poll(() => imgs.evaluateAll(els => els.every(i => i.complete && i.naturalWidth > 0))).toBe(true);
       H.expectCleanNetwork(log);
     });
