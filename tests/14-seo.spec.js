@@ -4,6 +4,11 @@ const { test, expect } = require('@playwright/test');
 const H = require('./helpers');
 
 const SCHEMA_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+// the day names the visit section's hours table prints, in SCHEMA_DAYS order
+const DAY_NAMES = {
+  bg: ['Неделя', 'Понеделник', 'Вторник', 'Сряда', 'Четвъртък', 'Петък', 'Събота'],
+  en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+};
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const CYRILLIC = /[\u0400-\u04FF]/;
 const LOCALE = { bg: 'bg_BG', en: 'en_GB' };
@@ -207,6 +212,23 @@ test.describe('structured data (JSON-LD)', () => {
         const opens = new Set(Object.values(week).filter(h => h.opens).map(h => h.opens));
         expect(opens.size).toBe(1);
         for (const d of SCHEMA_DAYS) expect(declared[d].opens).toBe([...opens][0]);
+
+        // …and the week of hours in the visit section, row by row: each day's open and close as the table prints them
+        const table = page.getByRole('table', { name: lang === 'bg' ? 'Работно време' : 'Opening hours' });
+        const rows = table.getByRole('row');
+        await expect(rows).toHaveCount(7);
+        const tabled = {};
+        for (const row of await rows.all()) {
+          const day = (await row.getByRole('rowheader').innerText()).trim();
+          const i = DAY_NAMES[lang].indexOf(day);
+          expect(i, `day "${day}" in the hours table`).toBeGreaterThanOrEqual(0);
+          const m = (await row.getByRole('cell').innerText()).trim().match(/^(\d\d:\d\d)\s*–\s*(\d\d:\d\d)$/);
+          expect(m, `${day}: hours "open – close"`).toBeTruthy();
+          expect(tabled[SCHEMA_DAYS[i]], `${day} listed once`).toBeUndefined();
+          tabled[SCHEMA_DAYS[i]] = { opens: m[1], closes: m[2] };
+        }
+        expect(Object.keys(tabled).sort()).toEqual([...SCHEMA_DAYS].sort());
+        for (const d of SCHEMA_DAYS) expect(declared[d], `${d}: JSON-LD vs the hours table`).toEqual(tabled[d]);
 
         // menu: the page the header's menu link opens, in the same language
         const menuHref = await page.getByRole('navigation', { name: H.CHROME[lang].mainNav }).getByRole('link', { name: lang === 'bg' ? 'Меню' : 'Menu', exact: true }).evaluate(a => a.href);
