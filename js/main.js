@@ -154,11 +154,84 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
 // [#10 carousel] featured-cocktail carousel (site-v2.js: feature / carousel)
 {
+  /* All 13 drinks are in the HTML; the first carries class "on" and is the one shown without JS (the controls stay
+     hidden then). Each glass holds for its data-dwell (prototype: 2.5s + 0.3s a word to read, never under 6s).
+     It holds still under the mouse, while anything inside has focus, off screen, in a hidden tab and under reduced
+     motion. Using ← → (buttons or arrow keys) stops it for good; Pause / Play brings it back (WCAG 2.2.2). */
+  const feat = document.querySelector('.v2-feat');
+  if (feat) {
+    const imgs = [...feat.querySelectorAll('.v2-feat-img')], slides = [...feat.querySelectorAll('.v2-feat-slide')], n = slides.length;
+    const stack = feat.querySelector('.v2-feat-stack'), count = feat.querySelector('[data-v2-count]');
+    const bar = feat.querySelector('.v2-car-bar i'), toggle = feat.querySelector('[data-v2-car="toggle"]');
+    const pad = k => String(k).padStart(2, '0');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+    const st = { i: 0, playing: !reduce.matches, hold: false, seen: !('IntersectionObserver' in window) };
+    let timer = 0;
+    const show = k => {
+      st.i = (k + n) % n;
+      imgs.forEach((el, j) => el.classList.toggle('on', j === st.i));
+      slides.forEach((el, j) => { el.classList.toggle('on', j === st.i); if (j === st.i) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', 'true'); });
+      count.textContent = pad(st.i + 1);
+    };
+    const run = () => {
+      clearTimeout(timer);
+      const live = st.playing && !st.hold && st.seen && !document.hidden;
+      feat.dataset.playing = String(live);
+      bar.style.animation = 'none';
+      if (!live) return;
+      const ms = +imgs[st.i].dataset.dwell || 6000;
+      void bar.offsetWidth; bar.style.animation = `v2-fill ${ms}ms linear`;
+      timer = setTimeout(() => { show(st.i + 1); run(); }, ms);
+    };
+    const setPlaying = on => {
+      st.playing = on;
+      toggle.textContent = on ? toggle.dataset.pause : toggle.dataset.play;
+      stack.setAttribute('aria-live', on ? 'off' : 'polite');   /* announce only what the visitor asked for */
+      run();
+    };
+    const step = d => { setPlaying(false); show(st.i + d); };
+
+    feat.querySelector('.v2-car').hidden = false;
+    feat.addEventListener('click', e => {
+      const b = e.target.closest('[data-v2-car]'); if (!b) return;
+      if (b.dataset.v2Car === 'toggle') setPlaying(!st.playing); else step(b.dataset.v2Car === 'next' ? 1 : -1);
+    });
+    feat.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); step(e.key === 'ArrowRight' ? 1 : -1); } });
+    feat.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') { st.hold = true; run(); } });
+    feat.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') { st.hold = false; run(); } });
+    feat.addEventListener('focusin', () => { st.hold = true; run(); });
+    feat.addEventListener('focusout', e => { if (!feat.contains(e.relatedTarget)) { st.hold = false; run(); } });
+    /* on a touch screen the glass is a swipe target */
+    let x0 = null;
+    const imgsBox = feat.querySelector('.v2-feat-imgs');
+    imgsBox.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') x0 = e.clientX; });
+    imgsBox.addEventListener('pointerup', e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1); });
+    imgsBox.addEventListener('pointercancel', () => { x0 = null; });
+    document.addEventListener('visibilitychange', run);
+    reduce.addEventListener('change', e => { if (e.matches) setPlaying(false); });
+    if (!st.seen) new IntersectionObserver(([en]) => { st.seen = en.isIntersecting; run(); }, { threshold: .35 }).observe(feat);
+    setPlaying(st.playing);
+  }
 }
 // [/#10 carousel]
 
 // [#10 index] cocktail index: point or focus a row → preview + lit name (site-v2.js: index / pick)
 {
+  /* Pointing at or focusing a row makes it the current one: from 860px its name lights in the drink's colour (CSS,
+     the name only) and the sticky glass beside the list swaps to that drink. Rows take focus only once this runs. */
+  const box = document.querySelector('.v2-idx');
+  if (box) {
+    const rows = [...box.querySelectorAll('.v2-row')], prev = box.querySelector('.v2-prev');
+    const pick = row => {
+      if (row.classList.contains('on')) return;
+      rows.forEach(r => r.classList.toggle('on', r === row));
+      prev.querySelectorAll('img').forEach(img => img.classList.toggle('on', img.dataset.v2Img === row.dataset.v2Pick));
+      prev.style.setProperty('--drink', row.style.getPropertyValue('--drink'));
+    };
+    rows.forEach(r => { r.tabIndex = 0; });
+    box.addEventListener('pointerover', e => { const r = e.target.closest('.v2-row'); if (r) pick(r); });
+    box.addEventListener('focusin', e => { const r = e.target.closest('.v2-row'); if (r) pick(r); });
+  }
 }
 // [/#10 index]
 

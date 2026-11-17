@@ -379,12 +379,104 @@ body{margin:0;background:#000}
 /* [/#9 hero] */
 
 /* [#10 story] v2.css "2 · one sentence, in the voice" */
+/* The story is spoken: the sign's face (Poiret One), unlit, plain ivory, running into the motto in the voice
+   (Cormorant italic, brass). Then | now as two short columns centred on the page, the motto centred under both.
+   One section gap above and below; the sentence sits closer to its date/award line (48px) than to its neighbours */
+.v2-say-sec{display:grid;justify-items:center;padding:var(--gap-section) var(--g)}
+.v2-say{display:grid;grid-template-columns:minmax(0,22ch);justify-content:center;gap:var(--s-5) clamp(32px,6cqi,96px);font:400 clamp(21px,2.3cqi,34px)/1.25 var(--f-disp);letter-spacing:.01em;color:var(--ivory)}
+.v2-say p{text-wrap:pretty}
+@container site (min-width:560px){.v2-say{grid-template-columns:repeat(2,minmax(0,16ch))}}
+.v2-say-motto{grid-column:1/-1;justify-self:center;margin-top:var(--s-3);font:italic 500 1.2em/1.1 var(--f-voice);letter-spacing:0;color:var(--brass-hi);text-align:center}
+.v2-say-foot{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 32px;align-items:center;margin-top:var(--s-7);font-size:14px;color:var(--ivory-3)}
+.v2-say-foot span{display:inline-flex;align-items:center;gap:10px}
+.v2-say-foot img{width:36px;height:36px}
 /* [/#10 story] */
 
 /* [#10 carousel] v2.css "3 · the signatures, one at a time" */
+/* every drink sits in the same grid cell, so the section never changes height; only opacity animates.
+   Without JS the first drink (class "on" in the HTML) is the one shown, and the controls stay hidden */
+.v2-feat{--cap:clamp(48px,10cqi,170px);display:grid;gap:clamp(24px,3cqi,40px);padding:0 var(--g) clamp(80px,9cqi,150px);align-items:end}
+.v2-feat-imgs,.v2-feat-stack{display:grid}
+/* the name sits under the glass, not on it (over the photo it was ivory on pale liquid and unreadable) */
+.v2-feat-imgs{margin:0 calc(var(--g) * -1) calc(var(--cap) * .8 + 12px);touch-action:pan-y}
+.v2-feat-img,.v2-feat-slide{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .4s var(--ease),visibility 0s .4s}
+.v2-feat-img.on,.v2-feat-slide.on{opacity:1;visibility:visible;transition:opacity .4s var(--ease)}
+.v2-feat-img{position:relative;margin:0;aspect-ratio:1}
+.v2-feat-img::before{content:"";position:absolute;inset:0;background:radial-gradient(48% 46% at 50% 62%,color-mix(in srgb,var(--drink) 30%,transparent),transparent 74%),radial-gradient(42% 8% at 50% 92%,color-mix(in srgb,var(--drink) 34%,transparent),transparent)}
+.v2-feat-img img{position:relative;width:100%;height:100%;object-fit:contain;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(ellipse 60% 64% at 50% 52%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 60% 64% at 50% 52%,#000 62%,transparent 100%)}
+.v2-feat-img figcaption{position:absolute;left:var(--g);top:calc(100% + 12px);font:400 var(--cap)/.8 var(--f-disp);white-space:nowrap;text-transform:uppercase;letter-spacing:.02em;color:var(--ivory);pointer-events:none}
+.v2-feat-txt{display:grid;gap:20px;justify-items:start}
+.v2-feat-stack{width:100%}
+.v2-feat-slide{display:grid;gap:20px;align-content:start}
+/* the slogan, one per drink: Poiret One caps, ivory, so the carousel and the index below read as one card. Not neon */
+.v2-feat-slogan{font:400 clamp(26px,3.5cqi,52px)/1.08 var(--f-disp);text-transform:uppercase;letter-spacing:.03em;color:var(--ivory);text-wrap:balance;max-width:20ch}
+.v2-feat-slide .v2-lede b{font-weight:500;color:var(--ivory)}
+.v2-feat-meta{display:flex;gap:20px;align-items:baseline;padding-top:16px;margin-top:8px;border-top:1px solid var(--hair);color:var(--ivory-3);font-size:14px;width:100%}
+.v2-feat-meta b{margin-left:auto;font:400 clamp(30px,3.2cqi,48px)/1 var(--f-disp);letter-spacing:.02em;color:var(--ivory)}
+@container site (min-width:860px){
+  .v2-feat{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
+  .v2-feat-imgs{grid-column:1/8;margin:0 0 calc(var(--cap) * .8 + 12px) calc(var(--g) * -1)}
+  .v2-feat-txt{grid-column:8/13;padding-bottom:9cqi}
+}
+/* controls: plain type, no boxes or pills. 48px targets, ivory like the rest of the UI; gold stays on the call button */
+.v2-car{position:relative;display:flex;align-items:center;width:100%;padding-top:6px;margin-top:-8px}
+.v2-car[hidden]{display:none}
+.v2-car button{display:inline-grid;place-items:center;min-width:48px;min-height:48px;padding:0;background:none;border:0;color:var(--ivory-2);font:400 22px/1 var(--f-body);cursor:pointer;transition:color .15s}
+.v2-car button:hover{color:var(--ivory)}
+.v2-car [data-v2-car="prev"]{margin-left:-14px}
+.v2-car-n{padding-inline:4px;font-size:14px;color:var(--ivory-3)}
+.v2-car-n b{font-weight:500;color:var(--ivory)}
+.v2 .v2-car .v2-car-toggle{margin-left:auto;min-width:0;padding-inline:4px;font:500 14.5px/1 var(--f-body);text-decoration:underline;text-decoration-color:var(--hair-2);text-underline-offset:4px}
+/* the time to the next drink, as a hairline over the controls that fills (js/main.js sets the animation) */
+.v2-car-bar{position:absolute;inset:0 0 auto;height:1px;overflow:hidden}
+.v2-car-bar i{display:block;height:100%;background:var(--ivory-3);transform:scaleX(0);transform-origin:0 50%}
+.v2-feat[data-playing="false"] .v2-car-bar i{transform:scaleX(0)}
+@keyframes v2-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+/* reduced motion: drinks change in one cut, and the hairline never runs */
+@media (prefers-reduced-motion:reduce){
+  .v2-feat-img,.v2-feat-slide,.v2-feat-img.on,.v2-feat-slide.on,.v2-car button{transition:none}
+  .v2-car-bar i{animation:none!important}
+}
 /* [/#10 carousel] */
 
 /* [#10 index] v2.css "4 · the index" */
+/* a typeset list. From 860px, pointing at or focusing a row lights its name (the name only) in the drink's colour and
+   swaps the sticky glass beside the list */
+.v2-idx{padding:0 var(--g) clamp(104px,13cqi,220px)}
+.v2-idx-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;padding-bottom:18px;border-bottom:1px solid var(--hair-2)}
+.v2-hint{display:none;color:var(--ivory-3);font-size:14px}
+.v2-idx-head .v2-link{margin-left:auto;font-size:15px}
+.v2-idx-grid{display:grid}
+.v2-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;column-gap:14px;align-items:center;padding-block:14px;border-bottom:1px solid var(--hair)}
+.v2-row .th{grid-row:1/3;width:52px;height:52px;object-fit:cover;object-position:50% 55%;border-radius:50%;background:#000;box-shadow:0 0 18px -2px color-mix(in srgb,var(--drink) 55%,transparent)}
+.v2-row .nm{grid-column:2;font:400 clamp(21px,2.8cqi,42px)/1.08 var(--f-disp);text-transform:uppercase;letter-spacing:.04em;transition:color .25s,text-shadow .25s,transform .45s var(--ease)}
+.v2-row .ing{grid-column:2/4;font-size:14px;line-height:1.4;color:var(--ivory-3);margin-top:4px}
+/* the base spirit, first word of every recipe, one step brighter: scannable like a printed card */
+.v2-row .ing b{font-weight:500;color:var(--ivory)}
+.v2-row .ml{display:none}
+.v2-row .pr{grid-column:3;grid-row:1;font:500 clamp(16px,1.4cqi,19px)/1 var(--f-body)}
+.v2-prev{display:none}
+@container site (min-width:860px){
+  .v2-hint{display:block}
+  .v2-idx-grid{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:var(--col)}
+  .v2-row{grid-template-columns:minmax(0,1fr) auto 4.5em;padding-block:16px 18px;cursor:default}
+  .v2-row .th{display:none}
+  .v2-row .nm{grid-column:1;grid-row:1}
+  .v2-row .ing{grid-column:1;grid-row:2}
+  .v2-row .ml{display:block;grid-column:2;grid-row:1;font-size:14px;color:var(--ivory-3);margin-right:24px}
+  .v2-row .pr{grid-column:3;text-align:right}
+  .v2-row:not(.on) .nm{color:var(--ivory-2)}
+  /* the drink's name becomes a tube of its own colour: a pale core inside the drink's gas */
+  .v2-row.on .nm{color:color-mix(in srgb,var(--drink) 45%,#fff);text-shadow:0 0 .02em #fff,0 0 .09em var(--drink),0 0 .28em color-mix(in srgb,var(--drink) 65%,transparent),0 0 .7em color-mix(in srgb,var(--drink) 35%,transparent);transform:translateX(14px)}
+  .v2-prev{display:block;position:sticky;top:calc(var(--stick-top,0px) + 24px);align-self:start;aspect-ratio:1;margin-top:24px}
+  .v2-prev::before{content:"";position:absolute;inset:0;background:radial-gradient(46% 46% at 50% 60%,color-mix(in srgb,var(--drink) 34%,transparent),transparent 74%);transition:background .3s}
+  .v2-prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:lighten;opacity:0;transform:translateY(18px) scale(.96);transition:opacity .35s var(--ease),transform .6s var(--ease);-webkit-mask-image:radial-gradient(ellipse 60% 62% at 50% 52%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 60% 62% at 50% 52%,#000 60%,transparent 100%)}
+  .v2-prev img.on{opacity:1;transform:none}
+}
+/* reduced motion: the name and the glass switch without moving */
+@media (prefers-reduced-motion:reduce){
+  .v2-row .nm,.v2-prev::before,.v2-prev img{transition:none}
+}
 /* [/#10 index] */
 
 /* [#11 music] v2.css "5 · music" */
