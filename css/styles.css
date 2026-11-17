@@ -651,10 +651,62 @@ body{margin:0;background:#000}
 /* [/#12 cocktails] */
 
 /* [#13 shots] components.css: shots and shot sets */
+/* the price list (components.css "menu list"): name, a dotted leader, the price right-aligned in flyer gold, what's in it
+   underneath. The accordions ([#13 accordions]) use the same rows */
+.mlist{display:grid}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--s-3);padding-block:var(--s-3);border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:0}
+.mrow .nm{display:flex;align-items:baseline;gap:var(--s-2);min-width:0;font-weight:600;color:var(--ivory)}
+.mrow .nm::after{content:"";flex:1;min-width:var(--s-4);border-bottom:1px dotted var(--line-2);transform:translateY(-4px)}
+.mrow .pr{font:700 var(--fs-body)/1.5 var(--font-label);color:var(--gold-hi);font-variant-numeric:tabular-nums;text-align:right}
+/* a price the bar has not confirmed: a dash, never a guess (its note says why) */
+.mrow .pr.tbd{color:var(--ivory-3);font-weight:600;font-size:var(--fs-sm)}
+.mrow .sub{grid-column:1/-1;font-size:var(--fs-sm);color:var(--ivory-3);line-height:1.4;margin-top:2px}
+/* the 21 shots run in two newspaper columns from a tablet up */
+.mlist.cols{column-gap:var(--s-7)}
+@container site (min-width:760px){.mlist.cols{display:block;columns:2}.mlist.cols .mrow{break-inside:avoid}.mlist.cols .mrow:last-child{border-bottom:1px solid var(--line)}}
+/* "Sets", under the shots (the prototype sets this margin inline) */
+.sets-h{margin:var(--s-7) 0 var(--s-3)}
 /* [/#13 shots] */
 
 /* [#13 accordions] components.css: spirits / wine / beer accordions */
+/* native <details>: opens with Enter or Space and without script. Hairlines between the rows, no box (rule 5) */
+.mcat{border-top:1px solid var(--line)}
+.mcat:last-of-type{border-bottom:1px solid var(--line)}
+.mcat summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:var(--s-4);min-height:64px;padding-block:var(--s-3);cursor:pointer}
+.mcat summary::-webkit-details-marker{display:none}
+.mcat summary:hover .t{color:var(--gold-hi)}
+.mcat summary .t{font-family:var(--font-display);font-weight:var(--display-weight);font-style:var(--display-style);text-transform:var(--display-case);letter-spacing:var(--display-track);font-size:var(--fs-h3);line-height:1.2}
+.mcat summary .meta{font-size:var(--fs-sm);color:var(--ivory-3);white-space:nowrap}
+.mcat summary .chev{width:36px;height:36px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);color:var(--gold)}
+.mcat[open] summary .chev{transform:rotate(180deg);border-color:var(--gold-lo)}
+.mcat .mlist{padding-bottom:var(--s-5)}
+/* an owner note (e.g. a price still in leva): status amber, the prototype's mark for "ask the bar" */
+.mcat .note{font-size:var(--fs-sm);color:var(--soon);padding-bottom:var(--s-4)}
+@media (prefers-reduced-motion:no-preference){
+  .mcat summary .t{transition:color var(--dur-1)}
+  .mcat summary .chev{transition:transform var(--dur-2) var(--ease-out),border-color var(--dur-1)}
+}
 /* [/#13 accordions] */
 
 /* [#13 nx0] v2.css "NX0" */
+/* the partner's sticker on the door (menu page only): a strip between two hairlines, the logo leading. No box (rule 5) */
+.v2-nx0{display:grid;gap:clamp(28px,4cqi,48px);align-items:center;margin:0 var(--g) var(--gap-section);padding-block:clamp(40px,5cqi,72px);border-block:1px solid var(--hair)}
+.v2-nx0-txt{display:grid;gap:16px;justify-items:start;max-width:46ch}
+.v2-nx0-rule{font-size:14px;line-height:1.45;color:var(--ivory-3)}
+/* NX0's own logo from nx0.ai, unaltered: a white wordmark made for dark grounds, so it sits on the black as it is.
+   Large and first, so it is the first thing seen in the strip */
+.v2 .v2-nx0-mark{order:-1;justify-self:start;display:block;width:clamp(180px,24cqi,340px);text-decoration:none;transition:opacity .2s}
+.v2-nx0-mark img{display:block;width:100%;height:auto}
+.v2 .v2-nx0-mark:hover{opacity:.82}
+@container site (min-width:760px){
+  .v2-nx0{grid-template-columns:auto minmax(0,1fr);column-gap:clamp(40px,6cqi,112px)}
+}
+/* the v1 menu body ends on its own section padding; the strip keeps its side gutter there too */
+.v2-v1menu + .v2-nx0{margin-top:var(--gap-section)}
+/* the download, until the bar confirms the link: the words where the text link will go (ivory, not underlined, since it
+   is not a link yet) and the owner note "Питай бара" / "Ask the bar" in status amber, as the menu marks its other
+   unconfirmed item. Not a button and not gold: gold stays on the call (rule 2) */
+.v2-nx0-get{font-size:17px;line-height:1.4;color:var(--ivory)}
+.v2-ask{font-size:14px;font-weight:600;color:var(--soon)}
 /* [/#13 nx0] */

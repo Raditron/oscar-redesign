@@ -395,6 +395,8 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
 // [#13 accordions]
 {
+  // Nothing to do: the accordions are native <details>/<summary>, so they open with a click, Enter or Space, and without
+  // script. Opening the one the category bar jumps to is done in [#12 catbar].
 }
 // [/#13 accordions]
 

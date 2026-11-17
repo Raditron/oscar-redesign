@@ -214,20 +214,145 @@
 
 <!-- [#13 shots] -->
 <section class="sec band" id="shots" aria-labelledby="shots-h">
-  <h2 id="shots-h">21 шота. Всеки е 3 €.</h2>
+  <div class="inner">
+    <div class="sec-h">
+      <p class="kick">25 ml</p>
+      <h2 class="disp h2" id="shots-h">21 шота. Всеки е 3 €.</h2>
+      <p class="lede">По 25 ml. Сетовете са отделно, най-долу.</p>
+    </div>
+    <!-- one price, said once in the heading and again on every row -->
+    <div class="mlist cols">
+      <div class="mrow"><span class="nm">Adios</span> <span class="pr tnum">3 €</span> <span class="sub">Jägermeister, raspberry schnapps, Aftershock</span></div>
+      <div class="mrow"><span class="nm">B-68</span> <span class="pr tnum">3 €</span> <span class="sub">Kahlúa, Baileys, absinthe</span></div>
+      <div class="mrow"><span class="nm">Strawberry NI</span> <span class="pr tnum">3 €</span> <span class="sub">rum, strawberry, Baileys</span></div>
+      <div class="mrow"><span class="nm">B-52</span> <span class="pr tnum">3 €</span> <span class="sub">Kahlúa, Baileys, Cointreau</span></div>
+      <div class="mrow"><span class="nm">Blow Job</span> <span class="pr tnum">3 €</span> <span class="sub">Kahlúa, Baileys, whipped cream</span></div>
+      <div class="mrow"><span class="nm">Bolivian Kiss</span> <span class="pr tnum">3 €</span> <span class="sub">Agwa de Bolivia, lime</span></div>
+      <div class="mrow"><span class="nm">Brain Tumor</span> <span class="pr tnum">3 €</span> <span class="sub">Carpano Dry, grenadine, Baileys</span></div>
+      <div class="mrow"><span class="nm">Brave Bull</span> <span class="pr tnum">3 €</span> <span class="sub">tequila, Kahlúa, cacao liqueur</span></div>
+      <div class="mrow"><span class="nm">Hot Jump</span> <span class="pr tnum">3 €</span> <span class="sub">sambuca, rum, Tabasco</span></div>
+      <div class="mrow"><span class="nm">Slippery Nipple</span> <span class="pr tnum">3 €</span> <span class="sub">sambuca, Baileys, grenadine</span></div>
+      <div class="mrow"><span class="nm">Sticky Fingers</span> <span class="pr tnum">3 €</span> <span class="sub">Aftershock Red, whiskey</span></div>
+      <div class="mrow"><span class="nm">Coco-Loco</span> <span class="pr tnum">3 €</span> <span class="sub">vodka, cacao, Frangelico</span></div>
+      <div class="mrow"><span class="nm">Thin Red Line</span> <span class="pr tnum">3 €</span> <span class="sub">tequila, sambuca, Tabasco</span></div>
+      <div class="mrow"><span class="nm">Viagra</span> <span class="pr tnum">3 €</span> <span class="sub">mint, amaretto, Baileys, cacao</span></div>
+      <div class="mrow"><span class="nm">Cool Kiss</span> <span class="pr tnum">3 €</span> <span class="sub">Aftershock Red, Baileys</span></div>
+      <div class="mrow"><span class="nm">Goodbye Johnnie</span> <span class="pr tnum">3 €</span> <span class="sub">tequila, pineapple rum</span></div>
+      <div class="mrow"><span class="nm">Hammer</span> <span class="pr tnum">3 €</span> <span class="sub">Aftershock Black, absinthe</span></div>
+      <div class="mrow"><span class="nm">K-For</span> <span class="pr tnum">3 €</span> <span class="sub">mint schnapps, Jägermeister</span></div>
+      <div class="mrow"><span class="nm">No Name</span> <span class="pr tnum">3 €</span> <span class="sub">Baileys, Licor 43, Cointreau</span></div>
+      <div class="mrow"><span class="nm">Peach Lady</span> <span class="pr tnum">3 €</span> <span class="sub">peach, pineapple rum, grenadine</span></div>
+      <div class="mrow"><span class="nm">Red Devil</span> <span class="pr tnum">3 €</span> <span class="sub">Aftershock Red, absinthe</span></div>
+    </div>
+    <h3 class="disp h3 sets-h">Сетове</h3>
+    <div class="mlist">
+      <div class="mrow"><span class="nm">Booster Dose · 6 шота</span> <span class="pr tnum">18 €</span> <span class="sub">никой не знае</span></div>
+      <div class="mrow"><span class="nm">Revolution · 8 шота</span> <span class="pr tnum">20 €</span> <span class="sub">уиски, амарето, водка, блу кюрасао, ром, гренадин</span></div>
+    </div>
+  </div>
 </section>
 <!-- [/#13 shots] -->
 
 <!-- [#13 accordions] -->
+<!-- native <details>/<summary>: they open with Enter or Space and work without JavaScript. The ids are the category bar's
+     targets (#12); js/main.js opens the one you jump to. The first one starts open, as in the prototype -->
 <section class="sec" id="spirits" aria-labelledby="sp-h">
-  <h2 id="sp-h">Уиски, джин, вино, бира. Мерим по 50 ml, текилата по 25.</h2>
+  <div class="inner">
+    <div class="sec-h">
+      <p class="kick">Спиртни напитки и още</p>
+      <h2 class="disp h2" id="sp-h">Уиски, джин, вино, бира. Мерим по 50 ml, текилата по 25.</h2>
+    </div>
+    <div class="mcats">
+    <details class="mcat" id="vodka" open>
+      <summary><span class="t">Водка</span> <span class="meta tnum">50 ml · 1</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Skyy</span> <span class="pr tnum">5 €</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="gin">
+      <summary><span class="t">Джин</span> <span class="meta tnum">50 ml · 2</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Bickens</span> <span class="pr tnum">5 €</span></div>
+        <div class="mrow"><span class="nm">Rocu</span> <span class="pr tnum">8 €</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="tequila">
+      <summary><span class="t">Текила</span> <span class="meta tnum">25 ml · 1</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Espolòn Silver / Reposado</span> <span class="pr tnum">3 €</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="whisky">
+      <summary><span class="t">Шотландско уиски</span> <span class="meta tnum">50 ml · 7</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Loch Lomond</span> <span class="pr tnum">7 €</span></div>
+        <div class="mrow"><span class="nm">Tamnavulin 12</span> <span class="pr tnum">7 €</span></div>
+        <div class="mrow"><span class="nm">Jura 10</span> <span class="pr tnum">9 €</span></div>
+        <div class="mrow"><span class="nm">Loch Lomond 12</span> <span class="pr tnum">10 €</span></div>
+        <div class="mrow"><span class="nm">Glen Grant 12</span> <span class="pr tnum">10 €</span></div>
+        <div class="mrow"><span class="nm">Auchentoshan 12</span> <span class="pr tnum">10 €</span></div>
+        <div class="mrow"><span class="nm">anCnoc</span> <span class="pr tnum">12 €</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="irish">
+      <summary><span class="t">Ирландско уиски</span> <span class="meta tnum">50 ml · 1</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Kilbeggan</span> <span class="pr tnum">5 €</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="bourbon">
+      <summary><span class="t">Бърбън</span> <span class="meta tnum">50 ml · 1</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Jim Beam</span> <span class="pr tnum">5 €</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="digestif">
+      <summary><span class="t">Дижестив</span> <span class="meta tnum">25 ml · 1</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <p class="note">Цената на сайта е в лева. Чака потвърждение в евро.</p>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Averna</span> <span class="pr tnum tbd">—</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="wine">
+      <summary><span class="t">Вино</span> <span class="meta tnum">750 ml · 1</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Cinzano</span> <span class="pr tnum">35 €</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="beer">
+      <summary><span class="t">Бира</span> <span class="meta tnum">0,5 l · 1</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Schöfferhofer</span> <span class="pr tnum">5 €</span></div>
+      </div>
+    </details>
+    <details class="mcat" id="soft">
+      <summary><span class="t">Безалкохолни</span> <span class="meta tnum">3</span> <span class="chev"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+      <div class="mlist">
+        <div class="mrow"><span class="nm">Coca-Cola · 330 ml</span> <span class="pr tnum">3 €</span></div>
+        <div class="mrow"><span class="nm">Crodo lemon / orange / mojito · 330 ml</span> <span class="pr tnum">3 €</span></div>
+        <div class="mrow"><span class="nm">Red Bull · 250 ml</span> <span class="pr tnum">4 €</span> <span class="sub">енергийна напитка, без захар, издания</span></div>
+      </div>
+    </details>
+    </div>
+  </div>
 </section>
 <!-- [/#13 accordions] -->
 
 </div>
 <!-- [#13 nx0] -->
+<!-- NX0: the partner's sticker on the door, at the foot of the menu (v2 · #5). NX0's own logo, unaltered, leads the strip
+     and links to them. The download is a text line, not a second gold button: gold stays on the call. -->
 <section class="v2-nx0" id="nx0" aria-labelledby="v2-nx0-h">
-  <h2 class="v2-h2" id="v2-nx0-h">Касовата бележка тук струва нещо.</h2>
+  <div class="v2-nx0-txt">
+    <h2 class="v2-h2" id="v2-nx0-h">Касовата бележка тук струва нещо.</h2>
+    <p class="v2-lede">Оскар клуб е партньор на NX0. Плащаш както винаги, снимаш бележката в приложението и наградата отива в City Wallet.</p>
+    <p class="v2-nx0-rule">Отвори Earn, преди да платиш: бележката важи само ако наградата е активна.</p>
+    <!-- OWNER NOTE (Питай бара): the NX0 download link is not confirmed yet, so there is no link here. Once the bar confirms
+         it, replace this paragraph with:
+         <a class="v2-link" href="[the confirmed download link]" target="_blank" rel="noopener">Изтегли NX0<span class="v2-ar" aria-hidden="true">↗</span></a> -->
+    <p class="v2-nx0-get">Изтегли NX0 · <span class="v2-ask">Питай бара</span></p>
+  </div>
+  <a class="v2-nx0-mark" href="https://nx0.ai/" target="_blank" rel="noopener"><img src="../assets/img/nx0-logo.png" alt="NX0" width="640" height="229" loading="lazy" decoding="async"></a>
 </section>
 <!-- [/#13 nx0] -->
 </main>
