@@ -580,8 +580,20 @@ body{margin:0;background:#000}
 .v2-week tr.today .v2-bar span{color:var(--on-brass);font-weight:600}
 /* the now-line passes behind tonight's label, never through it: the label sits above the line on a patch of the bar's
    own brass (4px either side), so the line shows above and below the hours and the hours stay whole */
-.v2-week tr.today .v2-bar span{z-index:1;line-height:1;background:var(--brass-hi);box-shadow:-4px 0 0 var(--brass-hi),4px 0 0 var(--brass-hi)}
+.v2-week tr.today .v2-bar span{z-index:2;line-height:1;background:var(--brass-hi);box-shadow:-4px 0 0 var(--brass-hi),4px 0 0 var(--brass-hi)}
 .v2-nowline{position:absolute;top:-5px;bottom:-5px;left:var(--x);width:2px;background:var(--ivory);box-shadow:0 0 0 2px var(--bg)}
+/* happy hour, 18:00–20:00 every night (#22): the first two of the axis's nine hours, hatched in the bar's own ink (ivory
+   on the dark bars, the on-brass ink on tonight's brass), so no new colour comes in. Stacking: bar, hatch, now-line,
+   label (tonight's label keeps its brass patch above the now-line). The hatch is fine and faint, so the hours read
+   through it */
+.v2-bar::after{content:"";position:absolute;top:0;bottom:0;left:0;width:calc(100% * 2 / 9);pointer-events:none;
+  background:repeating-linear-gradient(-45deg,var(--hh-ink,color-mix(in srgb,var(--ivory) 22%,transparent)) 0 1.5px,transparent 1.5px 6px)}
+.v2-week tr.today .v2-bar{--hh-ink:color-mix(in srgb,var(--on-brass) 28%,transparent)}
+.v2-nowline{z-index:1}
+.v2-bar span{z-index:2}
+/* the key under the week: the same hatch on the dark bar's fill, then the words */
+.v2-hh-key i{display:inline-block;width:24px;height:12px;margin-right:10px;vertical-align:-1px;border-radius:1px;
+  background:repeating-linear-gradient(-45deg,color-mix(in srgb,var(--ivory) 22%,transparent) 0 1.5px,transparent 1.5px 6px),color-mix(in srgb,var(--ivory) 13%,transparent)}
 /* [/#11 hours] */
 
 /* [#11 visit] v2.css "7 · visit": address, sign, contacts */

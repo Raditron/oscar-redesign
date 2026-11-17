@@ -285,7 +285,7 @@ const visit = () => `<section class="v2-visit" id="visit" aria-labelledby="v2-vi
   </div>
   <p class="v2-lede v2-visit-p">${t(C.visitP)}</p>
   <div class="v2-visit-grid">
-    <div class="v2-hours"><div class="v2-hours-h"><h3 class="v2-h3">${t(OC.copy.hoursH)}</h3>${nowLine()}</div>${week()}<p class="v2-dim">${t(C.late)}</p><p class="v2-dim">${t(C.hh)}</p></div>
+    <div class="v2-hours"><div class="v2-hours-h"><h3 class="v2-h3">${t(OC.copy.hoursH)}</h3>${nowLine()}</div>${week()}<p class="v2-dim">${t(C.late)}</p><p class="v2-dim v2-hh-key"><i aria-hidden="true"></i>${t(C.hh)}</p></div>
     <div class="v2-contact">
       <dl class="v2-dl">
         <div><dt>${t(C.phone)}</dt><dd><a class="tnum" href="${OC.info.phoneHref}">${OC.info.phone}</a></dd></div>

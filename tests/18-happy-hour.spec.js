@@ -76,6 +76,39 @@ for (const P of H.PAGES) {
       expect(l.color).not.toBe(gold);
     });
 
+    if (P.kind === 'home') {
+      // #22: the week draws it too. Every night's bar hatches its first two hours of nine (18:00–20:00) in its own ink,
+      // tonight's included; the key under the week carries the same hatch beside the words
+      for (const vp of ['desktop', 'phone']) {
+        test(`the week hatches 18:00–20:00 on every night, with a key (${vp})`, async ({ page }) => {
+          await page.setViewportSize(H.VIEWPORTS[vp]);
+          await H.openPage(page, P.path);
+          const bars = home(page, P.lang).locator('.v2-week .v2-bar');
+          await expect(bars).toHaveCount(7);
+          const marks = await bars.evaluateAll(els => els.map(el => {
+            const a = getComputedStyle(el, '::after');
+            return { bar: el.getBoundingClientRect().width, w: parseFloat(a.width), left: a.left, img: a.backgroundImage, today: !!el.closest('tr.today') };
+          }));
+          for (const m of marks) {
+            expect(m.left).toBe('0px');
+            expect(Math.abs(m.w - m.bar * 2 / 9)).toBeLessThan(1);
+            expect(m.img).toContain('repeating-linear-gradient');
+          }
+          // tonight's hatch is in the on-brass ink, the other nights' in ivory: two inks, both from the bar they sit on
+          if (marks.some(m => m.today)) expect(new Set(marks.map(m => m.img)).size).toBe(2);
+          // the hours stay above the hatch
+          const z = await bars.first().locator('span').evaluate(el => getComputedStyle(el).zIndex);
+          expect(Number(z)).toBeGreaterThan(0);
+          // the key: a hatched swatch, hidden from screen readers, then the words
+          const hh = line(page, P.lang, P.kind);
+          const sw = hh.locator('i[aria-hidden="true"]');
+          await expect(sw).toBeVisible();
+          expect(await sw.evaluate(el => getComputedStyle(el).backgroundImage)).toContain('repeating-linear-gradient');
+          expect(await textOf(hh)).toBe(t.line);
+        });
+      }
+    }
+
     test('at phone width it fits, with no sideways scroll', async ({ page }) => {
       await page.setViewportSize(H.VIEWPORTS.phone);
       await H.openPage(page, P.path);
