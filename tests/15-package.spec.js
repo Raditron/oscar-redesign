@@ -97,6 +97,15 @@ test.describe('the upload folder', () => {
     expect(changed, 'files that differ from the repo').toEqual([]);
   });
 
+  test('the suite is served from the folder under test (the package in the package run)', async ({ request }) => {
+    expect((await request.get('/index.html')).status()).toBe(200);
+    // npm run test:dist: the suite's server answers with the package's files and nothing from the dev side;
+    // npm test: it serves the working tree, dev files included
+    for (const dev of ['/design-system/index.html', '/tools/package.js', '/package.json', '/docs/handoff.html']) {
+      expect((await request.get(dev)).status(), `${dev}`).toBe(built ? 200 : 404);
+    }
+  });
+
   test('every shipped file is referenced by a shipped page or stylesheet, and every reference resolves', async ({ page }) => {
     const srv = await serve(site);
     try {
