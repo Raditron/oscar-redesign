@@ -1,0 +1,356 @@
+/* Oscar Club — Version 2. "Dark room, lit glass" — with the Neon Deco sign over the door.
+   Everything is scoped to .v2 and prefixed v2-, so v1 (tokens.css + components.css) renders exactly as before.
+   Responsive by container query on .site (same as v1): 560 · 860 · 980. Sizes in cqi follow the site's width.
+   Type scale is deliberately steep: captions 13 · body 17 · statements ~58 · hero ~190 (about 14:1, v1 was 5:1).
+   Three kinds of light, three rules:
+     colour  = the drinks (only where a glass is)
+     brass   = paint: the one action per screen, today's hours, the slogan's voice, the gold room
+     neon    = the sign: brand marks only (hero slogan, OC rings, the menu's title) and a drink's name while you point
+               at it, in that drink's colour. Never on UI: no lit buttons, cards, panels or borders. */
+
+.v2{
+  --bg:#000;                 /* the room: pure black, because every cocktail photo is shot on pure black and the glass must
+                                sit in the room with no seam (a warm off-black showed each photo as a dark box under the glow) */
+  --bg-2:#110f0b;            /* the back room (music) */
+  --ivory:#f3ebdd;           /* type · 16.9:1 */
+  --ivory-2:#bdb19c;         /* secondary · 9.2:1 */
+  --ivory-3:#8c8273;         /* captions · 5.1:1 (never under 13px) */
+  --hair:rgba(243,235,221,.14);
+  --hair-2:rgba(243,235,221,.3);
+  --brass:#b19859;           /* lifted: the site gold. Only the gold room uses it as a surface (ink on it 7.1:1) */
+  --brass-hi:#e8c96a;        /* lifted: flyer gold */
+  --on-brass:#0a0908;
+  /* neon: a near-white core inside a warm gas. The halo is light, so it scales with the letters (em) */
+  --tube:#fff6e4;
+  --gas:#e8c96a;             /* lifted: flyer gold */
+  --gas-2:#ec8b00;           /* lifted: the old call button's amber pulse */
+  --neon:0 0 .015em var(--tube),0 0 .07em color-mix(in srgb,var(--gas) 95%,transparent),0 0 .2em color-mix(in srgb,var(--gas) 55%,transparent),0 0 .5em color-mix(in srgb,var(--gas-2) 38%,transparent);
+  --f-disp:"Poiret One","Tenor Sans",ui-sans-serif,sans-serif;     /* Art Deco caps; monoline, so lit it reads as tube lettering */
+  --f-voice:"Cormorant","Cormorant Garamond",Georgia,serif;         /* the slogan's italic, as on their Instagram */
+  --f-body:"Onest",ui-sans-serif,system-ui,sans-serif;               /* Cyrillic-first text face (the Neon Deco pairing) */
+  --g:clamp(16px,4.2cqi,64px);                                       /* side gutter */
+  --col:clamp(12px,2cqi,32px);                                       /* column gap */
+  --ease:cubic-bezier(.2,.7,0,1);
+  position:relative;isolation:isolate;background:var(--bg);color:var(--ivory);
+  font:400 17px/1.55 var(--f-body);font-kerning:normal;overflow-x:clip
+}
+/* film grain: the page is a photograph of a room, not a flat screen */
+.v2::after{content:"";position:absolute;inset:0;z-index:60;pointer-events:none;opacity:.09;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.v2 a{color:inherit}
+.v2 .mark{color:var(--ivory);filter:none}
+.v2 :focus-visible{outline:2px solid var(--brass-hi);outline-offset:3px}
+.v2-dim{color:var(--ivory-3)}
+.v2-ar{display:inline-block;transition:transform .25s var(--ease)}
+.v2-link{color:var(--ivory);text-decoration:none;background:linear-gradient(currentColor,currentColor) 0 100%/100% 1px no-repeat;padding-bottom:2px;display:inline-flex;gap:.35em;align-items:baseline;transition:background-size .3s var(--ease)}
+.v2-link:hover{background-size:0 1px;background-position:100% 100%}
+.v2-link:hover .v2-ar{transform:translateX(3px)}
+
+/* the display face: Art Deco caps, one weight, tracked open (it is drawn in single strokes) */
+.v2-caps{font-family:var(--f-disp);font-weight:400;text-transform:uppercase}
+/* a lit sign. Only brand marks get this class (rule: neon never lights UI) */
+.v2-neon{color:var(--tube);text-shadow:var(--neon)}
+.v2 .mark.lit{color:var(--tube);filter:drop-shadow(0 0 1px var(--tube)) drop-shadow(0 0 5px color-mix(in srgb,var(--gas) 75%,transparent)) drop-shadow(0 0 16px color-mix(in srgb,var(--gas-2) 40%,transparent))}
+
+/* type roles */
+.v2-h2{font:400 clamp(26px,3.5cqi,52px)/1.08 var(--f-disp);text-transform:uppercase;letter-spacing:.03em;text-wrap:balance;max-width:20ch}
+.v2-h3{font:400 clamp(19px,1.6cqi,23px)/1.2 var(--f-disp);text-transform:uppercase;letter-spacing:.1em}
+.v2-lede{font-size:clamp(17px,1.35cqi,20px);line-height:1.5;color:var(--ivory-2);max-width:40ch;text-wrap:pretty}
+
+/* the one button: square, brass paint, says what happens. Not lit: neon is for the sign, not the controls */
+/* .v2 prefix: `.v2 a` / `.site a {color:inherit}` outrank a lone class and turned the label ivory on gold (~1.5:1) */
+.v2 .v2-btn{display:inline-flex;align-items:center;gap:12px;min-height:58px;padding:0 26px;background:var(--brass-hi);color:var(--on-brass);font:600 16px/1 var(--f-body);text-decoration:none;border-radius:2px;transition:background-color .2s}
+.v2-btn:hover{background:var(--ivory)}
+.v2-btn:hover .v2-ar{transform:translateX(4px)}
+.v2-btn:active{transform:translateY(1px)}
+
+/* status */
+.v2-now{display:inline-flex;align-items:baseline;gap:8px;font-size:14px;color:var(--ivory-2);white-space:nowrap}
+.v2-now b{font-weight:600;color:var(--ivory)}
+.v2-dot{width:7px;height:7px;border-radius:50%;background:var(--c);flex:none;align-self:center;position:relative}
+.v2-now[data-state="open"]{--c:var(--open)}.v2-now[data-state="soon"]{--c:var(--soon)}.v2-now[data-state="closed"]{--c:var(--closed)}
+
+/* ================= header ================= */
+/* home: not pinned, it scrolls away so the room gets the whole screen. menu: pinned, so the nav follows a long list (issue #6) */
+.v2-hdr{position:relative;z-index:30;background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.v2-hdr.is-pinned{position:sticky;top:var(--stick-top,0px)}
+.v2-hdr-in{display:flex;align-items:center;gap:clamp(16px,2.6cqi,40px);min-height:64px;padding-inline:var(--g);border-bottom:1px solid var(--hair)}
+.v2-brand{display:flex;min-height:44px;align-items:center}
+.v2-brand .mark{width:68px}
+.v2-nav{display:none;gap:clamp(16px,2cqi,30px)}
+.v2-nav a{font:500 14.5px/1 var(--f-body);color:var(--ivory-2);text-decoration:none;padding-block:14px;transition:color .15s}
+.v2-nav a:hover,.v2-nav a[aria-current="page"]{color:var(--ivory)}
+.v2-hdr-end{margin-left:auto;display:flex;align-items:center;gap:clamp(12px,2cqi,28px)}
+.v2-hdr .v2-now .det{display:none}
+.v2-tel{display:none;font:500 14.5px/1 var(--f-body);text-decoration:none;color:var(--ivory)}
+.v2-tel:hover{color:var(--brass-hi)}
+.v2-lang{display:inline-flex;align-items:center;font:600 12.5px/1 var(--f-body);letter-spacing:.06em;color:var(--ivory-3)}
+.v2-lang button{background:none;border:0;min-width:30px;min-height:44px;padding:0 4px;color:var(--ivory-3);font:inherit;letter-spacing:inherit;cursor:pointer}
+.v2-lang button:hover{color:var(--ivory-2)}
+.v2-lang button[aria-pressed="true"]{color:var(--ivory)}
+@container site (min-width:560px){.v2-hdr .v2-now .det{display:inline}}
+@container site (min-width:900px){.v2-nav{display:flex}}
+@container site (min-width:1100px){.v2-tel{display:inline}}
+
+/* ================= 1 · hero: the sign over the door ================= */
+/* phone first: a column — the sign, the glass, then the call button. Overlaid on a narrow screen the glass cut through
+   "YOURSELF" and the button; nothing may cover the text or the one action (Fitts's Law: a target you can see whole) */
+.v2-hero{position:relative;padding:clamp(28px,4cqi,64px) var(--g) 0;isolation:isolate;display:flex;flex-direction:column}
+.v2-hero-h{order:1}.v2-hero-act{order:3}.v2-slate{order:4}
+.v2-hero-h{position:relative;z-index:2;font:400 clamp(44px,13cqi,220px)/.9 var(--f-disp);text-transform:uppercase;letter-spacing:.02em;margin-left:-.04em}
+.v2-hero-h span{display:block}
+/* the script tube: the slogan's own italic, lit in gold gas */
+.v2-hero-h .l3{font:italic 500 .58em/1 var(--f-voice);text-transform:none;letter-spacing:0;text-align:left;margin-top:.12em;color:var(--tube);text-shadow:0 0 .015em var(--tube),0 0 .07em var(--gas),0 0 .2em color-mix(in srgb,var(--gas) 70%,transparent),0 0 .55em color-mix(in srgb,var(--gas-2) 50%,transparent)}
+/* the glass: the only colour on the first screen. In the flow on a phone, beside the sign from 860px */
+.v2-hero-glass{order:2;position:relative;z-index:1;align-self:center;width:min(84%,460px);aspect-ratio:1;margin-top:clamp(16px,5cqi,40px);pointer-events:none}
+.v2-hero-glass::before{content:"";position:absolute;inset:-6% 0 0;background:radial-gradient(closest-side,color-mix(in srgb,var(--drink) 42%,transparent),transparent 72%);filter:blur(24px)}
+.v2-hero-glass img{position:relative;width:100%;height:100%;object-fit:contain;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(ellipse 58% 60% at 50% 54%,#000 58%,transparent 100%);mask-image:radial-gradient(ellipse 58% 60% at 50% 54%,#000 58%,transparent 100%)}
+.v2-hero-act{position:relative;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:16px 28px;margin-top:clamp(32px,4.5cqi,72px)}
+.v2-hero-alt{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;font-size:15px;color:var(--ivory-3)}
+.v2-slate{position:relative;z-index:2;display:grid;gap:12px;margin-top:clamp(48px,7cqi,112px);padding-block:20px 22px;border-top:1px solid var(--hair);font-size:14px;color:var(--ivory-2)}
+.v2-slate li{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.v2-slate b{font:600 15px/1 var(--f-body);color:var(--ivory)}
+.v2-slate img{width:28px;height:28px}
+@container site (min-width:860px){
+  .v2-slate{display:flex;flex-wrap:wrap;gap:12px 0}
+  .v2-slate li{padding-right:28px;margin-right:28px;border-right:1px solid var(--hair)}
+  .v2-slate li:last-child{border:0;margin-right:0;padding-right:0}
+  .v2-hero{display:block}
+  .v2-hero-act{max-width:54cqi}   /* the phone and Instagram links wrap under the button before they reach the glass */
+  /* wide enough for the glass to stand beside the headline without touching it (YOURSELF ends near 56cqi, the glass starts at 57cqi) */
+  .v2-hero-glass{position:absolute;right:clamp(-70px,-5cqi,-20px);top:clamp(40px,4cqi,80px);width:clamp(250px,48cqi,700px);margin:0}
+}
+
+/* ================= 2 · one sentence, in the voice (unlit) =================
+   The story is spoken, so it is set in the voice face: Cormorant upright, ivory, running into the slogan in the same
+   family's italic, in brass. One hand from the first word to the motto (rule 4). Onest stays for reading and the UI;
+   Poiret caps stay for the sign and headings, because thin deco caps can't carry 40 words. */
+/* on the 8pt scale (tokens.css): one section gap above and below, 64–128px. Law of Proximity: the sentence sits closer
+   to its own date/founder line (48px) than to the sections around it */
+.v2-say-sec{padding:var(--gap-section) var(--g)}
+/* the sign's face (Poiret One, as on "ALLOW YOURSELF"), unlit: no glow, plain ivory. The motto keeps its italic voice */
+/* then | now, two short columns centred on the page, and the motto centred under both */
+.v2-say-sec{display:grid;justify-items:center}
+.v2-say{display:grid;grid-template-columns:minmax(0,22ch);justify-content:center;gap:var(--s-5) clamp(32px,6cqi,96px);font:400 clamp(21px,2.3cqi,34px)/1.25 var(--f-disp);letter-spacing:.01em;color:var(--ivory)}
+.v2-say p{text-wrap:pretty}
+@container site (min-width:560px){.v2-say{grid-template-columns:repeat(2,minmax(0,16ch))}}
+.v2-say-motto{grid-column:1/-1;justify-self:center;margin-top:var(--s-3);font:italic 500 1.2em/1.1 var(--f-voice);letter-spacing:0;color:var(--brass-hi);text-align:center}
+.v2-say-foot{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 32px;align-items:center;margin-top:var(--s-7);font-size:14px;color:var(--ivory-3)}
+.v2-say-foot span{display:inline-flex;align-items:center;gap:10px}
+.v2-say-foot img{width:36px;height:36px}
+
+/* ================= 3 · the signatures, one at a time (runs by itself; timing in site-v2.js) ================= */
+.v2-feat{--cap:clamp(48px,10cqi,170px);display:grid;gap:clamp(24px,3cqi,40px);padding:0 var(--g) clamp(80px,9cqi,150px);align-items:end}
+/* every drink sits in the same grid cell, so the section never changes height; only opacity animates */
+.v2-feat-imgs,.v2-feat-stack{display:grid}
+/* the name sits under the glass, not on it (over the photo it was ivory on pale liquid and unreadable) */
+.v2-feat-imgs{margin:0 calc(var(--g) * -1) calc(var(--cap) * .8 + 12px)}
+.v2-feat-img,.v2-feat-slide{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .4s var(--ease),visibility 0s .4s}
+.v2-feat-img.on,.v2-feat-slide.on{opacity:1;visibility:visible;transition:opacity .4s var(--ease)}
+.v2-feat-img{position:relative;margin:0;aspect-ratio:1}
+.v2-feat-img::before{content:"";position:absolute;inset:0;background:radial-gradient(48% 46% at 50% 62%,color-mix(in srgb,var(--drink) 30%,transparent),transparent 74%),radial-gradient(42% 8% at 50% 92%,color-mix(in srgb,var(--drink) 34%,transparent),transparent)}
+.v2-feat-img img{position:relative;width:100%;height:100%;object-fit:contain;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(ellipse 60% 64% at 50% 52%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 60% 64% at 50% 52%,#000 62%,transparent 100%)}
+.v2-feat-img figcaption{position:absolute;left:var(--g);top:calc(100% + 12px);font:400 var(--cap)/.8 var(--f-disp);white-space:nowrap;text-transform:uppercase;letter-spacing:.02em;color:var(--ivory);pointer-events:none}
+.v2-feat-txt{display:grid;gap:20px;justify-items:start}
+.v2-feat-stack{width:100%}
+.v2-feat-slide{display:grid;gap:20px;align-content:start}
+/* the slogan, one per drink: set like the rest of the menu (Poiret One caps, ivory), so the carousel and the index
+   below read as one card. Not neon: neon stays on the sign */
+.v2-feat-slogan{font:400 clamp(26px,3.5cqi,52px)/1.08 var(--f-disp);text-transform:uppercase;letter-spacing:.03em;color:var(--ivory);text-wrap:balance;max-width:20ch}
+.v2-feat-slide .v2-lede b{font-weight:500;color:var(--ivory)}
+.v2-feat-meta{display:flex;gap:20px;align-items:baseline;padding-top:16px;margin-top:8px;border-top:1px solid var(--hair);color:var(--ivory-3);font-size:14px;width:100%}
+.v2-feat-meta b{margin-left:auto;font:400 clamp(30px,3.2cqi,48px)/1 var(--f-disp);letter-spacing:.02em;color:var(--ivory)}
+@container site (min-width:860px){
+  .v2-feat{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
+  .v2-feat-imgs{grid-column:1/8;margin:0 0 calc(var(--cap) * .8 + 12px) calc(var(--g) * -1)}
+  .v2-feat-txt{grid-column:8/13;padding-bottom:9cqi}
+}
+/* controls: plain type, no boxes or pills. 48px targets (Fitts), ivory like the rest of the UI; gold stays on the call button */
+.v2-car{position:relative;display:flex;align-items:center;width:100%;padding-top:6px;margin-top:-8px}
+.v2-car button{display:inline-grid;place-items:center;min-width:48px;min-height:48px;padding:0;background:none;border:0;color:var(--ivory-2);font:400 22px/1 var(--f-body);cursor:pointer;transition:color .15s}
+.v2-car button:hover{color:var(--ivory)}
+.v2-car [data-v2-car="prev"]{margin-left:-14px}
+.v2-car-n{padding-inline:4px;font-size:14px;color:var(--ivory-3)}
+.v2-car-n b{font-weight:500;color:var(--ivory)}
+.v2 .v2-car .v2-car-toggle{margin-left:auto;min-width:0;padding-inline:4px;font:500 14.5px/1 var(--f-body);text-decoration:underline;text-decoration-color:var(--hair-2);text-underline-offset:4px}
+/* the time to the next drink, as a hairline over the controls that fills (Goal-Gradient) */
+.v2-car-bar{position:absolute;inset:0 0 auto;height:1px;overflow:hidden}
+.v2-car-bar i{display:block;height:100%;background:var(--ivory-3);transform:scaleX(0);transform-origin:0 50%}
+.v2-feat[data-playing="false"] .v2-car-bar i{transform:scaleX(0)}
+.v2-feat-imgs{touch-action:pan-y}
+@keyframes v2-fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@media (prefers-reduced-motion:reduce){.v2-feat-img,.v2-feat-slide{transition:none}}
+
+/* ================= 4 · the index: point at a name and it lights in its own colour ================= */
+.v2-idx{padding:0 var(--g) clamp(104px,13cqi,220px)}
+.v2-idx-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 24px;padding-bottom:18px;border-bottom:1px solid var(--hair-2)}
+.v2-hint{display:none;color:var(--ivory-3);font-size:14px}
+.v2-idx-head .v2-link{margin-left:auto;font-size:15px}
+.v2-idx-grid{display:grid}
+.v2-row{display:grid;grid-template-columns:52px minmax(0,1fr) auto;column-gap:14px;align-items:center;padding-block:14px;border-bottom:1px solid var(--hair)}
+.v2-row .th{grid-row:1/3;width:52px;height:52px;object-fit:cover;object-position:50% 55%;border-radius:50%;background:#000;box-shadow:0 0 18px -2px color-mix(in srgb,var(--drink) 55%,transparent)}
+.v2-row .nm{grid-column:2;font:400 clamp(21px,2.8cqi,42px)/1.08 var(--f-disp);text-transform:uppercase;letter-spacing:.04em;transition:color .25s,text-shadow .25s,transform .45s var(--ease)}
+.v2-row .ing{grid-column:2/4;font-size:14px;line-height:1.4;color:var(--ivory-3);margin-top:4px}
+/* the base spirit, first word of every recipe, one step brighter: scannable like a printed card */
+.v2-row .ing b{font-weight:500;color:var(--ivory)}
+.v2-row .ml{display:none}
+.v2-row .pr{grid-column:3;grid-row:1;font:500 clamp(16px,1.4cqi,19px)/1 var(--f-body)}
+.v2-prev{display:none}
+@container site (min-width:860px){
+  .v2-hint{display:block}
+  .v2-idx-grid{grid-template-columns:minmax(0,7fr) minmax(0,5fr);column-gap:var(--col)}
+  .v2-row{grid-template-columns:minmax(0,1fr) auto 4.5em;padding-block:16px 18px;cursor:default}
+  .v2-row .th{display:none}
+  .v2-row .nm{grid-column:1;grid-row:1}
+  .v2-row .ing{grid-column:1;grid-row:2}
+  .v2-row .ml{display:block;grid-column:2;grid-row:1;font-size:14px;color:var(--ivory-3);margin-right:24px}
+  .v2-row .pr{grid-column:3;text-align:right}
+  .v2-row:not(.on) .nm{color:var(--ivory-2)}
+  /* the drink's name becomes a tube of its own colour: a pale core inside the drink's gas */
+  .v2-row.on .nm{color:color-mix(in srgb,var(--drink) 45%,#fff);text-shadow:0 0 .02em #fff,0 0 .09em var(--drink),0 0 .28em color-mix(in srgb,var(--drink) 65%,transparent),0 0 .7em color-mix(in srgb,var(--drink) 35%,transparent);transform:translateX(14px)}
+  .v2-prev{display:block;position:sticky;top:calc(var(--stick-top,0px) + 24px);align-self:start;aspect-ratio:1;margin-top:24px}
+  .v2-prev::before{content:"";position:absolute;inset:0;background:radial-gradient(46% 46% at 50% 60%,color-mix(in srgb,var(--drink) 34%,transparent),transparent 74%);transition:background .3s}
+  .v2-prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:lighten;opacity:0;transform:translateY(18px) scale(.96);transition:opacity .35s var(--ease),transform .6s var(--ease);-webkit-mask-image:radial-gradient(ellipse 60% 62% at 50% 52%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 60% 62% at 50% 52%,#000 60%,transparent 100%)}
+  .v2-prev img.on{opacity:1;transform:none}
+}
+
+/* ================= NX0: the partner's sticker on the door (menu page only) ================= */
+/* a strip between two hairlines, the logo leading. No box around it (rule 5) */
+.v2-nx0{display:grid;gap:clamp(28px,4cqi,48px);align-items:center;margin:0 var(--g) var(--gap-section);padding-block:clamp(40px,5cqi,72px);border-block:1px solid var(--hair)}
+.v2-nx0-txt{display:grid;gap:16px;justify-items:start;max-width:46ch}
+.v2-nx0-rule{font-size:14px;line-height:1.45;color:var(--ivory-3)}
+/* NX0's own logo from nx0.ai, unaltered: a white wordmark made for dark grounds, so it sits on the black as it is.
+   Large and first, so it is the first thing seen in the strip */
+.v2 .v2-nx0-mark{order:-1;justify-self:start;display:block;width:clamp(180px,24cqi,340px);text-decoration:none;transition:opacity .2s}
+.v2-nx0-mark img{display:block;width:100%;height:auto}
+.v2 .v2-nx0-mark:hover{opacity:.82}
+@container site (min-width:760px){
+  .v2-nx0{grid-template-columns:auto minmax(0,1fr);column-gap:clamp(40px,6cqi,112px)}
+}
+/* the v1 menu body ends on its own section padding; the strip keeps its side gutter there too */
+.v2-v1menu + .v2-nx0{margin-top:var(--gap-section)}
+
+/* ================= 5 · music: a gig bill ================= */
+.v2-music{background:var(--bg-2);padding:clamp(80px,10cqi,160px) var(--g)}
+.v2-music-h{max-width:13ch;font-size:clamp(32px,5.6cqi,92px);line-height:1;letter-spacing:.02em}
+.v2-music-grid{display:grid;gap:clamp(32px,4cqi,64px);margin-top:clamp(40px,5cqi,80px)}
+/* crop to the chandelier and the decks: the flyer's baked-in text stays outside the frame */
+.v2-music-img{position:relative;overflow:hidden;aspect-ratio:480/300;margin:0 calc(var(--g) * -1)}
+.v2-music-img img{position:absolute;left:0;top:-58%;width:100%;height:auto;max-width:none}
+.v2-music-txt{display:grid;gap:clamp(28px,3cqi,40px);align-content:start;justify-items:start}
+.v2-gigs{width:100%;border-top:1px solid var(--hair-2)}
+.v2-gigs li{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:clamp(16px,2.4cqi,36px);align-items:baseline;padding-block:18px;border-bottom:1px solid var(--hair)}
+.v2-gigs .d{grid-row:1/3;font:400 clamp(44px,6.2cqi,96px)/.9 var(--f-disp);letter-spacing:.01em}
+.v2-gigs .n{font-weight:500;line-height:1.35}
+.v2-gigs .f{color:var(--ivory-3);font-size:14px}
+@container site (min-width:860px){
+  .v2-music-grid{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
+  .v2-music-img{grid-column:1/7;margin:0 0 0 calc(var(--g) * -1)}
+  .v2-music-txt{grid-column:8/13}
+}
+
+/* ================= 6 · events: the gold room, the one room with the house lights on (no neon here) ================= */
+.v2-events{background:var(--brass);color:var(--on-brass);padding:clamp(80px,11cqi,180px) var(--g);position:relative}
+.v2-ev-h{font:400 clamp(36px,7cqi,118px)/.98 var(--f-disp);text-transform:uppercase;letter-spacing:.01em;max-width:13ch;-webkit-text-stroke:.012em currentColor}   /* a hair of stroke so the single-line caps hold up on a bright ground */
+.v2-ev-h span{display:block;font:italic 500 1.08em/.95 var(--f-voice);text-transform:none;letter-spacing:-.01em;margin-top:.1em;-webkit-text-stroke:0}
+.v2-ev-cols{display:grid;gap:32px;margin-top:clamp(48px,6cqi,96px);padding-top:24px;border-top:1px solid rgba(10,9,8,.3)}
+.v2-ev-p{max-width:42ch;line-height:1.5;color:rgba(10,9,8,.82)}
+.v2-ev-types{display:grid;gap:6px;font:400 clamp(18px,1.6cqi,22px)/1.25 var(--f-disp);text-transform:uppercase;letter-spacing:.08em;-webkit-text-stroke:.015em currentColor}
+.v2-ev-contact{display:grid;gap:10px;justify-items:start;align-content:start}
+.v2-ev-mail{font:600 clamp(18px,1.9cqi,28px)/1.2 var(--f-body);letter-spacing:-.02em;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:.22em;overflow-wrap:anywhere}
+.v2-ev-mail:hover{text-decoration-thickness:4px}
+.v2-ev-tel{font-weight:600;text-decoration:none;border-bottom:1px solid currentColor}
+.v2-events :focus-visible{outline-color:var(--on-brass)}
+@container site (min-width:860px){
+  .v2-ev-cols{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
+  .v2-ev-p{grid-column:1/5}.v2-ev-types{grid-column:5/8;padding-left:var(--col)}.v2-ev-contact{grid-column:8/13}
+}
+
+/* ================= 7 · visit ================= */
+.v2-visit{padding:clamp(96px,12cqi,200px) var(--g) clamp(80px,9cqi,140px)}
+.v2-visit-top{display:grid;gap:24px;align-items:end}
+.v2-addr{font:400 clamp(34px,6.2cqi,108px)/.95 var(--f-disp);text-transform:uppercase;letter-spacing:.02em;margin-left:-.04em}
+.v2-addr span{display:block}
+.v2-addr span:last-child{font-size:2.6em;line-height:.85;letter-spacing:0}
+.v2-sign{position:relative;aspect-ratio:16/9;overflow:hidden;margin:0;max-width:560px}
+.v2-sign img{width:100%;height:100%;object-fit:cover;object-position:50% 0}
+.v2-visit-p{margin-top:clamp(20px,2.4cqi,36px)}
+.v2-visit-grid{display:grid;gap:56px;margin-top:clamp(56px,7cqi,112px)}
+.v2-hours-h{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between;margin-bottom:24px}
+.v2-hours>.v2-dim{margin-top:16px;font-size:14px}
+@container site (min-width:860px){
+  .v2-visit-top{grid-template-columns:minmax(0,1fr) minmax(0,.62fr)}
+  .v2-visit-grid{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
+  .v2-hours{grid-column:1/8}.v2-contact{grid-column:9/13}
+}
+/* the week as a picture: every night starts at 18:00, the bars show how late it runs */
+.v2-week-wrap{position:relative;padding-top:26px}
+.v2-axis{position:absolute;top:0;left:calc(7.5em + 16px);right:0;height:18px;font-size:12.5px;color:var(--ivory-3);font-variant-numeric:tabular-nums}
+.v2-axis span{position:absolute;transform:translateX(-50%)}
+.v2-axis span:first-child{transform:none}.v2-axis span:last-child{transform:translateX(-100%)}
+.v2-week{width:100%;border-collapse:collapse}
+.v2-week th{width:7.5em;padding:6px 16px 6px 0;text-align:left;font-weight:500;font-size:14.5px;color:var(--ivory-2);white-space:nowrap}
+.v2-week td{padding:6px 0}
+.v2-bar{position:relative;height:30px;background:repeating-linear-gradient(90deg,var(--hair) 0 1px,transparent 1px calc(100% / 9))}
+.v2-bar i{position:absolute;top:0;bottom:0;left:var(--a);width:var(--w);background:color-mix(in srgb,var(--ivory) 13%,transparent);border-radius:1px}
+.v2-bar span{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13.5px;color:var(--ivory);white-space:nowrap}
+.v2-week tr.today th{color:var(--ivory);font-weight:600}
+.v2-week tr.today .v2-bar i{background:var(--brass-hi)}
+.v2-week tr.today .v2-bar span{color:var(--on-brass);font-weight:600}
+.v2-nowline{position:absolute;top:-5px;bottom:-5px;left:var(--x);width:2px;background:var(--ivory);box-shadow:0 0 0 2px var(--bg)}
+.v2-dl{display:grid;border-top:1px solid var(--hair-2)}
+.v2-dl div{display:grid;grid-template-columns:7em minmax(0,1fr);gap:16px;padding-block:13px;border-bottom:1px solid var(--hair)}
+.v2-dl dt{font-size:14px;color:var(--ivory-3)}
+.v2-dl dd{margin:0;overflow-wrap:anywhere}
+.v2-dl a{text-decoration:none;background:linear-gradient(var(--hair-2),var(--hair-2)) 0 100%/100% 1px no-repeat;padding-bottom:1px}
+.v2-dl a:hover{background-image:linear-gradient(var(--ivory),var(--ivory))}
+.v2-visit-act{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:28px;font-size:14px}
+
+/* ================= footer: the sign you leave under ================= */
+.v2-ftr{padding:clamp(88px,11cqi,180px) var(--g) 28px;border-top:1px solid var(--hair)}
+.v2-ftr-sign{display:grid;gap:clamp(20px,2.4cqi,36px);justify-items:start}
+.v2-ftr-sign .mark{width:clamp(220px,38cqi,540px)}
+.v2-ftr-sign .mark text{font-size:15px}
+.v2-ftr-sign p{font:italic 500 clamp(24px,2.6cqi,40px)/1.1 var(--f-voice);color:var(--brass-hi)}
+.v2-ftr-row{display:grid;gap:20px;margin-top:clamp(56px,7cqi,112px);padding-top:24px;border-top:1px solid var(--hair);font-size:14px;color:var(--ivory-2)}
+.v2-ftr-row ul{display:grid;gap:4px}
+.v2-ftr-row a{text-decoration:none}.v2-ftr-row a:hover{color:var(--ivory)}
+@container site (min-width:860px){.v2-ftr-row{grid-template-columns:1fr auto;align-items:end;column-gap:clamp(32px,6cqi,96px)}}
+.v2-abar{position:sticky;bottom:0;z-index:30;display:grid;grid-template-columns:1.5fr 1fr 1fr;background:var(--bg);border-top:1px solid var(--hair-2);padding-bottom:env(safe-area-inset-bottom,0px)}
+.v2-abar a{display:flex;align-items:center;justify-content:center;gap:8px;min-height:60px;font:600 14px/1 var(--f-body);color:var(--ivory);text-decoration:none}
+.v2-abar a+a{border-left:1px solid var(--hair)}
+.v2-abar a.call{background:var(--brass-hi);color:var(--on-brass)}
+@container site (min-width:900px){.v2-abar{display:none}}
+
+/* ================= menu page: the v1 menu (components.css, Neon Deco) inside the v2 chrome ================= */
+/* same pure-black room as the rest of v2, so there is no seam under the header or above the footer */
+.v2 .v2-v1menu{--ink-0:#000}
+/* the menu keeps the v2 header pinned (64px; v1's header was 68px), so the category bar sticks under it */
+.v2-v1menu .catnav{top:calc(var(--stick-top,0px) + 64px)}
+.v2-v1menu .catnav ~ * [id],.v2-v1menu .catnav ~ [id]{scroll-margin-top:calc(var(--stick-top,0px) + 144px)}
+/* home anchors no longer need to clear a pinned header */
+.v2 [id]{scroll-margin-top:calc(var(--stick-top,0px) + 24px)}
+
+/* ================= motion: two places, both with a reason ================= */
+@media (prefers-reduced-motion:no-preference){
+  /* 1 · the sign switches on: each tube catches at its own moment, the glass rises into its light */
+  .site.intro .v2-hero-h span{animation:v2-flicker 1.25s linear backwards}
+  .site.intro .v2-hero-h .l2{animation-delay:140ms}
+  .site.intro .v2-hero-h .l3{animation-delay:380ms}
+  .site.intro .v2-hero-glass{animation:v2-glass 1.5s var(--ease) backwards 120ms}
+  .site.intro :is(.v2-hero-act,.v2-slate){animation:v2-fade .9s ease backwards 450ms}
+  /* 2 · the index (hover, above). The open dot keeps its slow ping: it's live data, not decoration */
+  .v2-now[data-state="open"] .v2-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid var(--open);opacity:0;animation:oc-ping 2.4s var(--ease) infinite}
+}
+/* an unlit tube is still visible glass: it dims to .16, never to nothing */
+@keyframes v2-flicker{0%,7%{opacity:.16;text-shadow:none}8%{opacity:1}11%{opacity:.3;text-shadow:none}13%,30%{opacity:1}31%{opacity:.45}33%,100%{opacity:1}}
+@keyframes v2-glass{from{opacity:0;transform:translateY(48px) scale(.95)}to{opacity:1;transform:none}}
+@keyframes v2-fade{from{opacity:0}to{opacity:1}}
+
+/* ================= rationale screen (prototype chrome, light) ================= */
+.v2doc-prompt{margin:0;padding:20px 22px;border-radius:14px;background:#1f1a14;color:#f3ebdd;font:500 12.5px/1.65 var(--mono);white-space:pre-wrap;overflow-x:auto}
+.v2doc-prompt b{color:#e8c96a;font-weight:600}
+.v2doc-cta{display:inline-flex;align-items:center;gap:8px;margin-top:4px;padding:10px 16px;border-radius:999px;background:var(--page-ink);color:#fff;font:600 14px var(--font);text-decoration:none}
+.v2doc-cta:hover{background:var(--accent)}
+.v2doc-rules{display:grid;gap:10px;counter-reset:r;margin:0;padding:0;list-style:none}
+.v2doc-rules li{counter-increment:r;display:grid;grid-template-columns:28px 1fr;gap:10px;padding:14px 16px;background:var(--card);border:1px solid var(--page-line);border-radius:12px}
+.v2doc-rules li::before{content:counter(r);font:700 13px/1.5 var(--mono);color:var(--accent)}

@@ -1,0 +1,56 @@
+<title>Oscar Club Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&family=Poiret+One&family=Onest:wght@400;500;600;700&family=Philosopher:ital,wght@0,400;0,700;1,400;1,700&family=Ubuntu+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@500&text=oscarlub&display=swap">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@300&display=swap">
+<link rel="stylesheet" href="prototype.css">
+<link rel="stylesheet" href="v2/v2.css?v=7">
+
+<div class="wrap">
+  <header class="intro">
+    <div>
+      <p class="kicker" id="introKicker"></p>
+      <h1 id="introH1"></h1>
+      <p class="lede" id="introLede"></p>
+    </div>
+    <p class="data-note">Prototype, not the live site · real content from <b>oscarclubsofia.com</b>, Google Maps and Instagram · URLs stay exactly as they are today</p>
+  </header>
+
+  <div class="toolbar" id="toolbar" role="toolbar" aria-label="Prototype controls">
+    <div class="jump">
+      <button type="button" class="stepbtn" id="jPrev" aria-label="Previous screen"></button>
+      <label class="vh" for="jump">Jump to screen</label>
+      <select id="jump"></select>
+      <button type="button" class="stepbtn" id="jNext" aria-label="Next screen"></button>
+    </div>
+    <span class="tb-sep" aria-hidden="true"></span>
+    <div class="tb-group" id="verWrap"><span class="tb-label">Version</span><div class="seg" id="ver" role="group" aria-label="Design version"></div></div>
+    <div class="tb-group" id="styleWrap"><span class="tb-label">Style</span><div class="tb-group" id="styleChips"></div></div>
+    <div class="tb-group" id="vpWrap"><span class="tb-label">Width</span><div class="seg" id="vp" role="group" aria-label="Preview width"></div></div>
+    <label class="switch" for="annotToggle">Annotations <input type="checkbox" id="annotToggle"></label>
+  </div>
+
+  <div id="docOnly" hidden></div>
+
+  <div class="frame" id="frame" hidden>
+    <div class="chrome"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="url" id="url"></div><span class="tag">real content · live hours</span></div>
+    <div class="vp"><div class="site" id="site" data-style="marquee"></div></div>
+  </div>
+
+  <section class="doc" id="doc" aria-label="Design rationale"></section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script src="site.js"></script>
+<script src="core.js"></script>
+<script src="screens/research.js"></script>
+<script src="screens/foundations.js"></script>
+<script src="screens/pages.js"></script>
+<script src="v2/site-v2.js?v=7"></script>
+<script src="screens/v2.js"></script>
+<script>PX.boot()</script>
