@@ -55,7 +55,6 @@ const C = {
   prevDrink: { bg: 'Предишен коктейл', en: 'Previous cocktail' }, nextDrink: { bg: 'Следващ коктейл', en: 'Next cocktail' },
   pause: { bg: 'Пауза', en: 'Pause' }, play: { bg: 'Пусни', en: 'Play' }, of: { bg: 'от', en: 'of' },
   idxH: { bg: 'Всички 13 авторски', en: 'All 13 of our own' },
-  idxHint: { bg: 'Посочи име и чашата светва', en: 'Point at a name and the glass lights up' },
   fullMenu: { bg: 'Цялото меню', en: 'The full menu' },
   musicH: { bg: 'В събота често има DJ.', en: 'Saturdays often have a DJ.' },
   musicP: { bg: 'Програмата първо излиза в Instagram. Някои вечери има вход, 10–15 €, и винаги го пишем в обявата.', en: 'The line-up goes up on Instagram first. Some nights have an entry fee, €10–15, and it’s always in the post.' },
@@ -213,7 +212,7 @@ const carousel = (site, feat) => {
 const index = () => {
   const list = ['tarator', 'machree', 'blue', 'kissme', 'eden', 'spraoi', 'better', 'french69', 'mucho', 'soju', 'cherry', 'tropilita', 'fridge'].map(ck);
   return `<section class="v2-idx" aria-labelledby="v2-idx-h">
-  <div class="v2-idx-head"><h2 class="v2-h3" id="v2-idx-h">${t(C.idxH)}</h2><p class="v2-hint">${t(C.idxHint)}</p><a class="v2-link" href="${href('menu')}">${t(C.fullMenu)}${arrow}</a></div>
+  <div class="v2-idx-head"><h2 class="v2-h3" id="v2-idx-h">${t(C.idxH)}</h2><a class="v2-link" href="${href('menu')}">${t(C.fullMenu)}${arrow}</a></div>
   <div class="v2-idx-grid">
     <ol class="v2-list">${list.map((c, i) => `<li class="v2-row${i ? '' : ' on'}" data-v2-pick="${c.id}" style="--drink:var(--d-${c.drink})">
       <img class="th" src="${src(c)}" alt="" width="56" height="56" loading="lazy"><span class="nm">${esc(c.name)}</span><span class="ing">${ing(c)}</span><span class="ml tnum">${c.ml} ml</span><span class="pr tnum">${price(c.price)}</span></li>`).join('')}</ol>
