@@ -1,6 +1,6 @@
 // #18 Happy hour, 18:00–20:00. The old site never mentions it, so only the time is stated: no days, drinks or prices
 // of our own making, and (#21) no "Питай бара" / "Ask the bar" marker. A guest finds it where the hours are: on home
-// under the week of opening hours, on the menu under the title and the open-now pill. Both languages, with and without
+// under the week of opening hours, on the menu under the title. Both languages, with and without
 // JavaScript, at phone width.
 // #24: the bar has since confirmed 50% off, every night, so the line now says "−50%" too, set large. Its words and its
 // look are tested in 24-happy-hour-off.spec.js; this file keeps where it sits, the hatch on the week, phone, no-JS.
@@ -43,7 +43,7 @@ for (const P of H.PAGES) {
         expect(l.y, 'below the week on screen').toBeGreaterThanOrEqual(w.y + w.height);
       });
     } else {
-      test('sits under the title and the open-now pill, before the first category', async ({ page }) => {
+      test('sits under the title, before the first category', async ({ page }) => {
         await H.openPage(page, P.path);
         const title = page.getByRole('heading', { level: 1, name: t.menu });
         const [h, l] = [await title.boundingBox(), await line(page, P.lang, P.kind).boundingBox()];

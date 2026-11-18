@@ -1,4 +1,4 @@
-// #12 Menu page, first slice: pinned header, menu title + status, category bar (sticky, scroll-spy, landings),
+// #12 Menu page, first slice: pinned header, menu title, category bar (sticky, scroll-spy, landings),
 // signature cocktails with the base-spirit filter. Both languages.
 const { test, expect } = require('@playwright/test');
 const H = require('./helpers');
@@ -7,12 +7,12 @@ const T = {
   bg: {
     title: 'Меню', euro: 'Всички цени са в евро', cats: 'Категории', filter: 'По основа', all: 'Всички',
     sig: '13 коктейла от 6 до 12 €. Избери по алкохола, който пиеш.', sigLink: 'Авторски коктейли', shotsLink: 'Шотове',
-    vodka: 'Водка', gin: 'Джин', open: 'Отворено · до 02:00'
+    vodka: 'Водка', gin: 'Джин', open: 'Отворено'
   },
   en: {
     title: 'Menu', euro: 'All prices are in euro', cats: 'Categories', filter: 'By base spirit', all: 'All',
     sig: '13 cocktails, €6 to €12. Pick by the spirit you drink.', sigLink: 'Signature cocktails', shotsLink: 'Shots',
-    vodka: 'Vodka', gin: 'Gin', open: 'Open now · until 02:00'
+    vodka: 'Vodka', gin: 'Gin', open: 'Open now'
   }
 };
 // the category bar, in order. Its accordion targets (#vodka … #soft) are the spirits/wine/beer <details> of #13
@@ -58,7 +58,7 @@ for (const lang of ['bg', 'en']) {
   const L = T[lang];
 
   test.describe(`${P.name}`, () => {
-    test('the title is the lit sign, with the euro label and the open-now status', async ({ page }) => {
+    test('the title is the lit sign, with no euro label above it and no open-now pill under it', async ({ page }) => {
       await H.openPage(page, P.path, { now: '2026-11-20T01:00' });
       const main = page.getByRole('main');
       const h1 = main.getByRole('heading', { level: 1 });
@@ -66,11 +66,14 @@ for (const lang of ['bg', 'en']) {
       await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
       // lit: the title glows (a text-shadow halo), as a brand mark may
       expect(await h1.evaluate(el => getComputedStyle(el).textShadow)).not.toBe('none');
-      await expect(main.getByText(L.euro, { exact: true })).toBeVisible();
-      // the open-now line under the title is plain text: the page's one live region is the header's
+      // the euro label is gone from the head (every price already carries €; the footer still says it)
       const head = main.getByRole('region', { name: L.title });
-      await expect(head.getByText(L.open)).toBeVisible();
+      await expect(head.getByText(L.euro)).toHaveCount(0);
+      // no open-now pill under the title either: the header's open-now line is the menu page's only one
+      await expect(head.locator('[data-oc-status]')).toHaveCount(0);
+      await expect(head.getByText(L.open)).toHaveCount(0);
       await expect(main.getByRole('status')).toHaveCount(0);
+      await expect(page.getByRole('banner').getByRole('status')).toContainText(L.open);
     });
 
     for (const [vp, size] of Object.entries(H.VIEWPORTS)) {
@@ -256,9 +259,10 @@ for (const lang of ['bg', 'en']) {
       await expect(cardNames(page, lang)).toHaveText(ALL_COCKTAILS);
       // the filter needs script, so it isn't offered as dead buttons
       await expect(page.getByRole('group', { name: L.filter })).toBeHidden();
-      // the title, the euro label, and the week's hours in place of the live status
+      // the title, with no week of hours under it (the header carries the week without script)
       await expect(page.getByRole('heading', { level: 1 })).toHaveText(L.title);
-      await expect(page.getByRole('main').getByRole('region', { name: L.title })).toContainText('18:00–23:30');
+      await expect(page.getByRole('main').getByRole('region', { name: L.title })).not.toContainText('18:00–23:30');
+      await expect(page.getByRole('banner')).toContainText('18:00–23:30');
       await catbar(page, lang).getByRole('link', { name: L.shotsLink }).click();
       await expect(page).toHaveURL(/#shots$/);
       const b = await bars(page, lang);

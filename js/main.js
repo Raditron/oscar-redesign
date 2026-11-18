@@ -27,10 +27,9 @@
 
    Status elements: any element with [data-oc-status]. In the HTML it holds the no-JS fallback (the week's hours). Only
    the header's carries role="status": one live region per page, so a screen reader hears a change once, not from every
-   copy of the line; the others (hero slate, visit, menu head) are plain text filled the same way.
+   copy of the line; the others (hero slate, visit) are plain text filled the same way.
    On load and then every minute this script replaces its content with the open-now line:
-     data-oc-status=""      v2 line:  <i class="v2-dot"></i><b>Open now</b> <span class="det">until 03:00</span>
-     data-oc-status="pill"  v1 pill (menu head): <i></i><b>Open now</b> <span>· until 03:00</span>
+     <i class="v2-dot"></i><b>Open now</b> <span class="det">until 03:00</span>
    and sets data-state="open|soon|closed" on the element (CSS colours the dot from it). The space between <b> and
    <span> is for screen readers (it collapses inside the inline-flex line). Content only changes when the status
    text changes, so screen readers hear it once, not every minute.
@@ -115,9 +114,7 @@ OC.renderStatus = (el, s = OC.status()) => {
   const label = s.happy
     ? `<span lang="en">Happy hour</span> −${OC.happyHour.off}%<span class="vh"> ${OC.t({ bg: 'отстъпка', en: 'off' })}</span>`
     : esc(s.label);
-  const html = el.dataset.ocStatus === 'pill'
-    ? `<i aria-hidden="true"></i><b>${label}</b> <span>· ${esc(s.detail)}</span>`
-    : `<i class="v2-dot" aria-hidden="true"></i><b>${label}</b> <span class="det">${esc(s.detail)}</span>`;
+  const html = `<i class="v2-dot" aria-hidden="true"></i><b>${label}</b> <span class="det">${esc(s.detail)}</span>`;
   if (el.dataset.state === s.state && el.innerHTML === html) return;
   el.dataset.state = s.state;
   el.innerHTML = html;

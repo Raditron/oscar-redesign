@@ -223,12 +223,12 @@ body{margin:0;background:#000}
 /* the no-JS fallback: the week's hours, allowed to wrap between its three parts */
 .v2-now-week{white-space:normal;line-height:1.35}
 .v2-now-week>span{white-space:nowrap}
-/* left-aligned (hero slate, menu head): when the week wraps, no "·" is left at a line end or start. Each part after the
+/* left-aligned (hero slate): when the week wraps, no "·" is left at a line end or start. Each part after the
    first leads with its "·" in a padding of its own (--sep); the line is pulled --sep to the left and clipped there, so
    the "·" of a part that starts a line is not drawn. (The header, right-aligned, does the mirror image: see chrome) */
-:is(.v2-slate,.status) .v2-now-week{--sep:1.1em;display:flex;flex-wrap:wrap;margin-left:calc(var(--sep) * -1);clip-path:inset(-4px -4px -4px var(--sep))}
-:is(.v2-slate,.status) .v2-now-week>span{position:relative;padding-left:var(--sep)}
-:is(.v2-slate,.status) .v2-now-week i{position:absolute;top:0;left:0;width:var(--sep);height:auto;border-radius:0;background:none;font-style:normal;text-align:center}   /* (not the pill's status dot, also an <i>) */
+.v2-slate .v2-now-week{--sep:1.1em;display:flex;flex-wrap:wrap;margin-left:calc(var(--sep) * -1);clip-path:inset(-4px -4px -4px var(--sep))}
+.v2-slate .v2-now-week>span{position:relative;padding-left:var(--sep)}
+.v2-slate .v2-now-week i{position:absolute;top:0;left:0;width:var(--sep);height:auto;border-radius:0;background:none;font-style:normal;text-align:center}
 
 
 /* ================= 5 · chrome: header, footer, thumb bar ================= */
@@ -638,24 +638,10 @@ body{margin:0;background:#000}
 }
 /* [/#11 visit] */
 
-/* [#12 menu-head] components.css: menu title, euro label, status pill */
-/* the euro label (.kick), the lit title (.disp.h1, neon: it is a brand mark) and the open-now pill, stacked left */
+/* [#12 menu-head] components.css: menu title */
+/* the lit title (.disp.h1, neon: it is a brand mark) and the happy-hour line, stacked left */
 .menu-head{padding-bottom:var(--s-6)}
 .menu-head .inner{display:grid;gap:var(--s-4);justify-items:start}
-/* open-now pill (components.css "status"). Markup: <p class="status" data-oc-status="pill">[no-JS: the
-   week's hours]</p>; js/main.js fills it with <i></i><b>label</b> <span>· detail</span> and sets data-state */
-.status{display:inline-flex;align-items:center;gap:var(--s-2);padding:7px 14px 7px 12px;border-radius:var(--r-pill);border:1px solid var(--line-2);font:500 var(--fs-sm)/1.2 var(--font-body);color:var(--ivory)}
-.status b{font-weight:700}
-.status i{width:8px;height:8px;border-radius:50%;background:var(--c,var(--closed));flex:none;position:relative}
-.status[data-state="open"]{--c:var(--open)}
-.status[data-state="soon"]{--c:var(--soon)}
-.status[data-state="closed"]{--c:var(--closed)}
-.status b{color:var(--c)}
-/* the no-JS fallback (the week's hours) may wrap on a phone, so its outline is a soft rectangle, not a pill */
-.status:not([data-state]){border-radius:var(--r-md);color:var(--ivory-2)}
-@media (prefers-reduced-motion:no-preference){
-  .status[data-state="open"] i::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--open);opacity:0;animation:oc-ping 2.4s var(--ease-out) infinite}
-}
 /* [/#12 menu-head] */
 
 /* [#12 catbar] components.css: .catnav and its chips */

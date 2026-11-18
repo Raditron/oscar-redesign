@@ -144,10 +144,10 @@ test.describe('one live region per page', () => {
       const statuses = await page.getByRole('status').evaluateAll(els => els.map(el => ({ inHeader: !!el.closest('header'), text: el.textContent.trim() })));
       expect(statuses.filter(s => s.inHeader)).toHaveLength(1);
       expect(statuses.filter(s => !s.inHeader), 'a second live status line').toEqual(p.kind === 'home' ? [{ inHeader: false, text: '' }] : []);
-      // the other copies of the line are filled all the same
+      // the other copies of the line are filled all the same: on home the hero slate and visit; the menu has none (#23)
       const main = page.getByRole('main');
-      await expect(main.getByText(new RegExp(`^${text}`)).first()).toBeVisible();
-      if (p.kind === 'home') await expect(main.getByText(new RegExp(`^${text}`))).toHaveCount(2);   // hero slate, visit
+      await expect(main.getByText(new RegExp(`^${text}`))).toHaveCount(p.kind === 'home' ? 2 : 0);
+      if (p.kind === 'home') await expect(main.getByText(new RegExp(`^${text}`)).first()).toBeVisible();
     });
   }
 });
@@ -257,11 +257,10 @@ test.describe('no separator left at the end (or start) of a line', () => {
 
     test.describe(`${home.name} without JavaScript`, () => {
       test.use({ javaScriptEnabled: false });
-      // P12 in the header (right-aligned), and the same week line in the hero slate and, on the menu, under the title
+      // P12 in the header (right-aligned), and the same week line in the hero slate (the menu head has none since #23)
       for (const [where, kind, find] of [
         ['header', 'home', pw => H.headerStatus(pw)],
-        ['hero slate', 'home', pw => pw.getByRole('region', { name: 'allow yourself to be yourself.' }).getByRole('listitem').first()],
-        ['menu head', 'menu', pw => pw.getByRole('main').getByRole('region', { name: lang === 'bg' ? 'Меню' : 'Menu' })]
+        ['hero slate', 'home', pw => pw.getByRole('region', { name: 'allow yourself to be yourself.' }).getByRole('listitem').first()]
       ]) {
         test(`P12 ${where}: the week's hours never leave a "·" at the end or start of a line`, async ({ page }) => {
           await H.openPage(page, H.page(lang, kind).path);
