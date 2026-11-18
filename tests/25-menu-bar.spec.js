@@ -1,29 +1,17 @@
-// #25: guests open the menu from the QR code at the bar, so its phone thumb bar carries only Home: no Call, no
-// Directions. Home keeps the full bar.
+// #25 / #26: guests open the menu from the QR code at the bar, so Call and Directions are no use there (#25), and
+// a bar holding only Home duplicated the header's link home (#26). The menu has no thumb bar; home keeps its own.
 const { test, expect } = require('@playwright/test');
 const H = require('./helpers');
 
-const HOME = { bg: 'Начало', en: 'Home' };
-
 for (const lang of ['bg', 'en']) {
-  test(`menu ${lang.toUpperCase()} · phone: the thumb bar holds only Home, across the full width`, async ({ page }) => {
-    await page.setViewportSize(H.VIEWPORTS.phone);
-    await H.openPage(page, H.page(lang, 'menu').path);
-    const bar = page.getByRole('navigation', { name: H.CHROME[lang].quick });
-    await expect(bar).toBeVisible();
-    const links = bar.getByRole('link');
-    await expect(links).toHaveCount(1);
-    await expect(links.first()).toHaveAccessibleName(HOME[lang]);
-    await expect(links.first()).toHaveAttribute('href', '../index.html');
-    await expect(bar.locator('a[href^="tel:"], a[href*="google.com/maps"]')).toHaveCount(0);
-    const w = await bar.evaluate(n => ({ bar: n.getBoundingClientRect().width, link: n.querySelector('a').getBoundingClientRect().width }));
-    expect(Math.abs(w.bar - w.link)).toBeLessThan(2);
-    // still within thumb reach while scrolling, and gone on desktop
-    await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight / 2));
-    await expect(bar).toBeInViewport();
-    await page.setViewportSize(H.VIEWPORTS.desktop);
-    await expect(bar).toBeHidden();
-  });
+  for (const vp of ['phone', 'desktop']) {
+    test(`menu ${lang.toUpperCase()} · ${vp}: no thumb bar at all`, async ({ page }) => {
+      await page.setViewportSize(H.VIEWPORTS[vp]);
+      await H.openPage(page, H.page(lang, 'menu').path);
+      await expect(page.getByRole('navigation', { name: H.CHROME[lang].quick })).toHaveCount(0);
+      await expect(page.locator('.v2-abar')).toHaveCount(0);
+    });
+  }
 
   test(`home ${lang.toUpperCase()} · phone: the thumb bar keeps Call, Directions and Menu`, async ({ page }) => {
     await page.setViewportSize(H.VIEWPORTS.phone);
