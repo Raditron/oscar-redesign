@@ -2,35 +2,34 @@
 // of our own making, and (#21) no "Питай бара" / "Ask the bar" marker. A guest finds it where the hours are: on home
 // under the week of opening hours, on the menu under the title and the open-now pill. Both languages, with and without
 // JavaScript, at phone width.
+// #24: the bar has since confirmed 50% off, every night, so the line now says "−50%" too, set large. Its words and its
+// look are tested in 24-happy-hour-off.spec.js; this file keeps where it sits, the hatch on the week, phone, no-JS.
 const { test, expect } = require('@playwright/test');
 const H = require('./helpers');
 
 const T = {
-  bg: { line: 'Happy hour 18:00–20:00.', visit: 'Славянска 15', hours: 'Работно време', menu: 'Меню' },
-  en: { line: 'Happy hour 18:00–20:00.', visit: 'Slavyanska 15', hours: 'Opening hours', menu: 'Menu' }
+  bg: { line: '−50% отстъпка Happy hour всяка вечер 18:00–20:00', visit: 'Славянска 15', hours: 'Работно време', menu: 'Меню' },
+  en: { line: '−50% off Happy hour every night 18:00–20:00', visit: 'Slavyanska 15', hours: 'Opening hours', menu: 'Menu' }
 };
 
 /** The region the line belongs in: the visit section on home, the menu's title section on the menu. */
 const home = (pw, lang) => pw.getByRole('region', { name: T[lang].visit });
 const menuHead = (pw, lang) => pw.getByRole('region', { name: T[lang].menu, exact: true });
 const where = (pw, lang, kind) => (kind === 'home' ? home(pw, lang) : menuHead(pw, lang));
-const line = (pw, lang, kind) => where(pw, lang, kind).getByText(/^Happy hour 18:00/);
+const line = (pw, lang, kind) => where(pw, lang, kind).locator('p').filter({ hasText: /^s*−50%/ });
 const textOf = loc => loc.evaluate(el => el.textContent.replace(/\s+/g, ' ').trim());
 
 for (const P of H.PAGES) {
   const t = T[P.lang];
   test.describe(`${P.name}: happy hour`, () => {
-    test('says 18:00–20:00, nothing more', async ({ page }) => {
+    test('is stated once in its place', async ({ page }) => {
       await H.openPage(page, P.path);
       const hh = line(page, P.lang, P.kind);
       await expect(hh).toHaveCount(1);
       await expect(hh).toBeVisible();
-      // the exact words: the time. No day, drink, price, percentage or currency of our own making
       expect(await textOf(hh)).toBe(t.line);
       // no "Питай бара" / "Ask the bar" marker anywhere on the page (#21)
       await expect(page.getByText(/Питай бара|Ask the bar/)).toHaveCount(0);
-      // only one happy-hour line per page
-      await expect(page.getByText(/happy hour/i)).toHaveCount(1);
     });
 
     if (P.kind === 'home') {
@@ -60,20 +59,14 @@ for (const P of H.PAGES) {
       });
     }
 
-    test('is plain type: no glow, not gold, in the dim type of the line above', async ({ page }) => {
+    test('is plain type: no glow, not gold', async ({ page }) => {
       await H.openPage(page, P.path);
-      const hh = line(page, P.lang, P.kind);
-      const look = el => { const s = getComputedStyle(el); return { shadow: s.textShadow, color: s.color }; };
-      const l = await hh.evaluate(look);
+      const l = await line(page, P.lang, P.kind).evaluate(el => {
+        const probe = col => { const x = el.appendChild(document.createElement('span')); x.style.color = col; const v = getComputedStyle(x).color; x.remove(); return v; };
+        return { shadow: getComputedStyle(el).textShadow, colors: [...el.querySelectorAll('*')].map(c => getComputedStyle(c).color), gold: probe('var(--gold)') };
+      });
       expect(l.shadow).toBe('none');
-      // the same dim colour as the site's other secondary lines (.v2-dim), not the gold of the call
-      const [dim, gold] = await hh.evaluate(el => [['p', 'v2-dim', ''], ['span', '', 'var(--gold)']].map(([tag, cls, color]) => {
-        const s = el.parentElement.appendChild(document.createElement(tag));
-        s.className = cls; s.style.color = color;
-        const c = getComputedStyle(s).color; s.remove(); return c;
-      }));
-      expect(l.color).toBe(dim);
-      expect(l.color).not.toBe(gold);
+      expect(l.colors).not.toContain(l.gold);
     });
 
     if (P.kind === 'home') {

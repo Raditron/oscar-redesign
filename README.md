@@ -106,7 +106,7 @@ URL answering with its original bytes while the four pages become the new ones.
 Send `dist/oscarclubsofia.com.zip` to the bar. `README-handoff.html` inside it (source: `docs/handoff.html`) says,
 in Bulgarian and English: what to upload (the contents of `oscarclubsofia.com/` into the site's main folder,
 overwriting), what must not be deleted on the server, three checks after the upload, and the open
-items (NX0 partnership terms, founder's name, opening hours, rating snapshot, Averna's euro price, happy-hour terms).
+items (NX0 partnership terms, founder's name, opening hours, rating snapshot, Averna's euro price, any drinks left out of the happy hour).
 
 ## Content still to confirm with the bar
 
@@ -117,5 +117,6 @@ Left off the site until the bar confirms them, never guessed (no "Питай б�
 - whether the opening hours have changed since November 2026;
 - the Google and Tripadvisor ratings are a November 2026 snapshot;
 - Averna's price in euro (the old site lists it in leva): a dash "—" where the price goes on both menu pages;
-- the happy hour's days, drinks and prices: only its time, 18:00–20:00, is confirmed (the old site doesn't mention
-  it) and shown on both home pages under the week and on both menu pages under the title.
+- whether any drinks are left out of the happy hour. Confirmed (#24): 50% off, every night 18:00–20:00, shown in the
+  hero slate and under the week on both home pages, under the title on both menu pages, and in every open-now line
+  while it is on.

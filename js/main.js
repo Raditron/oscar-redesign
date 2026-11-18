@@ -14,8 +14,10 @@
                               whatever the visitor's own timezone. Honours the clock override below
      OC.nightOf(now?)         the weekday whose night it is. After midnight, until the previous night's late close,
                               that is still the previous day (Fri 01:30 → Thursday). Use it to mark "today" in the week
-     OC.status(now?)          { state: 'open' | 'soon' | 'closed', label, detail } for the current language.
-                              'soon' = closes within 45 minutes. Logic lifted unchanged from the prototype (site.js)
+     OC.status(now?)          { state: 'open' | 'soon' | 'closed', label, detail, happy? } for the current language.
+                              'soon' = closes within 45 minutes. Logic lifted from the prototype (site.js), plus the
+                              happy hour (#24): during OC.happyHour the open line says so ({ happy: true })
+     OC.happyHour             { from: '18:00', to: '20:00', off: 50 }: every night, Sofia time
      OC.renderStatus(el)      fill one status element (see "status" below); OC.renderAllStatus() fills them all
 
    Clock override (tests and demos): the time is read as Sofia local time and frozen.
@@ -82,7 +84,10 @@ OC.nightOf = (now = OC.sofiaNow()) => {
   return yest && toMin(yest.close) <= toMin(yest.open) && now.m < toMin(yest.close) ? (now.d + 6) % 7 : now.d;
 };
 
-/* ---------- open-now status: lifted unchanged from the prototype (design-system/site.js, OC.status) ---------- */
+/* ---------- open-now status: lifted from the prototype (design-system/site.js, OC.status) ----------
+   One addition (#24): from 18:00 to 20:00 on the evening's own night the open line reads "Happy hour −50% · until
+   20:00" instead of "Open now · until …". The state stays 'open' (same dot); the closing time comes back at 20:00 */
+OC.happyHour = { from: '18:00', to: '20:00', off: 50 };
 OC.status = (now = OC.sofiaNow()) => {
   const L = OC.lang === 'bg';
   const today = OC.hoursFor(now.d), yest = OC.hoursFor((now.d + 6) % 7), tom = OC.hoursFor((now.d + 1) % 7);
@@ -93,6 +98,10 @@ OC.status = (now = OC.sofiaNow()) => {
     if (now.m < end) until = { at: today.close, left: end - now.m };
   }
   if (until && until.left <= 45) return { state: 'soon', label: L ? 'Затваря скоро' : 'Closing soon', detail: L ? `в ${until.at}` : `at ${until.at}` };
+  const hh = OC.happyHour;
+  if (until && today && now.m >= toMin(today.open) && now.m >= toMin(hh.from) && now.m < toMin(hh.to)) {
+    return { state: 'open', happy: true, label: `Happy hour −${hh.off}%`, detail: L ? `до ${hh.to}` : `until ${hh.to}` };
+  }
   if (until) return { state: 'open', label: L ? 'Отворено' : 'Open now', detail: L ? `до ${until.at}` : `until ${until.at}` };
   const later = today && now.m < toMin(today.open);
   const at = later ? today.open : tom.open;
@@ -102,9 +111,13 @@ OC.status = (now = OC.sofiaNow()) => {
 /* ---------- status elements ---------- */
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 OC.renderStatus = (el, s = OC.status()) => {
+  /* the happy-hour label: "Happy hour" is English on the BG pages too; a screen reader hears "−50%" as a discount */
+  const label = s.happy
+    ? `<span lang="en">Happy hour</span> −${OC.happyHour.off}%<span class="vh"> ${OC.t({ bg: 'отстъпка', en: 'off' })}</span>`
+    : esc(s.label);
   const html = el.dataset.ocStatus === 'pill'
-    ? `<i aria-hidden="true"></i><b>${esc(s.label)}</b> <span>· ${esc(s.detail)}</span>`
-    : `<i class="v2-dot" aria-hidden="true"></i><b>${esc(s.label)}</b> <span class="det">${esc(s.detail)}</span>`;
+    ? `<i aria-hidden="true"></i><b>${label}</b> <span>· ${esc(s.detail)}</span>`
+    : `<i class="v2-dot" aria-hidden="true"></i><b>${label}</b> <span class="det">${esc(s.detail)}</span>`;
   if (el.dataset.state === s.state && el.innerHTML === html) return;
   el.dataset.state = s.state;
   el.innerHTML = html;

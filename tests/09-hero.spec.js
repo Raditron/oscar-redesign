@@ -83,10 +83,13 @@ for (const lang of ['bg', 'en']) {
       await expect(hero(page).locator('form, input, select, textarea')).toHaveCount(0);
     });
 
-    test('the slate: open-now status, address with directions, ratings, award', async ({ page }) => {
+    test('the slate: open-now status, happy hour, address with directions, ratings, award', async ({ page }) => {
       await H.openPage(page, P.path, { now: FRI_22 });
-      const items = slate(page).getByRole('listitem');
-      await expect(items).toHaveCount(4);
+      const all = slate(page).getByRole('listitem');
+      await expect(all).toHaveCount(5);
+      // #24: the happy hour is the second item (its words are tested in 24-happy-hour-off.spec.js); the rest keep their order
+      await expect(all.nth(1)).toContainText('Happy hour');
+      const items = { nth: i => all.nth(i === 0 ? 0 : i + 1) };
       // the open-now line comes first. It is plain text here: the page's one live region is the header's (one announcement)
       await expect(items.nth(0)).toHaveText(C.status);
       await expect(items.nth(0).getByRole('status')).toHaveCount(0);
@@ -156,7 +159,7 @@ for (const lang of ['bg', 'en']) {
       await expect(hero(pw).getByRole('link', { name: C.call })).toHaveAttribute('href', TEL);
       await expect(hero(pw).getByRole('link', { name: C.dm })).toHaveAttribute('href', DM);
       await expect(hero(pw).getByRole('link', { name: C.dirs })).toBeVisible();
-      expect(await textOf(slate(pw).getByRole('listitem').nth(2))).toBe(C.ratings);
+      expect(await textOf(slate(pw).getByRole('listitem').nth(3))).toBe(C.ratings);   // #24: the happy hour is item 2
       await ctx.close();
     });
 
@@ -255,7 +258,8 @@ test.describe('hero parity', () => {
     expect(en.links).toEqual(bg.links);
     expect(en.items).toEqual(bg.items);
     expect(en.glass).toBe(bg.glass);
-    // and they say the same thing: the clock line, the street number, the two ratings and their review counts, the year
-    expect(bg.items.map(i => i.numbers)).toEqual([['03', '00'], ['15'], ['4.7', '671', '4.8', '141'], ['2024']]);
+    // and they say the same thing: the clock line, the happy hour (#24: 50%, 18:00–20:00), the street number, the two ratings
+    // and their review counts, the year
+    expect(bg.items.map(i => i.numbers)).toEqual([['03', '00'], ['50', '18', '00', '20', '00'], ['15'], ['4.7', '671', '4.8', '141'], ['2024']]);
   });
 });
