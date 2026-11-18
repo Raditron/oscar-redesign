@@ -275,7 +275,7 @@ for (const lang of ['bg', 'en']) {
     }
 
     for (const vp of ['phone', 'desktop']) {
-      test(`${vp}: gold stays on the call: no other control on the menu page is painted gold`, async ({ page }) => {
+      test(`${vp}: no control on the menu page is painted gold`, async ({ page }) => {
         await page.setViewportSize(H.VIEWPORTS[vp]);
         await H.openPage(page, P.path);
         await page.evaluate(() => document.querySelectorAll('details').forEach(d => { d.open = true; }));
@@ -290,7 +290,8 @@ for (const lang of ['bg', 'en']) {
         for (const g of gold) expect(g.href, `gold control "${g.text}"`).toBe('tel:+359899666633');
         // and nothing in the shots, the accordions or the NX0 strip is a button
         await expect(page.locator('#shots, #spirits, #nx0').getByRole('button')).toHaveCount(0);
-        if (vp === 'phone') expect(gold.map(g => g.text)).toEqual([L.call]);
+        // #25: the menu's thumb bar no longer carries the call, so nothing on the menu is gold at all
+        expect(gold.map(g => g.text)).toEqual([]);
       });
 
       test(`${vp}: axe stays clean with every accordion open and the NX0 strip in view`, async ({ page }) => {
