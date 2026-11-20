@@ -148,7 +148,9 @@
   --f-disp:"Poiret One","Tenor Sans",ui-sans-serif,sans-serif;   /* Art Deco caps; monoline, so lit it reads as tube lettering */
   --f-voice:"Cormorant","Cormorant Garamond",Georgia,serif;       /* the slogan's italic, as on their Instagram */
   --f-body:"Onest",ui-sans-serif,system-ui,sans-serif;             /* Cyrillic-first text face */
-  --g:clamp(16px,4.2cqi,64px);                                     /* side gutter */
+  /* side gutter: the menu's own inset (.inner: --max wide, centred, --gutter inside), so every section on every page
+     starts and ends where the menu does (#28). Full-bleed pieces cancel it with calc(var(--g) * -1) */
+  --g:calc(max(0px,(100cqi - var(--max)) / 2) + var(--gutter));
   --col:clamp(12px,2cqi,32px);                                     /* column gap */
   --ease:cubic-bezier(.2,.7,0,1);
 }
@@ -262,7 +264,7 @@ body{margin:0;background:#000}
 
 /* footer: the sign you leave under */
 .v2-ftr{padding:clamp(88px,11cqi,180px) var(--g) 28px;border-top:1px solid var(--hair)}
-.v2-ftr-sign{display:grid;gap:clamp(20px,2.4cqi,36px);justify-items:start}
+.v2-ftr-sign{display:grid;gap:clamp(20px,2.4cqi,36px);justify-items:center;text-align:center}   /* centred, as the NX0 strip is (#28) */
 .v2-ftr-sign .mark{width:clamp(220px,38cqi,540px)}
 .v2-ftr-sign p{font:italic 500 clamp(24px,2.6cqi,40px)/1.1 var(--f-voice);color:var(--brass-hi)}
 .v2-ftr-row{display:grid;gap:20px;margin-top:clamp(56px,7cqi,112px);padding-top:24px;border-top:1px solid var(--hair);font-size:14px;color:var(--ivory-2)}

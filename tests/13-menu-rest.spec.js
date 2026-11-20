@@ -269,8 +269,9 @@ for (const lang of ['bg', 'en']) {
         expect(Math.abs(m.spaceL - m.spaceR)).toBeLessThan(2);
         expect(m.spaceL).toBeGreaterThanOrEqual(-0.5);
         expect(m.scroll).toBe(0);
-        // on a wide screen there is real room either side: it is centred, not stretched to fill
-        if (vp === 'desktop') expect(m.spaceL).toBeGreaterThan(100);
+        // on a wide screen there is real room either side: it is centred, not stretched to fill. Since #28 the strip sits in
+        // the menu's 1200px column (not the full width), so at 1440 that room is ~63px a side
+        if (vp === 'desktop') expect(m.spaceL).toBeGreaterThan(40);
       });
     }
 
