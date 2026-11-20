@@ -422,13 +422,16 @@ body{margin:0;background:#000}
 /* [#10 carousel] v2.css "3 · the signatures, one at a time" */
 /* every drink sits in the same grid cell, so the section never changes height; only opacity animates.
    Without JS the first drink (class "on" in the HTML) is the one shown, and the controls stay hidden */
-.v2-feat{--cap:clamp(48px,10cqi,170px);display:grid;gap:clamp(24px,3cqi,40px);padding:0 var(--g) clamp(80px,9cqi,150px);align-items:end}
+/* the glass is sized to the screen as well as the column: the smallest of its column, the screen height less its name
+   and some air, and 640px (the photos are 560px; much past that they go soft). The name scales with the screen height
+   too, so glass, name and price share one screen on a short landscape window (a laptop at 125-150% scaling) */
+.v2-feat{--cap:clamp(48px,min(10cqi,15svh),140px);--glass:max(280px,min(100%,100svh - var(--cap) * .8 - 132px,640px));display:grid;gap:clamp(24px,3cqi,40px);padding:0 var(--g) clamp(80px,9cqi,150px);align-items:end}
 .v2-feat-imgs,.v2-feat-stack{display:grid}
 /* the name sits under the glass, not on it (over the photo it was ivory on pale liquid and unreadable) */
 .v2-feat-imgs{margin:0 calc(var(--g) * -1) calc(var(--cap) * .8 + 12px);touch-action:pan-y}
 .v2-feat-img,.v2-feat-slide{grid-area:1/1;opacity:0;visibility:hidden;transition:opacity .4s var(--ease),visibility 0s .4s}
 .v2-feat-img.on,.v2-feat-slide.on{opacity:1;visibility:visible;transition:opacity .4s var(--ease)}
-.v2-feat-img{position:relative;margin:0;aspect-ratio:1}
+.v2-feat-img{position:relative;margin:0;aspect-ratio:1;width:var(--glass);justify-self:center}
 .v2-feat-img::before{content:"";position:absolute;inset:0;background:radial-gradient(48% 46% at 50% 62%,color-mix(in srgb,var(--drink) 30%,transparent),transparent 74%),radial-gradient(42% 8% at 50% 92%,color-mix(in srgb,var(--drink) 34%,transparent),transparent)}
 .v2-feat-img img{position:relative;width:100%;height:100%;object-fit:contain;mix-blend-mode:lighten;-webkit-mask-image:radial-gradient(ellipse 60% 64% at 50% 52%,#000 62%,transparent 100%);mask-image:radial-gradient(ellipse 60% 64% at 50% 52%,#000 62%,transparent 100%)}
 .v2-feat-img figcaption{position:absolute;left:var(--g);top:calc(100% + 12px);font:400 var(--cap)/.8 var(--f-disp);white-space:nowrap;text-transform:uppercase;letter-spacing:.02em;color:var(--ivory);pointer-events:none}
@@ -442,8 +445,9 @@ body{margin:0;background:#000}
 .v2-feat-meta b{margin-left:auto;font:400 clamp(30px,3.2cqi,48px)/1 var(--f-disp);letter-spacing:.02em;color:var(--ivory)}
 @container site (min-width:860px){
   .v2-feat{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:var(--col)}
-  .v2-feat-imgs{grid-column:1/8;margin:0 0 calc(var(--cap) * .8 + 12px) calc(var(--g) * -1)}
-  .v2-feat-txt{grid-column:8/13;padding-bottom:9cqi}
+  .v2-feat-imgs{grid-column:1/8;margin:0 0 calc(var(--cap) * .8 + 12px)}
+  /* the text's last line sits on the glass's base */
+  .v2-feat-txt{grid-column:8/13;padding-bottom:calc(var(--cap) * .8 + 12px)}
 }
 /* controls: plain type, no boxes or pills. 48px targets, ivory like the rest of the UI; gold stays on the call button */
 .v2-car{position:relative;display:flex;align-items:center;width:100%;padding-top:6px;margin-top:-8px}
@@ -496,7 +500,8 @@ body{margin:0;background:#000}
   .v2-row:not(.on) .nm{color:var(--ivory-2)}
   /* the drink's name becomes a tube of its own colour: a pale core inside the drink's gas */
   .v2-row.on .nm{color:color-mix(in srgb,var(--drink) 45%,#fff);text-shadow:0 0 .02em #fff,0 0 .09em var(--drink),0 0 .28em color-mix(in srgb,var(--drink) 65%,transparent),0 0 .7em color-mix(in srgb,var(--drink) 35%,transparent);transform:translateX(14px)}
-  .v2-prev{display:block;position:sticky;top:calc(var(--stick-top,0px) + 24px);align-self:start;aspect-ratio:1;margin-top:24px}
+  /* same sizing as the carousel glass: never taller than the screen it sticks in, never far past the 560px photo */
+  .v2-prev{display:block;position:sticky;top:calc(var(--stick-top,0px) + 24px);align-self:start;justify-self:center;aspect-ratio:1;width:min(100%,100svh - var(--stick-top,0px) - 48px,640px);margin-top:24px}
   .v2-prev::before{content:"";position:absolute;inset:0;background:radial-gradient(46% 46% at 50% 60%,color-mix(in srgb,var(--drink) 34%,transparent),transparent 74%);transition:background .3s}
   .v2-prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;mix-blend-mode:lighten;opacity:0;transform:translateY(18px) scale(.96);transition:opacity .35s var(--ease),transform .6s var(--ease);-webkit-mask-image:radial-gradient(ellipse 60% 62% at 50% 52%,#000 60%,transparent 100%);mask-image:radial-gradient(ellipse 60% 62% at 50% 52%,#000 60%,transparent 100%)}
   .v2-prev img.on{opacity:1;transform:none}
