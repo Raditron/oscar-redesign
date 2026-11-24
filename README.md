@@ -25,6 +25,8 @@ assets/share/              the link-preview image (1200×630)
 
 docs/handoff.html          the hand-off note for the bar (Bulgarian, then English); not uploaded
 design-system/             the v2 prototype: the design reference. Not uploaded, not edited
+backend/                   the content API (Node + TypeScript), its own package on its own host; not uploaded.
+                           See backend/ARCHITECTURE.md
 tests/                     Playwright suite, local server, old-site fixture
 tools/                     packaging, the dist test run, the share-image generator
 ```

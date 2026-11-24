@@ -1,0 +1,30 @@
+// Type-checks everything (src, tests, config files) without emitting: `npm run typecheck`.
+// tsconfig.build.json extends this to emit src/ only into dist/.
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    // Imports name the file you can see (`./config.ts`); tsc rewrites them to `.js` when it builds.
+    "rewriteRelativeImportExtensions": true,
+    // Only TypeScript that can be erased to plain JavaScript: no enums, namespaces or constructor parameter
+    // properties. The source then runs under Node's own type stripping too (the startup test relies on it), and
+    // what a class holds is always spelled out as a field.
+    "erasableSyntaxOnly": true,
+    // Type-only imports must say `import type`, so nothing is imported at runtime by accident.
+    "verbatimModuleSyntax": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src", "tests", "vitest.config.ts"]
+}

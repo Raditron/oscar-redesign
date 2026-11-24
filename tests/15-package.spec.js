@@ -19,7 +19,7 @@ const LICENCE = /^assets\/fonts\/OFL-(.+)\.txt$/;
 // Only these may ship: the four pages, the stylesheet, the script and the new assets
 const SHIPPABLE = /^(index\.html|en\/index\.html|mainmenu\/index\.html|en\/mainmenu\/index\.html|css\/styles\.css|js\/main\.js|assets\/.+)$/;
 // …and none of the repo's dev and design files may
-const EXCLUDED_DIRS = ['design-system/', 'tests/', 'tools/', 'docs/', 'node_modules/', 'dist/', '.claude/', '.git/', 'test-results/', 'playwright-report/'];
+const EXCLUDED_DIRS = ['design-system/', 'tests/', 'tools/', 'docs/', 'backend/', 'node_modules/', 'dist/', '.claude/', '.git/', 'test-results/', 'playwright-report/'];
 const EXCLUDED_NAMES = ['package.json', 'package-lock.json', 'playwright.config.js', 'README.md', '.gitignore', 'handoff.html', PKG.NOTE_OUT];
 
 /** Every file under `dir`, as sorted forward-slash paths relative to it. */
