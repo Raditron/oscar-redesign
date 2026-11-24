@@ -73,6 +73,12 @@ export async function logInAsAdmin(api: TestApi): Promise<string> {
   return response.body.token;
 }
 
+/** A backend for one test, and the Authorization header of an Admin logged in to it. */
+export async function asAdmin(options: TestBackendOptions = {}): Promise<{ api: TestApi; authorization: string }> {
+  const api = await createTestBackend(options);
+  return { api, authorization: `Bearer ${await logInAsAdmin(api)}` };
+}
+
 async function freshDatabase(): Promise<Db> {
   const client = await new MongoClient(inject('mongoUri')).connect();
   const db = client.db(`test-${randomUUID()}`);

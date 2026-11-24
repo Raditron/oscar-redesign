@@ -50,7 +50,8 @@ A named group of MenuItems within one Section, in the bar's chosen order, with a
 _Avoid_: group, list, menu section
 
 **Serving size**:
-The pour a Category's prices refer to, written the way the bar writes it, e.g. "50 ml" or "0,5 l".
+The pour a Category's prices refer to, written the way the bar writes it in each language, e.g. "50 ml", or "0,5 l"
+in Bulgarian and "0.5 l" in English.
 _Avoid_: portion, volume (volume belongs to a Cocktail)
 
 **MenuItem**:
@@ -60,7 +61,7 @@ _Avoid_: product, drink, entry
 
 **Cocktail**:
 One of the bar's signature cocktails, shown with its photo, ingredients, base spirit, volume, price and accent
-colour.
+colour, and, in the home page carousel, its slogan and description.
 _Avoid_: drink, signature (on its own), recipe
 
 **Base spirit**:
@@ -73,8 +74,18 @@ The drink colour from the site's design that a Cocktail is shown in, one of a fi
 _Avoid_: theme, tint
 
 **Featured**:
-Said of a Cocktail that appears in the home page carousel.
+Said of a Cocktail that appears in the home page carousel, with the slogan and description it carries for it.
 _Avoid_: highlighted, promoted, pinned
+
+**Slug**:
+The short name a Category or a Cocktail goes by in the site's addresses, the menu's anchors and the links to them:
+"irish", "tarator". No two Categories share one, and no two Cocktails.
+_Avoid_: id (that is its identity, which never changes), key, handle
+
+**Position**:
+Where a Category stands among the Categories of its Section, or a Cocktail among the Cocktails: the bar's chosen
+order, counted from 1.
+_Avoid_: order, index, rank, sort order
 
 **Hidden**:
 Said of a MenuItem or Cocktail that stays in the admin panel but is left off the public site, e.g. while it's out

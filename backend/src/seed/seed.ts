@@ -12,7 +12,8 @@ import { eventsStep } from './steps/events.ts';
 
 /**
  * The steps, in the order they load. A step that is written but not switched on yet (because the backend's routes
- * for it don't exist) stays out of this list until they do.
+ * for it don't exist) stays out of this list until they do: venueSettingsStep, categoriesStep and cocktailsStep, in
+ * steps/, are added here, in that order, by the owner's slices #36, #37 and #38.
  */
 const SEED_STEPS: readonly SeedStep[] = [eventsStep];
 

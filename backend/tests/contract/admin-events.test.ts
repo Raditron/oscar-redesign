@@ -3,13 +3,7 @@
 // null. The test clock stands at Sunday 22 November 2026, 01:30 in Sofia: still Saturday the 21st's ServiceNight.
 import { describe, expect, it } from 'vitest';
 import { addEvent, addEvents, eventOn, eventTitled, type AdminEvent } from '../support/events.ts';
-import { createTestBackend, logInAsAdmin } from '../support/test-backend.ts';
-
-/** A backend for one test, and the Authorization header of an Admin logged in to it. */
-async function asAdmin() {
-  const api = await createTestBackend();
-  return { api, authorization: `Bearer ${await logInAsAdmin(api)}` };
-}
+import { asAdmin } from '../support/test-backend.ts';
 
 const NEXT_SATURDAY = {
   date: '2026-11-28',

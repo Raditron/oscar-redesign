@@ -1,4 +1,4 @@
-import type { SeedStep } from '../seed-step.ts';
+import { collectionStep } from '../collection-step.ts';
 
 /** An Event as the seed sends it and reads it back: the fields of the admin API it needs. */
 interface SiteEvent {
@@ -25,21 +25,12 @@ const SITE_EVENTS = [
 ];
 
 /** The events step: through GET and POST /admin/events. */
-export const eventsStep: SeedStep = {
+export const eventsStep = collectionStep<SiteEvent>({
   name: 'events',
-
-  async hasContent(api) {
-    const events = (await api.get('/admin/events')) as unknown[];
-    return events.length > 0;
-  },
-
-  async load(api) {
-    const there = (await api.get('/admin/events')) as SiteEvent[];
-    const missing = SITE_EVENTS.filter((event) => !there.some((existing) => isSameEvent(existing, event)));
-    for (const event of missing) await api.post('/admin/events', event);
-    return { added: missing.length, skipped: SITE_EVENTS.length - missing.length };
-  },
-};
+  path: '/admin/events',
+  content: SITE_EVENTS,
+  isSame: isSameEvent,
+});
 
 // An Event has no slug, so "already there" means on the same date with the same title, in both languages. The fee
 // isn't compared: an Admin may have corrected it, and the seed leaves an Admin's edits alone.

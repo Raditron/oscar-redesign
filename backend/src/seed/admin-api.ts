@@ -1,6 +1,13 @@
 /** The backend refused a request, couldn't be reached, or answered something the seed can't use. */
 export class AdminApiError extends Error {
   override readonly name = 'AdminApiError';
+  /** The error code the backend answered with (VENUE_SETTINGS_NOT_FOUND, …); undefined when it gave none. */
+  readonly code: string | undefined;
+
+  constructor(message: string, code?: string) {
+    super(message);
+    this.code = code;
+  }
 }
 
 /**
@@ -36,6 +43,10 @@ export class AdminApi {
     return this.request('POST', path, body);
   }
 
+  put(path: string, body: unknown): Promise<unknown> {
+    return this.request('PUT', path, body);
+  }
+
   private async request(method: string, path: string, body?: unknown): Promise<unknown> {
     let response: Response;
     try {
@@ -52,7 +63,7 @@ export class AdminApi {
       // The shared error format: a code for programs, a message for people.
       const { code, message } = (answer ?? {}) as { code?: string; message?: string };
       const status = code === undefined ? `${response.status}` : `${response.status} ${code}`;
-      throw new AdminApiError(`${method} ${path} answered ${status}: ${message ?? response.statusText}`);
+      throw new AdminApiError(`${method} ${path} answered ${status}: ${message ?? response.statusText}`, code);
     }
     return answer;
   }

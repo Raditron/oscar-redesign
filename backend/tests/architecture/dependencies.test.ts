@@ -39,7 +39,8 @@ function importsIn(folder: Layer | 'seed'): Import[] {
   return files.flatMap((name) => {
     const path = join(SRC, folder, name);
     const source = readFileSync(path, 'utf8');
-    const patterns = [/\bfrom\s*['"]([^'"]+)['"]/g, /\bimport\s*['"]([^'"]+)['"]/g, /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g];
+    // `from` after a space or a brace, as in an import, never after a dot: 'HappyHour.from' is a string, not an import.
+    const patterns = [/(?:^|[\s}])from\s*['"]([^'"]+)['"]/g, /\bimport\s*['"]([^'"]+)['"]/g, /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g];
     const modules = patterns.flatMap((pattern) => [...source.matchAll(pattern)].map((match) => match[1]!));
     return modules.map((module) => ({ file: relative(SRC, path), module, reaches: layerReachedBy(path, module) }));
   });

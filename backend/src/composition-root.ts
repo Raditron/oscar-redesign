@@ -20,6 +20,7 @@ import { eventsRouter } from './interface/http/events/events-router.ts';
 import { healthRouter } from './interface/http/health/health-router.ts';
 import { createHttpApp } from './interface/http/http-app.ts';
 import type { Logger } from './interface/http/logger.ts';
+import { pendingRoutesRouter } from './interface/http/pending-routes.ts';
 
 /**
  * What differs between a real run and a test, so it is handed in rather than created here: main.ts passes the
@@ -51,7 +52,8 @@ export function composeApp({ config, db, clock, logger }: AppDependencies): Expr
   return createHttpApp({
     cors: config.cors,
     trustProxyHops: config.trustProxyHops,
-    routers: [healthRouter(health), loginRouter(adminAuth), eventsRouter(events)],
+    // The pending routes last, so a route of the owner's slices answers before its pending entry does.
+    routers: [healthRouter(health), loginRouter(adminAuth), eventsRouter(events), pendingRoutesRouter()],
     requireAdmin: requireAdmin(adminAuth),
     logger,
   });

@@ -13,7 +13,9 @@ export type ErrorCode =
   | 'WRONG_PASSWORD'
   | 'LOGIN_REQUIRED'
   | 'TOO_MANY_FAILED_LOGINS'
-  | 'EVENT_NOT_FOUND';
+  | 'EVENT_NOT_FOUND'
+  // Scaffolding: the owner's routes not written yet (pending-routes.ts). Goes once that list is empty.
+  | 'NOT_IMPLEMENTED';
 
 /** One problem with one field of a request, e.g. { field: 'title.en', message: 'Enter the English title' }. */
 export interface FieldError {

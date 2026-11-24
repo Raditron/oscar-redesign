@@ -1,6 +1,8 @@
 // Seam: the seed, called the way a program calls it (the browser suite does, to fill each backend it starts). It
 // logs in with the admin password and loads the site's current content through the admin API, the way the admin
 // panel would. It fills an empty database only; forced, it adds only what is missing and never deletes anything.
+// These tests are about the events step: each checks its own line of the seed's result, since the result also has
+// a line for every other step once the owner's slices switch theirs on.
 import { describe, expect, it } from 'vitest';
 import { seed, SeedRefusedError } from '../../src/seed/seed.ts';
 import { addEvent, addEvents, adminEventList, eventOn, type AdminEvent } from '../support/events.ts';
@@ -28,7 +30,7 @@ describe('seed', () => {
 
     const loaded = await seed({ backendUrl: url, password: ADMIN_PASSWORD });
 
-    expect(loaded).toEqual([{ step: 'events', added: 2, skipped: 0 }]);
+    expect(loaded).toContainEqual({ step: 'events', added: 2, skipped: 0 });
     expect(await adminEventList(api)).toEqual([
       { id: expect.any(String), ...DISCOCKTAILS, upcoming: false },
       { id: expect.any(String), ...HALLOWEEN, upcoming: false },
@@ -62,7 +64,7 @@ describe('seed', () => {
 
       const loaded = await seed({ backendUrl: url, password: ADMIN_PASSWORD, force: true });
 
-      expect(loaded).toEqual([{ step: 'events', added: 1, skipped: 1 }]);
+      expect(loaded).toContainEqual({ step: 'events', added: 1, skipped: 1 });
       expect(datesAndFeesOf(await adminEventList(api))).toEqual([
         ['2026-11-28', 2000],
         ['2026-11-07', 1200],
@@ -76,7 +78,7 @@ describe('seed', () => {
 
       const loadedAgain = await seed({ backendUrl: url, password: ADMIN_PASSWORD, force: true });
 
-      expect(loadedAgain).toEqual([{ step: 'events', added: 0, skipped: 2 }]);
+      expect(loadedAgain).toContainEqual({ step: 'events', added: 0, skipped: 2 });
       expect(datesOf(await adminEventList(api))).toEqual(['2026-11-07', '2026-10-31']);
     });
 
@@ -86,7 +88,7 @@ describe('seed', () => {
 
       const loaded = await seed({ backendUrl: url, password: ADMIN_PASSWORD, force: true });
 
-      expect(loaded).toEqual([{ step: 'events', added: 2, skipped: 0 }]);
+      expect(loaded).toContainEqual({ step: 'events', added: 2, skipped: 0 });
       expect(datesOf(await adminEventList(api))).toEqual(['2026-11-14', '2026-11-07', '2026-10-31', '2026-10-31']);
     });
   });

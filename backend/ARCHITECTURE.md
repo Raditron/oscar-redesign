@@ -17,6 +17,7 @@ backend's dependencies, and the site package (`npm run package` at the root) shi
 ```
 npm ci
 npm test               # every test, on an in-memory MongoDB (the first run downloads a mongod binary, once)
+npm run test:owner     # only the owner's finish line, which fails until the owner's slices are written
 npm run typecheck      # tsc over src/ and tests/, no output
 npm run build          # src/ → dist/
 npm start              # runs dist/main.js, reading .env when there is one
@@ -120,6 +121,9 @@ src/
     events/event.ts            the Event aggregate
     events/event-lists.ts      which Events guests see, and the order Events are listed in
     events/event-repository.ts EventRepository: the interface to every Event
+    shared/slug.ts, shared/position.ts, venue-settings/, categories/, cocktails/
+                               declarations only, for the owner's slices (see "The owner's contract")
+    shared/not-implemented-error.ts   what those declarations throw until they're written
   application/
     ports/clock.ts             Clock: where "now" comes from
     ports/schedule-provider.ts ScheduleProvider: the bar's WeeklySchedule
@@ -155,11 +159,15 @@ src/
     events/events-router.ts    GET /public/events; GET, POST, PUT, DELETE /admin/events
     events/event-body.ts       the request body for an Event: zod schema → EventDetails
     events/event-json.ts       the answers: an Event as guests and as the admin panel get it
+    pending-routes.ts          the owner's routes not written yet: 501 NOT_IMPLEMENTED
   seed/
     seed.ts                    seed(): the steps in order, and the refusal of a database that has content
     seed-step.ts               SeedStep: one kind of content
+    collection-step.ts         a step for a kind there are many of, given what "the same" means for it
     admin-api.ts               the admin API as the seed calls it, over HTTP
     steps/events.ts            the two Events the site lists today
+    steps/venue-settings.ts, steps/categories.ts, steps/cocktails.ts
+                               the rest of the site's content, switched off until the owner's slices
   scripts/
     hash-password.ts           npm run hash-password: the admin password → its bcrypt hash
     seed.ts                    npm run seed: the seed, from the command line
@@ -327,14 +335,17 @@ any `DomainError` → 400 (see "Errors").
 2. **domain**: its value objects (in `shared/` when other aggregates use them too); the aggregate in
    `src/domain/<aggregate>/`, with a private constructor, `create` and `restore` factories, methods for every
    change, and `DomainError` subclasses for what it refuses; its repository interface beside it; rules about many
-   of them at once (which ones guests see, their order) in plain functions beside it, like `event-lists.ts`.
+   of them at once (which ones guests see, their order) in plain functions beside it, like `event-lists.ts`. (An
+   aggregate with no identity to keep, such as VenueSettings, the one of its kind and replaced whole by every save,
+   is built like a value object instead, with `of`: see its doc comment.)
 3. **application**: its service, a method per use case, given ports and domain values only; its errors beside it.
 4. **infrastructure**: its document type and mapper, and its MongoDB repository.
 5. **interface**: its request schemas (transformed into domain values), its JSON answers, its router; its error
    codes in `ErrorCode` and their answers in `toHttpError`.
 6. **composition root**: its repository, service and router.
 7. **seed**: its step in `src/seed/steps/`, added to the list in `src/seed/seed.ts`, which decides what of its kind
-   is already there (for a kind with a slug, the same slug) and adds only the rest.
+   is already there (for a kind with a slug, the same slug) and adds only the rest. For a kind there are many of,
+   `collectionStep` does the work, given the admin path, the content and what "the same" means (`sameSlug`).
 8. **tests**: `tests/domain/` for its rules, `tests/contract/` for its routes.
 
 ## The composition root
@@ -407,6 +418,156 @@ Every `/admin` route answers 401 `LOGIN_REQUIRED` without a valid token. `entryF
 a whole number of cents from 0 up, or `null` for free entry. A fee of 0 stays 0 and is not free entry (see the
 glossary). In both lists, Events on the same date come in the order of their ids: an order that means nothing, but
 is the same on every load.
+
+## The owner's contract: VenueSettings, Categories, Cocktails
+
+The three remaining aggregates are the owner's to build, by hand, one slice each: VenueSettings (#36), then
+Categories (#37), then Cocktails (#38), following the Events slice above. Their finish line is written already:
+tests that fail now and pass once the slice is done. What exists for them today, and nothing more:
+
+- **Domain declarations** (`src/domain/venue-settings/`, `categories/`, `cocktails/`, and `shared/slug.ts`,
+  `shared/position.ts`): the classes, factories, getters, methods and errors the tests use, with the rules each must
+  enforce in its doc comment. Every member throws a `NotImplementedError` until it is written. They pin the
+  vocabulary, not the inside: private fields, helper functions, the `restore` factory and repository interface
+  each aggregate will need, and where "no two share a slug" is checked, are the owner's to design.
+- **The pending routes** (`src/interface/http/pending-routes.ts`): each route below answers 501 `NOT_IMPLEMENTED`
+  until written. Delete a route's entry when you implement it, and the file when the list is empty.
+- **The tests**, named `*.owner.test.ts`, run by `npm run test:owner` and kept out of `npm test` (see `OWNER_TESTS`
+  in `vitest.config.ts`). Each fails now for one reason: a `NotImplementedError`, or a 501 `NOT_IMPLEMENTED`. When a
+  file passes, rename it to `*.test.ts`: it joins `npm test`, and stays green from then on.
+- **The seed steps** (`src/seed/steps/venue-settings.ts`, `categories.ts`, `cocktails.ts`) hold the site's content and
+  stay out of `SEED_STEPS` until their slice switches them on. `tests/seed/site-content.test.ts` checks their content
+  against the pages today.
+
+No controller, service, repository or mapper exists for them: those are the slices.
+
+**Why a test fails.** Every owner test says so in its failure message, so read that before the test's code:
+
+- `expectStatus` names what the backend answered instead: "expected 200, got 501 NOT_IMPLEMENTED: GET
+  /public/cocktails is part of the API, but not implemented yet." Once the route exists, the same line shows a 400's
+  field details ("got 400 VALIDATION_FAILED: … (slogan.bg: …)") or a 500, whose cause is in the backend's log.
+- `expectValidationFailed` names the fields it looked for and the ones the backend named instead.
+- `expectRefusal` lets anything but the expected refusal through as it is: the `NotImplementedError` of a member not
+  written yet ("Volume.ofMillilitres is not implemented yet."), another rule's DomainError, or a TypeError.
+
+### Routes
+
+Every `/admin` route needs the token (401 `LOGIN_REQUIRED` without it); `/public` ones don't, and answer with
+`Cache-Control: no-cache` like every public route. Bodies follow "The API's wire format" above: every field present,
+none as a missing key, null where there is no value.
+
+| Slice | Route                          | Request body       | Answer                                                                                         |
+| ----- | ------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------- |
+| #36   | `GET /public/venue-settings`   | none               | 200 VenueSettings; 404 `VENUE_SETTINGS_NOT_FOUND` until first saved                            |
+| #36   | `GET /admin/venue-settings`    | none               | the same                                                                                       |
+| #36   | `PUT /admin/venue-settings`    | VenueSettings      | 200 as saved (the first save creates them, every later one replaces them whole); 400           |
+| #37   | `GET /public/categories`       | none               | 200 `{ shots, sets, spirits }`, each a list of public Categories, always all three             |
+| #37   | `GET /admin/categories`        | none               | 200 `[admin Category]`, every one, hidden items included                                       |
+| #37   | `POST /admin/categories`       | Category           | 201 the admin Category; 400; 409 `DUPLICATE_SLUG`                                              |
+| #37   | `PUT /admin/categories/:id`    | Category           | 200 the admin Category as it now is; 400; 404 `CATEGORY_NOT_FOUND`; 409 `DUPLICATE_SLUG`       |
+| #37   | `DELETE /admin/categories/:id` | none               | 204, no body; 404 `CATEGORY_NOT_FOUND`                                                         |
+| #38   | `GET /public/cocktails`        | none               | 200 `[public Cocktail]`: the ones not hidden                                                   |
+| #38   | `GET /admin/cocktails`         | none               | 200 `[admin Cocktail]`, hidden ones included                                                   |
+| #38   | `POST /admin/cocktails`        | Cocktail           | 201 the admin Cocktail; 400; 409 `DUPLICATE_SLUG`                                              |
+| #38   | `PUT /admin/cocktails/:id`     | Cocktail           | 200 the admin Cocktail as it now is; 400; 404 `COCKTAIL_NOT_FOUND`; 409 `DUPLICATE_SLUG`       |
+| #38   | `DELETE /admin/cocktails/:id`  | none               | 204, no body; 404 `COCKTAIL_NOT_FOUND`                                                         |
+
+**Two public menu reads, by the user's decision.** #29 planned one public "menu" read; the user replaced it with
+`GET /public/cocktails` and `GET /public/categories` (#33's decisions). Each slice then owns its own route and its
+own pending entry, the menu page asks for both at once, and the home page, which shows the Cocktails (carousel,
+index) but not the Categories, asks for only what it shows.
+
+### Shapes
+
+```
+VenueSettings  { weeklySchedule: { monday … sunday: { opensAt: "18:00", closesAt: "03:00" } | null },
+                 happyHour: { from: "18:00", to: "20:00", discountPercent: 50 },
+                 contacts: { reservationPhone: "+359 899 666 633", eventsEmail: "events@oscarclubsofia.com",
+                             eventsPhone: "+359 883 30 50 55", address: { bg, en }, instagramHandle: "oscarclub_official" } }
+
+Category (sent)     { slug, section: "shots" | "sets" | "spirits", name: { bg, en },
+                      servingSize: { bg: "0,5 l", en: "0.5 l" } | null, position: 1…,
+                      items: [{ id: string | null, name: { bg, en }, note: { bg, en } | null,
+                                price: cents | null, hidden: boolean }] }
+admin Category      the same, plus the Category's `id`, and every item's `id` (never null)
+public Category     { slug, name, servingSize, items: [{ name, note, price }] }: visible items only, in order
+
+Cocktail (sent)     { slug, name: "Tarator", slogan: { bg, en }, description: { bg, en }, ingredients: { bg, en },
+                      imageAlt: { bg, en }, imagePath: "assets/img/cocktails/taratorw.webp", baseSpirit,
+                      volumeMl: 280, price: cents, accentColour, featured: boolean, hidden: boolean, position: 1… }
+admin Cocktail      the same, plus `id`
+public Cocktail     the same without `id`, `hidden` and `position` (the list's order is the position)
+```
+
+- **Order.** Categories: each Section's by position. Cocktails: by position. Items: the order sent. Where positions
+  are equal, any order, as long as it is the same on every load (an Event's list uses its ids; choose your own).
+- **Items** belong to their Category. In a `PUT`, an item sent with its `id` stays that item, a `null` id makes a new
+  one, and an item left out is removed. A `POST` has no items yet to name, so every id in it is null. An id the
+  Category doesn't have, or the same id twice, is 400 `VALIDATION_FAILED`.
+- **An unconfirmed price** is `null`; a price of `0` is a price. A Cocktail's price is never null.
+- **The carousel copy lives on the Cocktail**, by the user's decision: `slogan` and `description` are required, so
+  any Cocktail can be featured.
+- **Validation** is 400 `VALIDATION_FAILED` with a `details` entry per problem, each with a message for the Admin,
+  named by the field's path (`happyHour.discountPercent`, `weeklySchedule.saturday.closesAt`, `items.1.price`). A
+  test asks only for a detail on the field it broke or on a field inside it, so a rule across fields (a day that
+  opens and closes at the same time, a happy hour that doesn't start before it ends) may be reported on the object
+  that holds them or on one of its fields.
+
+### The rules, and why each is pinned
+
+The declarations' doc comments say each rule in full. The tests pin only what #29 and the user's decisions ask for,
+or what keeps the site working:
+
+- **#29's model:** a Slug is lower-case Latin letters and digits with single hyphens between them, and unique among
+  its kind (409); a Position is a whole number from 1; a HappyHour discount is a whole 1–100; LocalizedText is never
+  blank in either language (so neither is a serving size, a slogan or a description); a Cocktail's name isn't
+  blank, its volume is whole millilitres above 0, and its base spirit and accent colour come from `BASE_SPIRITS` and
+  `ACCENT_COLOURS`.
+- **Phones are international** (`+` and the country code): the site makes a `tel:` link of the digits, which dials
+  the bar from a foreign phone only in that form. How the digits are grouped is left as written.
+- **An Instagram handle is the handle, not a link:** the site builds the profile link, the message link and the "@…"
+  from it.
+- **A happy hour starts before it ends, on the same evening:** `OC.status` in js/main.js compares the minutes since
+  that evening's midnight, so a window across midnight would never show on the open-now line.
+- **An image path has no scheme and no host:** the site writes it into an `<img src>`, where a `javascript:` URL or
+  another site's photo must never get. Whether the file exists is the site's business.
+
+What the tests leave to you: the wording of every message, the order of `details` and of equal positions, whether a
+rule across fields is reported on the object or on a field in it, and every internal (where uniqueness is checked,
+how documents look, how the services are split).
+
+### The VenueSettings slice replaces the temporary ScheduleProvider
+
+`tests/contract/venue-settings-schedule.owner.test.ts` is what #36's dependency-inversion exercise must achieve: the
+hours an Admin saves decide which Events are upcoming (Saturday's closing time moved to 23:00, and Saturday's Event
+is gone at 01:30 on Sunday). Only the adapter behind `ScheduleProvider` changes, in the composition root; the Events
+code stays as it is.
+
+**Before the first save** there are no VenueSettings, and the user decided what that means: the venue reads answer
+404 `VENUE_SETTINGS_NOT_FOUND`, and for Events no schedule means every day counts as closed, so an Event is upcoming
+from its own date in Sofia (at 01:30 on Sunday, Saturday's Event is gone and Sunday's is listed). The seed always
+creates VenueSettings, so a seeded backend never meets this. One consequence is #36's to handle: the Events tests
+(`admin-events.test.ts`, `public-events.test.ts`) save no VenueSettings and expect the bar's hours (Saturday's Event
+still listed at 01:30 on Sunday), so #36 changes their setup to save the bar's hours first. That change is the
+owner's, made with the slice, not before.
+
+### Finishing a slice
+
+1. Write the domain behind its declarations, replacing every `throw new NotImplementedError(…)`.
+2. Build the slice through the layers, as "Following the pattern for another aggregate" above lists: its repository
+   interface and `restore`, service, document mapper and repository, request schemas, JSON answers, router, and its
+   error codes in `ErrorCode` and `toHttpError`.
+3. Delete its entries from `pending-routes.ts`, and add its seed step to `SEED_STEPS`.
+4. Run `npm run test:owner` until its files pass, then rename them to `*.test.ts`; `npm test` must stay green.
+
+| Slice | Needs first | Its tests | Its pending routes | Its seed step |
+| ----- | ----------- | --------- | ------------------ | ------------- |
+| #36   | nothing     | `tests/domain/`: `happy-hour`, `phone-number`, `email-address`, `instagram-handle`, `venue-settings`; `tests/contract/`: `admin-venue-settings`, `public-venue-settings`, `venue-settings-schedule`; `tests/seed/seed-venue-settings` | `GET /public/venue-settings`, `GET` and `PUT /admin/venue-settings` | `venueSettingsStep` |
+| #37   | nothing     | `tests/domain/`: `slug`, `position`, `section`, `category`; `tests/contract/`: `admin-categories`, `public-categories`; `tests/seed/seed-categories` | `GET /public/categories`, `GET` and `POST /admin/categories`, `PUT` and `DELETE /admin/categories/:id` | `categoriesStep` |
+| #38   | #37's Slug and Position | `tests/domain/`: `base-spirit`, `accent-colour`, `volume`, `image-path`, `cocktail`; `tests/contract/`: `admin-cocktails`, `public-cocktails`; `tests/seed/seed-cocktails` | `GET /public/cocktails`, `GET` and `POST /admin/cocktails`, `PUT` and `DELETE /admin/cocktails/:id` | `cocktailsStep` |
+
+(Each name is `<name>.owner.test.ts` until renamed. The Cocktail tests build Slugs and Positions, so they can't pass
+before #37's are written.)
 
 ## Admin access: where auth sits in the layers
 
@@ -526,14 +687,16 @@ Every error response, from every route, has the same JSON body:
 | 401    | a missing, invalid or expired token on an admin route        | `LOGIN_REQUIRED`                    |
 | 404    | no such route                                                | `ROUTE_NOT_FOUND`                   |
 | 404    | no Event with that id                                        | `EVENT_NOT_FOUND`                   |
-| 409    | a duplicate slug                                             | added with Categories and Cocktails |
 | 413    | a body over 100 kB                                           | `BODY_TOO_LARGE`                    |
 | 415    | a body the parser can't read otherwise (e.g. not UTF-8)      | `UNREADABLE_BODY`                   |
 | 429    | too many failed logins (with `Retry-After`)                  | `TOO_MANY_FAILED_LOGINS`            |
 | 500    | anything unexpected                                          | `INTERNAL_ERROR`                    |
+| 501    | a route of the owner's slices that isn't written yet         | `NOT_IMPLEMENTED` (scaffolding)     |
 
-Each aggregate names its own unknown id (`EVENT_NOT_FOUND`, and later one each for categories and cocktails), so
-the admin panel knows what has gone without reading the message.
+Each aggregate names its own unknown id (`EVENT_NOT_FOUND`, and later `CATEGORY_NOT_FOUND` and `COCKTAIL_NOT_FOUND`;
+`VENUE_SETTINGS_NOT_FOUND` before they're first saved), so the admin panel knows what has gone without reading the
+message. The owner's slices add these codes to `ErrorCode` as they answer them (see "The owner's contract"), with
+one more: 409 `DUPLICATE_SLUG`, for a slug another of its kind already has (#37, then #38).
 
 The interface layer throws `HttpError`s, which already carry their status and body. The domain and application
 layers throw their own errors, which know nothing of HTTP; `toHttpError` (`errors/to-http-error.ts`), which the
@@ -637,9 +800,19 @@ domain objects.
   tests check only what the command line adds (its options, its messages, its exit codes); what the seed loads,
   skips and refuses is checked once, in `tests/seed/`, since each process takes a second or more to start.
 - **`tests/seed/`: the seed as a program calls it**, against a backend listening on a local port
-  (`startTestBackend()`).
+  (`startTestBackend()`). One exception, for now: the steps whose routes the owner hasn't written can't load into
+  a backend yet, so `site-content.test.ts` hands each one an admin API that answers as an empty backend would, and
+  checks what the step sends against the pages. Once a step is switched on, `seed-*.owner.test.ts` checks it end
+  to end as well.
 - **`tests/architecture/`: the imports.** The one test that reads source files: it holds each layer to the "May
   import" column of the table above, layers and packages alike, and keeps the seed a client of the API.
+
+Helpers in `tests/support/` say what went wrong rather than only that something did: `expectStatus(response,
+201)` fails with what the backend answered instead ("expected 201, got 400 VALIDATION_FAILED: … (price: …)");
+`expectValidationFailed(response, ['price'])` expects a 400 with a detail, and a message, on each field named; and
+`expectRefusal(act, InvalidSlugError)` expects one rule's own DomainError and throws anything else on as it is.
+`asAdmin()` gives a test a backend and an Admin's Authorization header for it. A file named `*.owner.test.ts` is the owner's finish line (see "The owner's contract"), run by `npm run test:owner`
+only.
 
 `tests/support/global-setup.ts` starts one in-memory MongoDB per run; `createTestBackend()` gives each test its own
 database on it and drops it when the test ends. No test touches a real database.
