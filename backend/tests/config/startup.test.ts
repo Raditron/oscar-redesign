@@ -1,14 +1,13 @@
 // Seam: starting the backend as a process, the way `npm start` does, with nothing but environment variables.
 // The source runs under Node's own type stripping, so no build is needed first.
 import { spawn, spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import { describe, expect, inject, it, onTestFinished } from 'vitest';
 import { freePort } from '../support/free-port.ts';
-import { VALID_ENV, envWithout } from '../support/valid-env.ts';
+import { BACKEND_DIR, nodeArgs } from '../support/source-process.ts';
+import { ADMIN_PASSWORD, VALID_ENV, envWithout } from '../support/valid-env.ts';
 
-const BACKEND_DIR = fileURLToPath(new URL('../..', import.meta.url));
-const NODE_ARGS = ['--experimental-strip-types', '--disable-warning=ExperimentalWarning', 'src/main.ts'];
-const BACKEND_VARIABLES = [...Object.keys(VALID_ENV), 'CORS_ALLOW_LOCALHOST'];
+const NODE_ARGS = nodeArgs('src/main.ts');
+const BACKEND_VARIABLES = [...Object.keys(VALID_ENV), 'CORS_ALLOW_LOCALHOST', 'TRUST_PROXY_HOPS'];
 
 /** This process's environment, minus any backend variable a developer may have exported, plus `variables`. */
 function processEnv(variables: Readonly<Record<string, string>>): NodeJS.ProcessEnv {
@@ -44,6 +43,39 @@ describe('starting the backend', () => {
     const body = await pollJson(`http://127.0.0.1:${port}/health`);
 
     expect(body).toMatchObject({ status: 'ok', timeZone: 'Europe/Sofia' });
+  }, 30_000);
+
+  it('never writes the admin password to its output, whatever a login sends', async () => {
+    const port = await freePort();
+    const child = spawn(process.execPath, NODE_ARGS, {
+      cwd: BACKEND_DIR,
+      env: processEnv({ ...VALID_ENV, PORT: String(port), MONGODB_URI: `${inject('mongoUri')}oscar-startup-test` }),
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let output = '';
+    child.stdout.on('data', (chunk) => (output += chunk));
+    child.stderr.on('data', (chunk) => (output += chunk));
+    onTestFinished(() => {
+      child.kill();
+    });
+    await pollJson(`http://127.0.0.1:${port}/health`);
+
+    const logIn = async (body: string) => {
+      const init = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body };
+      return (await fetch(`http://127.0.0.1:${port}/auth/login`, init)).status;
+    };
+    const statuses = [
+      await logIn(JSON.stringify({ password: ADMIN_PASSWORD })),
+      await logIn(JSON.stringify({ password: `${ADMIN_PASSWORD}?` })),
+      await logIn(`{"password": "${ADMIN_PASSWORD}`), // JSON that doesn't parse
+      await logIn(JSON.stringify({ password: ADMIN_PASSWORD, padding: 'x'.repeat(200 * 1024) })), // too large
+    ];
+    const exited = new Promise((resolve) => child.once('exit', resolve));
+    child.kill();
+    await exited;
+
+    expect(statuses).toEqual([200, 401, 400, 413]);
+    expect(output).not.toContain(ADMIN_PASSWORD);
   }, 30_000);
 });
 

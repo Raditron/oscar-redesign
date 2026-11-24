@@ -50,6 +50,9 @@ describe('loadConfig', () => {
     ['CORS_ORIGINS', '*'],
     ['CORS_ORIGINS', ' , '],
     ['CORS_ALLOW_LOCALHOST', 'yes'],
+    ['TRUST_PROXY_HOPS', 'true'], // Express would read this as "trust every address", which lets a client choose its own
+    ['TRUST_PROXY_HOPS', '-1'],
+    ['TRUST_PROXY_HOPS', '1.5'],
   ])('refuses a malformed %s (%s), naming it', (name, value) => {
     expect(refusedVariables(refusal({ ...VALID_ENV, [name]: value }))).toEqual([name]);
   });

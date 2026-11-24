@@ -1,6 +1,7 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 import type { Logger } from '../logger.ts';
 import { HttpError, type ErrorBody } from './http-error.ts';
+import { toHttpError } from './to-http-error.ts';
 
 /** The last stop for a request no router answered: 404 in the shared format instead of Express's HTML page. */
 export const routeNotFound: RequestHandler = (request, _response, next) => {
@@ -26,8 +27,9 @@ export function errorHandler(logger: Logger): ErrorRequestHandler {
       next(error);
       return;
     }
-    if (error instanceof HttpError) {
-      response.status(error.status).json(error.body);
+    const expected = toHttpError(error);
+    if (expected !== undefined) {
+      response.status(expected.status).set(expected.headers).json(expected.body);
       return;
     }
     logger.error(`Unexpected error on ${request.method} ${request.path}`, error);

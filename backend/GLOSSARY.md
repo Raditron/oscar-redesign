@@ -113,5 +113,10 @@ Anyone reading the public site. Guests are always anonymous.
 _Avoid_: user, visitor, customer
 
 **Admin**:
-A member of the bar's staff signed in to the admin panel with the one shared password.
+A member of the bar's staff logged in to the admin panel with the one shared password.
 _Avoid_: user, editor, owner (ambiguous: the bar's owner, or the developer who owns this project)
+
+**Session**:
+What logging in gives an Admin: 8 hours in which the admin panel may change the content, carried by a token the
+panel sends with every admin request. A new admin password ends every Session started before it.
+_Avoid_: login (that is the act of getting a session), account

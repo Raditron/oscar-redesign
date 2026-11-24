@@ -5,20 +5,28 @@ import { randomUUID } from 'node:crypto';
 import { MongoClient, type Db } from 'mongodb';
 import request from 'supertest';
 import { inject, onTestFinished } from 'vitest';
+import type { Clock } from '../../src/application/ports/clock.ts';
 import { composeApp } from '../../src/composition-root.ts';
 import { loadConfig } from '../../src/config.ts';
 import { FixedClock } from '../../src/infrastructure/clock/fixed-clock.ts';
 import { freePort } from './free-port.ts';
-import { VALID_ENV } from './valid-env.ts';
+import { ADMIN_PASSWORD, VALID_ENV } from './valid-env.ts';
 
 /** Sunday 22 November 2026, 01:30 in Sofia (UTC+2): still Saturday's ServiceNight. */
 const TEST_NOW = new Date('2026-11-22T01:30:00+02:00');
+
+/** The clock every test backend runs on, stopped at TEST_NOW. Pass one in to move time on during a test. */
+export function testClock(): FixedClock {
+  return new FixedClock(TEST_NOW);
+}
 
 export interface TestBackendOptions {
   /** Changes to the valid environment the backend is configured from. */
   readonly env?: Readonly<Record<string, string | undefined>>;
   /** Another database instead of a fresh one on the in-memory server. */
   readonly db?: Db;
+  /** A clock the test keeps hold of, to advance it, instead of one of its own stopped at TEST_NOW. */
+  readonly clock?: Clock;
 }
 
 export type TestApi = ReturnType<typeof request>;
@@ -29,10 +37,17 @@ export async function createTestBackend(options: TestBackendOptions = {}): Promi
   const app = composeApp({
     config: loadConfig({ ...VALID_ENV, ...options.env }),
     db,
-    clock: new FixedClock(TEST_NOW),
+    clock: options.clock ?? testClock(),
     logger: { error: () => {} }, // unexpected errors are expected in some tests; keep the output clean
   });
   return request(app);
+}
+
+/** Logs in with the test password, the way the admin panel does, and returns the session's token. */
+export async function logInAsAdmin(api: TestApi): Promise<string> {
+  const response = await api.post('/auth/login').send({ password: ADMIN_PASSWORD });
+  if (response.status !== 200) throw new Error(`logging in answered ${response.status}: ${JSON.stringify(response.body)}`);
+  return response.body.token;
 }
 
 async function freshDatabase(): Promise<Db> {

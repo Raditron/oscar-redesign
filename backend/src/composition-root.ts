@@ -3,10 +3,16 @@
 // Each later slice adds its repository, its service and its router below, in the same three steps.
 import type { Express } from 'express';
 import type { Db } from 'mongodb';
+import { AdminAuthService } from './application/auth/admin-auth-service.ts';
+import { FailedLoginLimit } from './application/auth/failed-login-limit.ts';
 import { HealthService } from './application/health/health-service.ts';
 import type { Clock } from './application/ports/clock.ts';
 import type { Config } from './config.ts';
+import { BcryptAdminPassword } from './infrastructure/auth/bcrypt-admin-password.ts';
+import { JwtSessionTokens } from './infrastructure/auth/jwt-session-tokens.ts';
 import { MongoDatabaseProbe } from './infrastructure/mongo/mongo-database-probe.ts';
+import { loginRouter } from './interface/http/auth/login-router.ts';
+import { requireAdmin } from './interface/http/auth/require-admin.ts';
 import { healthRouter } from './interface/http/health/health-router.ts';
 import { createHttpApp } from './interface/http/http-app.ts';
 import type { Logger } from './interface/http/logger.ts';
@@ -27,10 +33,19 @@ export interface AppDependencies {
 export function composeApp({ config, db, clock, logger }: AppDependencies): Express {
   // infrastructure: adapters for the ports
   const databaseProbe = new MongoDatabaseProbe(db);
+  const adminPassword = new BcryptAdminPassword(config.auth.adminPasswordHash);
+  const sessionTokens = new JwtSessionTokens(config.auth.jwtSecret, clock);
 
   // application: use cases, given ports only
   const health = new HealthService(databaseProbe, clock);
+  const adminAuth = new AdminAuthService(adminPassword, sessionTokens, new FailedLoginLimit(), clock);
 
   // interface: HTTP, one router per resource
-  return createHttpApp({ cors: config.cors, routers: [healthRouter(health)], logger });
+  return createHttpApp({
+    cors: config.cors,
+    trustProxyHops: config.trustProxyHops,
+    routers: [healthRouter(health), loginRouter(adminAuth)],
+    requireAdmin: requireAdmin(adminAuth),
+    logger,
+  });
 }

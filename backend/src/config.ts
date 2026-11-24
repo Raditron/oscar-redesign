@@ -19,6 +19,8 @@ export interface Config {
   };
   /** The browser origins allowed to call the API (the site's own addresses), and the development switch. */
   readonly cors: CorsOptions;
+  /** How many reverse proxies stand between the internet and the backend, to find each client's own IP address. */
+  readonly trustProxyHops: number;
 }
 
 /** The environment cannot run the backend. The message lists every problem, one per line, each naming its variable. */
@@ -82,6 +84,15 @@ const allowLocalhost = z
   .optional()
   .transform((value) => value === 'true');
 
+// Optional, 0 when unset: with no proxy in front, trusting X-Forwarded-For would let any client claim any address
+// and so escape the login rate limit. A count, never "true", for the same reason: only the hops that are really
+// there are trusted.
+const trustProxyHops = z
+  .string()
+  .regex(/^\d*$/, { error: 'must be a whole number: how many reverse proxies stand in front of the backend (0 for none)' })
+  .optional()
+  .transform((value) => (value ? Number(value) : 0));
+
 const EnvSchema = z.object({
   PORT: port,
   MONGODB_URI: mongoUri,
@@ -89,6 +100,7 @@ const EnvSchema = z.object({
   ADMIN_PASSWORD_HASH: bcryptHash,
   CORS_ORIGINS: corsOrigins,
   CORS_ALLOW_LOCALHOST: allowLocalhost,
+  TRUST_PROXY_HOPS: trustProxyHops,
 });
 
 /** Reads and checks the env config. Throws a ConfigError listing every problem when the environment is not usable. */
@@ -104,5 +116,6 @@ export function loadConfig(env: Readonly<Record<string, string | undefined>>): C
     mongoUri: vars.MONGODB_URI,
     auth: { jwtSecret: vars.JWT_SECRET, adminPasswordHash: vars.ADMIN_PASSWORD_HASH },
     cors: { origins: vars.CORS_ORIGINS, allowLocalhost: vars.CORS_ALLOW_LOCALHOST },
+    trustProxyHops: vars.TRUST_PROXY_HOPS,
   };
 }
