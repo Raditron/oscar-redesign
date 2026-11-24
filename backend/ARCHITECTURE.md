@@ -11,8 +11,9 @@ bar's things (ServiceNight, Money, Event, …) are defined in [GLOSSARY.md](GLOS
 
 ## Running it
 
-Needs Node 22.13 or newer. Everything happens in this folder; the site's own tooling at the repo root never needs the
-backend's dependencies, and the site package (`npm run package` at the root) ships nothing from here.
+Needs Node 22.13 or newer. Everything happens in this folder. The site's browser suite at the repo root runs this
+backend too (`tests/support/browser-backend.ts`), so it needs these dependencies installed; the site package
+(`npm run package` at the root) ships nothing from here.
 
 ```
 npm ci
@@ -165,7 +166,7 @@ src/
     seed-step.ts               SeedStep: one kind of content
     collection-step.ts         a step for a kind there are many of, given what "the same" means for it
     admin-api.ts               the admin API as the seed calls it, over HTTP
-    steps/events.ts            the two Events the site lists today
+    steps/events.ts            the two Events the site used to list
     steps/venue-settings.ts, steps/categories.ts, steps/cocktails.ts
                                the rest of the site's content, switched off until the owner's slices
   scripts/
@@ -308,7 +309,7 @@ any `DomainError` → 400 (see "Errors").
 
 - **The composition root** gains the slice's three steps (the repository, the service, the router), plus the
   temporary ScheduleProvider.
-- **The seed** gains a step, `src/seed/steps/events.ts`, with the two Events the site lists today, loaded through
+- **The seed** gains a step, `src/seed/steps/events.ts`, with the two Events the site used to list, loaded through
   `POST /admin/events` like any Admin's. The step also says what makes an Event already there (the same date and
   title), for a forced run.
 - **The tests**, at two seams. `tests/domain/` checks what the value objects and the Event allow and refuse, and
@@ -365,8 +366,10 @@ The four arguments are what differs between a real run and a test, so they come 
 - The tests pass a fresh database on an in-memory MongoDB, a fixed clock and a silent logger
   (`tests/support/test-backend.ts`). A test that needs time to pass (a session ending, a rate limit's window
   closing, a Saturday's ServiceNight ending) keeps hold of its `FixedClock` and moves it on with `advance()`.
-- A browser test harness can do the same and then `listen()` on a free port: one private backend per test, with its
-  own data and its own moment in time, filled by calling `seed()`. The backend needs no test-only routes for this.
+- The site's browser suite does the same in `tests/support/browser-backend.ts`, a process of its own: an in-memory
+  MongoDB, a `FixedClock` (moved on over the process's IPC channel), `listen()` on a free port, then `seed()`. The
+  suite runs one shared backend for the whole run and a private one per test that needs its own data or its own
+  moment in time (the repo root's `tests/backend.js`). The backend needs no test-only routes for this.
 
 Routers are mounted in the order `composeApp` lists them, behind the admin guard and before the 404 and the error
 handler.
@@ -748,9 +751,10 @@ WeeklySchedule. Together with the Clock's instant they give the current ServiceN
 upcoming. For now its adapter, `FixedHoursScheduleProvider`, returns the hours the site shows today; the
 VenueSettings slice replaces it with one that reads the hours an Admin keeps. The site's open-now line follows the
 same ServiceNight rule in the browser (`OC.nightOf` in `js/main.js`): a copy kept on purpose, so the line can
-change without asking the server. When the rule changes, both copies change. Both are meant to be checked against
-the same cases: `tests/support/service-night-cases.ts` holds them as plain data (a moment in Sofia, written the way
-the site's `?now=` override takes it, and the date of its ServiceNight), which the domain tests run today.
+change without asking the server. When the rule changes, both copies change. Both are checked against the same
+cases: `tests/support/service-night-cases.ts` holds them as plain data (a moment in Sofia, written the way the site's
+`?now=` override takes it, and the date of its ServiceNight), which the domain tests run, and so does the site's
+week of hours (`tests/11-night.spec.js` at the repo root: the page marks the ServiceNight's weekday).
 
 ## The seed
 
@@ -771,7 +775,7 @@ line; a program (the browser suite) imports and calls it.
 - **It is a list of steps, in order** (`SeedStep`, one per kind of content, in `src/seed/steps/`). Each step decides
   what counts as already there, since only it knows what makes two of its kind the same: for an Event, the same date
   and title (the fee isn't compared, so an Admin's correction stays); for a kind with a slug, the same slug. The
-  events step holds the two Events the site lists today (2026's 31 October and 7 November, so both are past). A
+  events step holds the two Events the site used to list (2026's 31 October and 7 November, so both are past). A
   step that is written but not switched on yet, because its admin routes don't exist, stays out of the list until
   they do.
 - **The password** is read from standard input, hidden at a terminal (`scripts/read-password.ts`, shared with

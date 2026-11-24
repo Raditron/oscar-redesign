@@ -1,8 +1,10 @@
 // Playwright config (dev only, not uploaded). `npm test` runs every tests/*.spec.js against the static pages,
-// served from the repo root by tests/server.js exactly as the host serves them.
+// served from the repo root by tests/server.js exactly as the host serves them, beside a seeded backend on an
+// in-memory database that the pages load their content from (tests/backend.js).
 // `npm run test:dist` runs the same suite against the upload folder instead: it packages first, then sets
 // SITE_ROOT=dist/oscarclubsofia.com, which tests/server.js serves in place of the repo root.
 const { defineConfig, devices } = require('@playwright/test');
+const { sharedBackendServer } = require('./tests/backend');
 
 // Each checkout gets its own port (derived from its path), so several worktrees can run their suites at the same
 // time without one testing another's files; the package run gets a port of its own too. Override with PORT=xxxx.
@@ -33,10 +35,14 @@ module.exports = defineConfig({
     { name: 'firefox', use: { ...devices['Desktop Firefox'], ...BASE }, timeout: 60000 },
     { name: 'webkit', use: { ...devices['Desktop Safari'], ...BASE } }
   ],
-  webServer: {
-    // serves $SITE_ROOT when it is set (the web server inherits this process's environment), else the repo root
-    command: `node tests/server.js ${PORT}`,
-    url: `http://localhost:${PORT}/index.html`,
-    reuseExistingServer: false
-  }
+  webServer: [
+    {
+      // serves $SITE_ROOT when it is set (the web server inherits this process's environment), else the repo root
+      command: `node tests/server.js ${PORT}`,
+      url: `http://localhost:${PORT}/index.html`,
+      reuseExistingServer: false
+    },
+    // the shared backend (tests/backend.js), in the package run too
+    sharedBackendServer()
+  ]
 });

@@ -8,6 +8,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const H = require('./helpers');
+const { sharedBackendUrl } = require('./backend');
 const PKG = require('../tools/package.js');
 const { serve } = require('./server');
 
@@ -16,8 +17,8 @@ const OLD_SITE = path.join(__dirname, 'fixtures', 'old-site');
 const OLD_PAGES = ['index.html', 'mainmenu/index.html'];
 const PAGES = H.PAGES.map(p => p.path.slice(1));
 const LICENCE = /^assets\/fonts\/OFL-(.+)\.txt$/;
-// Only these may ship: the four pages, the stylesheet, the script and the new assets
-const SHIPPABLE = /^(index\.html|en\/index\.html|mainmenu\/index\.html|en\/mainmenu\/index\.html|css\/styles\.css|js\/main\.js|assets\/.+)$/;
+// Only these may ship: the four pages, the stylesheet, the scripts (behaviour and the backend's address) and the new assets
+const SHIPPABLE = /^(index\.html|en\/index\.html|mainmenu\/index\.html|en\/mainmenu\/index\.html|css\/styles\.css|js\/(main|config)\.js|assets\/.+)$/;
 // …and none of the repo's dev and design files may
 const EXCLUDED_DIRS = ['design-system/', 'tests/', 'tools/', 'docs/', 'backend/', 'node_modules/', 'dist/', '.claude/', '.git/', 'test-results/', 'playwright-report/'];
 const EXCLUDED_NAMES = ['package.json', 'package-lock.json', 'playwright.config.js', 'README.md', '.gitignore', 'handoff.html', PKG.NOTE_OUT];
@@ -86,8 +87,8 @@ async function referencedPaths(pw, base) {
 }
 
 test.describe('the upload folder', () => {
-  test('holds the four pages, the stylesheet, the script and the new assets, and nothing from the dev side', async () => {
-    for (const f of [...PAGES, 'css/styles.css', 'js/main.js']) expect(files, f).toContain(f);
+  test('holds the four pages, the stylesheet, the scripts and the new assets, and nothing from the dev side', async () => {
+    for (const f of [...PAGES, 'css/styles.css', 'js/main.js', 'js/config.js']) expect(files, f).toContain(f);
     expect(files.filter(f => !SHIPPABLE.test(f)), 'files that are not site files').toEqual([]);
     expect(files.filter(f => EXCLUDED_DIRS.some(d => f.startsWith(d) || f.includes(`/${d}`))), 'dev folders').toEqual([]);
     expect(files.filter(f => EXCLUDED_NAMES.includes(path.posix.basename(f))), 'dev files').toEqual([]);
@@ -104,12 +105,20 @@ test.describe('the upload folder', () => {
     for (const dev of ['/design-system/index.html', '/tools/package.js', '/package.json', '/docs/handoff.html']) {
       expect((await request.get(dev)).status(), `${dev}`).toBe(built ? 200 : 404);
     }
+    // …except the backend's folder, never served: a developer's backend/.env (its secrets) lives there. Not under any
+    // other name Windows opens it by either: another case, a trailing dot or space, an NTFS stream's suffix
+    for (const secret of ['/backend/.env.example', '/Backend/package.json', '/backend./package.json', '/backend%20/package.json',
+      '/backend::$INDEX_ALLOCATION/package.json']) {
+      expect((await request.get(secret)).status(), secret).toBe(404);
+    }
   });
 
   test('every shipped file is referenced by a shipped page or stylesheet, and every reference resolves', async ({ page }) => {
     // fetches every page and every referenced file in turn: give it room when the machine is busy (e.g. three engines)
     test.setTimeout(120_000);
     const srv = await serve(site);
+    // the shipped js/config.js may hold the live backend's address: the suite never calls it
+    await H.pointAtBackend(page, sharedBackendUrl());
     try {
       const referenced = new Set();
       for (const p of H.PAGES) {
@@ -172,9 +181,11 @@ test.describe('the hand-off note', () => {
 
     for (const [article, words] of [
       [bg, ['oscarclubsofia.com', 'Замени', 'Обедини', 'Не трийте нищо', '+359 899 666 633', 'search.google.com/test/rich-results',
-        'Какво още ни трябва', 'NX0', 'основателя', 'Работното време', 'ноември 2026', 'Оценките', 'Averna', 'Happy hour']],
+        'Какво още ни трябва', 'NX0', 'основателя', 'Работното време', 'ноември 2026', 'Оценките', 'Averna', 'Happy hour',
+        'Преди качването', 'js/config.js']],
       [en, ['oscarclubsofia.com', 'Overwrite', 'Merge', 'Don\'t delete anything', '+359 899 666 633', 'search.google.com/test/rich-results',
-        'What we still need', 'NX0', 'founder', 'Opening hours', 'November 2026', 'ratings', 'Averna', 'Happy hour']]
+        'What we still need', 'NX0', 'founder', 'Opening hours', 'November 2026', 'ratings', 'Averna', 'Happy hour',
+        'Before you upload', 'js/config.js']]
     ]) {
       const text = await article.innerText();
       for (const w of words) expect(text, `"${w}"`).toContain(w);
@@ -204,6 +215,7 @@ test.describe('uploading over the old site (a stand-in with the old asset paths)
     fs.cpSync(OLD_SITE, server, { recursive: true });
     fs.cpSync(site, server, { recursive: true, force: true });
     const srv = await serve(server);
+    await H.pointAtBackend(page, sharedBackendUrl());   // never the live backend js/config.js may name
     try {
       for (const f of oldAssets) {
         const res = await page.request.get(`${srv.url}/${f}`);

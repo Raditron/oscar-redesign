@@ -1,8 +1,9 @@
 // The ServiceNight rule's cases, for the bar's current hours (Mon–Wed and Sun 18:00–23:30, Thu until 02:00, Fri–Sat
 // until 03:00): a moment on Sofia's wall clock, and the date of the ServiceNight it belongs to. The rule exists
-// twice, here in the domain and in the site's open-now line (OC.nightOf in js/main.js), and both are meant to be
-// checked against these same cases, so this file is plain data that imports nothing. `sofiaTime` is written the way
-// the site's `?now=` override takes it. Every moment is in winter, when Sofia is UTC+2.
+// twice, here in the domain and in the site's open-now line (OC.nightOf in js/main.js), and both are checked against
+// these same cases (the site's in tests/11-night.spec.js at the repo root), so this file is plain data that imports
+// nothing. `sofiaTime` is written the way the site's `?now=` override takes it. Every moment is in winter, when Sofia
+// is UTC+2.
 export const SERVICE_NIGHT_CASES: readonly { when: string; sofiaTime: string; serviceNight: string }[] = [
   { when: 'Monday 12:00, before the bar opens', sofiaTime: '2026-11-16T12:00', serviceNight: '2026-11-16' },
   { when: 'Monday 20:00, an evening', sofiaTime: '2026-11-16T20:00', serviceNight: '2026-11-16' },

@@ -1,5 +1,8 @@
-/* Oscar Club — the one behaviour script. Progressive enhancement only: every page is complete without it.
-   Loaded with `defer` on all four pages, so the DOM is ready when it runs. No framework, no third-party code.
+/* Oscar Club — the one behaviour script. Progressive enhancement, but for one thing: the content that comes from the
+   backend (today the Saturday gig list) is fetched by this script, so without it those parts of the page say the
+   content isn't available and give the reservation phone. Everything else on the page is complete without it.
+   Loaded with `defer` on all four pages, after js/config.js, so the DOM is ready when it runs. No framework, no
+   third-party code.
 
    Shared helpers on window.OC (use them from your region instead of re-implementing):
      OC.lang                  'bg' | 'en', from <html lang>
@@ -19,11 +22,22 @@
                               happy hour (#24): during OC.happyHour the open line says so ({ happy: true })
      OC.happyHour             { from: '18:00', to: '20:00', off: 50 }: every night, Sofia time
      OC.renderStatus(el)      fill one status element (see "status" below); OC.renderAllStatus() fills them all
+     OC.backend               the backend's base URL: OC_BACKEND from js/config.js, or the override below. '' for none
+     OC.load(path)            GET one of the backend's public reads, e.g. OC.load('/public/events'): a Promise of its
+                              JSON. It fails when there is no backend, it can't be reached, it answers anything but 2xx,
+                              or it hasn't answered in full within 10 seconds
+     OC.fill(box, path, render)  show a part of the page from the backend, with its loading and "unavailable" states
+                              (see "content from the backend" below)
+     OC.euros(cents)          Money (whole cents, as the backend sends it) written for the current language:
+                              1500 → '15 €' / '€15', 1250 → '12,50 €' / '€12.50'
 
    Clock override (tests and demos): the time is read as Sofia local time and frozen.
      ?now=2026-11-20T01:30        in the page URL
      window.OC_NOW = '2026-11-20T01:30'   in an inline script that runs before this file
    OC.clock tells which one is in use: 'live' | 'override'.
+
+   Backend override (tests): window.OC_API = 'http://127.0.0.1:5123', set before this file runs, replaces the address
+   in js/config.js ('' for none). Never a URL parameter, so nobody can point the live site at another backend.
 
    Status elements: any element with [data-oc-status]. In the HTML it holds the no-JS fallback (the week's hours). Only
    the header's carries role="status": one live region per page, so a screen reader hears a change once, not from every
@@ -126,13 +140,52 @@ OC.renderAllStatus = () => {
 OC.renderAllStatus();
 if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
 
+/* ---------- content from the backend ----------
+   What changes at the bar lives in the backend, the one source of truth, and is fetched as the page loads. A part of
+   the page shown from it is filled by OC.fill(box, path, render): it loads `path`, hands the JSON to render(), which
+   fills the part's own elements, and marks `box` (the section the part belongs to) with how it went:
+     while loading   aria-busy="true", and nothing new on screen: no spinner, no placeholder, so nothing jumps
+     then            data-oc-state="ready", or "unavailable" when the load (10 seconds at most) or render() failed
+   Each part's elements stay hidden in the HTML until render() has something to put in them. In the "unavailable"
+   state the box's .v2-unavail note shows (CSS): it says the content isn't available and gives the reservation phone,
+   the one data value the HTML keeps on purpose, so a guest can always reach the bar. It shows without JS too (the
+   <noscript> style in each page's head):
+     <p class="v2-lede v2-unavail">Програмата не е достъпна в момента. Маса запазваш на <a href="tel:+359899666633">…</a>.</p>
+   Once the box is marked, OC.fill sends an 'oc:filled' event on window: what sits below may have moved. */
+// (a slash typed at the end of the address would double the one each path starts with)
+OC.backend = (typeof window.OC_API === 'string' ? window.OC_API : window.OC_BACKEND || '').replace(/\/+$/, '');
+// a backend that takes the request and then hangs must not leave the part waiting for good
+const LOAD_LIMIT = 10 * 1000;
+OC.load = path => {
+  if (!OC.backend) return Promise.reject(new Error('no backend address in js/config.js'));
+  const stop = new AbortController();
+  const timer = setTimeout(() => stop.abort(), LOAD_LIMIT);
+  return fetch(OC.backend + path, { signal: stop.signal }).then(res => {
+    if (!res.ok) throw new Error(`${path} answered ${res.status}`);
+    return res.json();
+  }).finally(() => clearTimeout(timer));
+};
+OC.fill = (box, path, render) => {
+  box.setAttribute('aria-busy', 'true');
+  return OC.load(path).then(render).then(() => 'ready', () => 'unavailable').then(state => {
+    box.dataset.ocState = state;
+    box.removeAttribute('aria-busy');
+    dispatchEvent(new Event('oc:filled'));   // heard by "a link to a part of a page", below
+  });
+};
+OC.euros = cents => {
+  const n = cents % 100 ? (cents / 100).toFixed(2) : String(cents / 100);
+  return OC.lang === 'bg' ? `${n.replace('.', ',')} €` : `€${n}`;
+};
+
 /* ---------- a link to a part of a page lands on it, and stays there ----------
    The browser jumps to #part as soon as it can, which can be before the web fonts arrive, the open-now lines are
-   filled and the menu filter appears; each of those moves what sits above. Chromium and Firefox keep the part in place
-   (scroll anchoring); WebKit doesn't, and it may also make its jump late, after the page has loaded, from a stale layout.
-   So until the visitor scrolls, presses a key or touches the page, and for two seconds after the page has loaded, the
-   part is brought back to its place whenever the fonts land, the page loads or the page is scrolled by anything else.
-   (When it is already in place this does nothing.) */
+   filled, the menu filter appears and the content from the backend lands (that one can take seconds); each of those
+   moves what sits above. Chromium and Firefox keep the part in place (scroll anchoring); WebKit doesn't, and it may
+   also make its jump late, after the page has loaded, from a stale layout. So until the visitor scrolls, presses a key
+   or touches the page, and for two seconds after the page has loaded or content from the backend has landed, the part
+   is brought back to its place whenever the fonts land, the page loads, content lands or the page is scrolled by
+   anything else. (When it is already in place this does nothing.) */
 if (location.hash.length > 1) {
   const hash = location.hash;
   let moved = false, until = Infinity, queued = false;
@@ -155,6 +208,8 @@ if (location.hash.length > 1) {
     if (document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', queue);   // each face as it lands
   }
   addEventListener('load', () => { until = performance.now() + 2000; queue(); });
+  // OC.fill: landing before the page has loaded changes nothing to the window; after, it gives two more seconds
+  addEventListener('oc:filled', () => { until = Math.max(until, performance.now() + 2000); queue(); });
   addEventListener('scroll', queue, { passive: true });
 }
 
@@ -315,6 +370,32 @@ if (location.hash.length > 1) {
 {
 }
 // [/#11 music]
+
+// [#34 gig list] the Saturday gig list: the upcoming Events, from the backend
+{
+  /* GET /public/events answers at most three upcoming Events, soonest first: [{ date: 'YYYY-MM-DD', title: { bg, en },
+     entryFee: cents | null }]. Each becomes a row of the bill: the date as DD.MM, the title, and the entry fee when
+     there is one (null is free entry, which shows no fee). The date is cut from the text, never read through Date:
+     that would place it in the visitor's own time zone and could show the day before. With nothing upcoming the list
+     stays hidden; the lede and the Instagram line still say where the programme is announced. */
+  const list = document.querySelector('[data-oc-gigs]');
+  if (list) {
+    const cell = (tag, className, text) => Object.assign(document.createElement(tag), { className, textContent: text });
+    const row = ({ date, title, entryFee }) => {
+      const day = cell('time', 'd tnum', `${date.slice(8, 10)}.${date.slice(5, 7)}`);
+      day.dateTime = date;
+      const li = document.createElement('li');
+      li.append(day, cell('span', 'n', OC.t(title)));
+      if (entryFee !== null) li.append(cell('span', 'f tnum', OC.t({ bg: `вход ${OC.euros(entryFee)}`, en: `entry ${OC.euros(entryFee)}` })));
+      return li;
+    };
+    OC.fill(list.closest('section'), '/public/events', events => {
+      list.replaceChildren(...events.map(row));
+      list.hidden = events.length === 0;
+    });
+  }
+}
+// [/#34 gig list]
 
 // [#11 events] copy-to-clipboard on the events contacts
 {

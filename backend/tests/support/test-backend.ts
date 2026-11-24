@@ -12,10 +12,11 @@ import { composeApp } from '../../src/composition-root.ts';
 import { loadConfig } from '../../src/config.ts';
 import { FixedClock } from '../../src/infrastructure/clock/fixed-clock.ts';
 import { freePort } from './free-port.ts';
+import { TEST_INSTANT } from './test-instant.ts';
 import { ADMIN_PASSWORD, VALID_ENV } from './valid-env.ts';
 
-/** Sunday 22 November 2026, 01:30 in Sofia (UTC+2): still Saturday's ServiceNight. */
-const TEST_NOW = new Date('2026-11-22T01:30:00+02:00');
+/** Sunday 22 November 2026, 01:30 in Sofia (UTC+2): still Saturday's ServiceNight (see test-instant.ts). */
+const TEST_NOW = new Date(TEST_INSTANT);
 
 /** The clock every test backend runs on, stopped at TEST_NOW. Pass one in to move time on during a test. */
 export function testClock(): FixedClock {

@@ -2,6 +2,7 @@
 // (roles, labels, text, requests), never class names.
 const { expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
+const { sharedBackendUrl } = require('./backend');
 
 const SITE = 'https://oscarclubsofia.com';
 
@@ -46,9 +47,29 @@ function patchFirefoxLocators(pw) {
   proto.allInnerTexts = function () { return inFirefox(this) ? this.evaluateAll(els => els.map(e => e.innerText)) : allInnerTexts.call(this); };
 }
 
-/** Open a page. `now` sets the clock as Sofia local time ('2026-11-20T01:30'); `query` adds more parameters. */
-async function openPage(pw, path, { now, query } = {}) {
+// The backend each page loads from. An init script can't be taken back, and the order several run in isn't defined,
+// so a page is pointed at one backend for good.
+const pointedAt = new WeakMap();
+
+/** Point the page at a backend (see tests/backend.js): window.OC_API, set before js/main.js runs, on every load. */
+async function pointAtBackend(pw, url) {
+  if (pointedAt.has(pw)) {
+    if (pointedAt.get(pw) !== url) throw new Error(`This page loads from ${pointedAt.get(pw)}: open another page for ${url}`);
+    return;
+  }
+  pointedAt.set(pw, url);
+  await pw.addInitScript(u => { window.OC_API = u; }, url);
+}
+
+/**
+ * Open a page. `now` sets the clock as Sofia local time ('2026-11-20T01:30'); `query` adds more parameters; `backend`
+ * is the base URL the page loads its content from: the suite's shared backend unless given (a private backend's url,
+ * closedBackendUrl(), or '' for none). null leaves it to js/config.js: only for a test that serves that file itself
+ * (page.route), so the suite never calls the backend the file on disk may name.
+ */
+async function openPage(pw, path, { now, query, backend = sharedBackendUrl() } = {}) {
   patchFirefoxLocators(pw);
+  if (backend !== null) await pointAtBackend(pw, backend);
   const params = new URLSearchParams(query || {});
   if (now) params.set('now', now);
   const qs = params.toString();
@@ -63,7 +84,7 @@ const headerStatus = pw => pw.getByRole('banner').getByRole('status');
 /**
  * Start recording network traffic. Call before openPage. Returns { failed, thirdParty, requests }:
  *   failed      every request that errored or answered 4xx/5xx
- *   thirdParty  every http(s) request to a host other than the local test server
+ *   thirdParty  every http(s) request to a host other than the local test servers (the site's, and its backend's)
  */
 function watchNetwork(pw) {
   const log = { failed: [], thirdParty: [], requests: [] };
@@ -77,7 +98,7 @@ function watchNetwork(pw) {
   return log;
 }
 
-/** Assert the recorded traffic: nothing failed, nothing left the site. */
+/** Assert the recorded traffic: nothing failed, nothing went beyond the site and its backend. */
 function expectCleanNetwork(log) {
   expect(log.thirdParty, 'requests to third-party hosts').toEqual([]);
   expect(log.failed, 'failed requests / 404s').toEqual([]);
@@ -165,6 +186,6 @@ const WEBKIT_TAB = 'WebKit (as Safari by default) does not move Tab through link
 
 module.exports = {
   SITE, PAGES, VIEWPORTS, CHROME, page,
-  openPage, headerStatus, watchNetwork, expectCleanNetwork, scrollThrough, expectLocalReferencesResolve,
+  openPage, pointAtBackend, headerStatus, watchNetwork, expectCleanNetwork, scrollThrough, expectLocalReferencesResolve,
   expectNoSeriousA11yViolations, tabThrough, WEBKIT_TAB
 };

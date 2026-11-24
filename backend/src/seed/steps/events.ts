@@ -7,8 +7,8 @@ interface SiteEvent {
 }
 
 /**
- * The two Events the site lists today, in the music section of index.html and en/index.html (the `v2-gigs` list),
- * with their entry fees in whole cents. The site writes them without a year ("31.10", "07.11"): they are 2026's,
+ * The two Events the site used to list in the music section of index.html and en/index.html (its `v2-gigs` list),
+ * with their entry fees in whole cents. The site wrote them without a year ("31.10", "07.11"): they are 2026's,
  * so both are past by now, and guests won't see them. They're loaded for the record, as past Events.
  */
 const SITE_EVENTS = [

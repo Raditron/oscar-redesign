@@ -173,7 +173,7 @@ test.describe('language switch, canonical, hreflang', () => {
   }
 });
 
-test.describe('integrity: no 404s, no third-party requests, self-hosted fonts', () => {
+test.describe('integrity: no 404s, nothing asked of anyone but the site and its backend, self-hosted fonts', () => {
   for (const p of H.PAGES) {
     for (const vp of ['phone', 'desktop']) {
       test(`${p.name} · ${vp}`, async ({ page }) => {
