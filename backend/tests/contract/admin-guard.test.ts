@@ -1,9 +1,10 @@
 // Seam: the HTTP API of the fully composed backend. Everything under /admin needs the token from a login, sent as
 // `Authorization: Bearer <token>`, and refuses any request without a valid, unexpired one with 401.
 //
-// There are no admin routes yet (Events brings the first), so these tests knock on a path under /admin that no
-// router answers: refused with 401 when the token is missing or bad, and let through to the usual 404 when it is
-// good. That shows the guard sits in front of the whole /admin prefix, so no admin route can be added without it.
+// These tests knock on a path under /admin that no router answers: refused with 401 when the token is missing or
+// bad, and let through to the usual 404 when it is good. That shows the guard sits in front of the whole /admin
+// prefix, not in front of each admin route, so no admin route can be added without it. (Each resource's own tests,
+// such as admin-events.test.ts, also check that its routes refuse a request without a token.)
 import { describe, expect, it } from 'vitest';
 import { createTestBackend, logInAsAdmin, testClock } from '../support/test-backend.ts';
 import { ADMIN_PASSWORD } from '../support/valid-env.ts';

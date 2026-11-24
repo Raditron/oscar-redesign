@@ -4,6 +4,8 @@ import {
   TooManyFailedLoginsError,
   WrongPasswordError,
 } from '../../../application/auth/auth-errors.ts';
+import { EventNotFoundError } from '../../../application/events/event-errors.ts';
+import { DomainError } from '../../../domain/shared/domain-error.ts';
 import { HttpError } from './http-error.ts';
 
 /**
@@ -22,8 +24,25 @@ export function toHttpError(error: unknown): HttpError | undefined {
   if (error instanceof InvalidSessionError || error instanceof SessionExpiredError) {
     return new HttpError(401, { code: 'LOGIN_REQUIRED', message: error.message });
   }
+  if (error instanceof EventNotFoundError) return new HttpError(404, { code: 'EVENT_NOT_FOUND', message: error.message });
+  // A backstop. Request bodies are checked by their zod schemas first, which name each field; a DomainError only
+  // gets here if a schema let through a value the domain refuses. Still the client's value, so still a 400, with
+  // the domain's message but no field, since the domain doesn't know the request's field names.
+  if (error instanceof DomainError) return new HttpError(400, { code: 'VALIDATION_FAILED', message: error.message });
+  if (isMalformedUrl(error)) {
+    return new HttpError(400, { code: 'MALFORMED_URL', message: 'The address has a %-escape that does not decode.' });
+  }
   if (isUnreadableBody(error)) return unreadableBody(error);
   return undefined;
+}
+
+/**
+ * What Express's router throws when a route parameter (an Event's id in /admin/events/:id, say) holds a %-escape
+ * that doesn't decode, such as %E0%A4%A: a URIError it has marked with status 400. Its message, which quotes the
+ * parameter, is never passed on.
+ */
+function isMalformedUrl(error: unknown): boolean {
+  return error instanceof URIError && 'status' in error && error.status === 400;
 }
 
 /**

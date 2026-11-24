@@ -1,4 +1,4 @@
-// Seam: the hash-password script, run as the owner runs it (`npm run hash-password`). The password goes in on
+// Seam: the hash-password script, run from a terminal as `npm run hash-password` starts it. The password goes in on
 // standard input, never as an argument, which the shell would keep in its history; the bcrypt hash for
 // ADMIN_PASSWORD_HASH comes out on standard output.
 import { spawnSync } from 'node:child_process';

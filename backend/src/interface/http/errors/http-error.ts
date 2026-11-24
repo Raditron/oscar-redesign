@@ -5,13 +5,15 @@
 export type ErrorCode =
   | 'ROUTE_NOT_FOUND'
   | 'INTERNAL_ERROR'
+  | 'MALFORMED_URL'
   | 'MALFORMED_JSON'
   | 'BODY_TOO_LARGE'
   | 'UNREADABLE_BODY'
   | 'VALIDATION_FAILED'
   | 'WRONG_PASSWORD'
   | 'LOGIN_REQUIRED'
-  | 'TOO_MANY_FAILED_LOGINS';
+  | 'TOO_MANY_FAILED_LOGINS'
+  | 'EVENT_NOT_FOUND';
 
 /** One problem with one field of a request, e.g. { field: 'title.en', message: 'Enter the English title' }. */
 export interface FieldError {

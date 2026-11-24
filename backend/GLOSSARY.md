@@ -8,7 +8,7 @@ tests and the issues.
 
 **ServiceNight**:
 The bar's night, named by the date it opens on. A moment belongs to the ServiceNight of its own date, except a
-moment after midnight and before the previous night's closing time, which still belongs to the previous date's.
+moment after midnight and before the previous day's closing time, which still belongs to the previous date's.
 _Avoid_: business day, day, night (on its own)
 
 **WeeklySchedule**:
@@ -84,7 +84,7 @@ _Avoid_: disabled, inactive, deleted, archived
 ## Events
 
 **Event**:
-A night at the bar with something on, such as a DJ: a date in Sofia, a title, and an entry fee or free entry.
+Something on at the bar, such as a DJ, on a date in Sofia, with a title and an entry fee or free entry.
 _Avoid_: gig, party, DJ night (the site's wording, not the model's)
 
 **Upcoming**:
@@ -92,7 +92,8 @@ Said of an Event whose date is on or after the date of the current ServiceNight.
 _Avoid_: future, active, current
 
 **Entry fee**:
-What a guest pays to get into an Event, as Money. An Event without one has free entry.
+What a guest pays to get into an Event, as Money. An Event without one has free entry; an entry fee of 0 € is still
+an entry fee, kept as the bar wrote it, and is not the same as free entry.
 _Avoid_: cover, ticket price, door fee
 
 ## Venue

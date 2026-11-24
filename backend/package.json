@@ -12,7 +12,8 @@
     "start": "node --env-file-if-exists=.env --enable-source-maps dist/main.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "hash-password": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/scripts/hash-password.ts"
+    "hash-password": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/scripts/hash-password.ts",
+    "seed": "node --experimental-strip-types --disable-warning=ExperimentalWarning src/scripts/seed.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

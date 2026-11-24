@@ -29,6 +29,7 @@ export function createHttpApp(options: HttpAppOptions): Express {
   // not, needs a token, so an admin route can't be added without it. It runs before the body is read, so nobody
   // without a token gets the server to parse what they send.
   app.use('/admin', options.requireAdmin);
+  app.use('/public', checkBackOnEveryLoad);
   app.use(express.json());
   for (const router of options.routers) app.use(router);
   // Order matters: these two only run once no router above has answered.
@@ -36,3 +37,14 @@ export function createHttpApp(options: HttpAppOptions): Express {
   app.use(errorHandler(options.logger));
   return app;
 }
+
+/**
+ * Guests' content can change at any moment from the admin panel, and an Admin checks a save by reloading the site.
+ * So a browser (or a cache on the way) may keep a public answer but must ask again before every use. With the ETag
+ * Express puts on every answer, asking again costs a 304 with no body while nothing has changed. Set on the /public
+ * prefix, so every public route gets it without saying so.
+ */
+const checkBackOnEveryLoad: RequestHandler = (_request, response, next) => {
+  response.set('Cache-Control', 'no-cache');
+  next();
+};

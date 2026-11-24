@@ -2,6 +2,8 @@
 // clock and the env config parsed from a valid environment. Tests talk to it only over HTTP (Supertest), the way
 // the site and the admin panel will.
 import { randomUUID } from 'node:crypto';
+import type { Server } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { MongoClient, type Db } from 'mongodb';
 import request from 'supertest';
 import { inject, onTestFinished } from 'vitest';
@@ -33,14 +35,35 @@ export type TestApi = ReturnType<typeof request>;
 
 /** Composes the backend for one test and returns an HTTP client for it. Everything is cleaned up when the test ends. */
 export async function createTestBackend(options: TestBackendOptions = {}): Promise<TestApi> {
-  const db = options.db ?? (await freshDatabase());
-  const app = composeApp({
+  return request(await composeTestApp(options));
+}
+
+/**
+ * Like createTestBackend, but listening on a free local port, for a client that needs a real address: the seed,
+ * or a process the test starts. Returns that address and an HTTP client for it. It stops when the test ends.
+ */
+export async function startTestBackend(options: TestBackendOptions = {}): Promise<{ url: string; api: TestApi }> {
+  const app = await composeTestApp(options);
+  const server = await new Promise<Server>((resolve, reject) => {
+    const listening = app.listen(0, '127.0.0.1', (error) => (error ? reject(error) : resolve(listening)));
+  });
+  onTestFinished(() => {
+    // close() only stops new connections and waits for the open ones to end, and a client's keep-alive sockets
+    // (fetch keeps them open for reuse) would hold it for seconds. Closing them first lets it finish at once.
+    server.closeAllConnections();
+    server.close();
+  });
+  const url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  return { url, api: request(url) };
+}
+
+async function composeTestApp(options: TestBackendOptions) {
+  return composeApp({
     config: loadConfig({ ...VALID_ENV, ...options.env }),
-    db,
+    db: options.db ?? (await freshDatabase()),
     clock: options.clock ?? testClock(),
     logger: { error: () => {} }, // unexpected errors are expected in some tests; keep the output clean
   });
-  return request(app);
 }
 
 /** Logs in with the test password, the way the admin panel does, and returns the session's token. */
