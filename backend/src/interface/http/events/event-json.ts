@@ -1,5 +1,6 @@
 import type { ListedEvent } from '../../../application/events/event-service.ts';
 import type { Event } from '../../../domain/events/event.ts';
+import type { PlainLocalizedText } from '../../../domain/shared/localized-text.ts';
 
 // How Events look on the wire. The HTTP layer decides this, not the domain: a domain object never serialises
 // itself, so its fields can change without changing the API, and the API can change without touching the domain.
@@ -8,12 +9,12 @@ import type { Event } from '../../../domain/events/event.ts';
 export interface PublicEventJson {
   /** YYYY-MM-DD, the day in Sofia. */
   readonly date: string;
-  readonly title: { readonly bg: string; readonly en: string };
+  readonly title: PlainLocalizedText;
   /** Whole euro cents; null for free entry. */
   readonly entryFee: number | null;
 }
 
-/** An Event as the admin panel gets it from /admin/events: with its id, and whether guests see it now. */
+/** An Event as the admin panel gets it from /admin/events: with its id, and whether it is upcoming now. */
 export interface AdminEventJson extends PublicEventJson {
   readonly id: string;
   readonly upcoming: boolean;

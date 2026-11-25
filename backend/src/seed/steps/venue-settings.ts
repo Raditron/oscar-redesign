@@ -7,8 +7,9 @@ const open = (opensAt: string, closesAt: string) => ({ opensAt, closesAt });
 /**
  * The bar's details as the site shows them today: the hours from `OC.hours` in js/main.js (the same in the hours
  * table and the opening-hours JSON-LD of index.html and en/index.html), the happy hour from `OC.happyHour` (50 % off,
- * 18:00–20:00, every night), and the contacts from the home pages: the reservation phone in the header, the events
- * email and phone in the events section, the address as the footer writes it, the Instagram handle in its links.
+ * 18:00–20:00, every night), and the contacts from the home pages: the reservation phone in the header, the general
+ * email and the Facebook page in the visit section, the events email and phone in the events section, the address as
+ * the footer writes it, the Maps link behind every "Directions" button, the Instagram handle in its links.
  */
 const SITE_VENUE_SETTINGS = {
   weeklySchedule: {
@@ -23,10 +24,13 @@ const SITE_VENUE_SETTINGS = {
   happyHour: { from: '18:00', to: '20:00', discountPercent: 50 },
   contacts: {
     reservationPhone: '+359 899 666 633',
+    generalEmail: 'oscarclub.sf@gmail.com',
     eventsEmail: 'events@oscarclubsofia.com',
     eventsPhone: '+359 883 30 50 55',
     address: { bg: 'ул. „Славянска“ 15, 1000 София', en: '15 Slavyanska St, 1000 Sofia' },
+    mapsUrl: 'https://www.google.com/maps/dir/?api=1&destination=Oscar+Club+Cocktail+bar%2C+Slavyanska+15%2C+Sofia',
     instagramHandle: 'oscarclub_official',
+    facebookUrl: 'https://www.facebook.com/OscarClub.sf',
   },
 };
 

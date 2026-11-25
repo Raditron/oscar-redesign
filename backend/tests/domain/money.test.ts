@@ -2,6 +2,7 @@
 // negative: what it allows and what it refuses.
 import { describe, expect, it } from 'vitest';
 import { InvalidMoneyError, Money } from '../../src/domain/shared/money.ts';
+import { expectRefusal } from '../support/expect-refusal.ts';
 
 describe('Money', () => {
   it('holds an amount in whole euro cents', () => {
@@ -13,7 +14,7 @@ describe('Money', () => {
   });
 
   it('refuses a negative amount', () => {
-    expect(() => Money.ofCents(-1)).toThrow(InvalidMoneyError);
+    expectRefusal(() => Money.ofCents(-1), InvalidMoneyError);
   });
 
   it.each([
@@ -22,6 +23,6 @@ describe('Money', () => {
     ['infinity', Number.POSITIVE_INFINITY],
     ['more cents than can be counted exactly', Number.MAX_SAFE_INTEGER + 1],
   ])('refuses %s', (_case, cents) => {
-    expect(() => Money.ofCents(cents)).toThrow(InvalidMoneyError);
+    expectRefusal(() => Money.ofCents(cents), InvalidMoneyError);
   });
 });

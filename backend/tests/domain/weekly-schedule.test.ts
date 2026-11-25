@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { TimeOfDay } from '../../src/domain/shared/time-of-day.ts';
 import { DayHours, InvalidDayHoursError, WeeklySchedule } from '../../src/domain/shared/weekly-schedule.ts';
 import { open } from '../support/bar-hours.ts';
+import { expectRefusal } from '../support/expect-refusal.ts';
 
 describe('WeeklySchedule', () => {
   it('holds hours for all seven days, closed ones included', () => {
@@ -41,6 +42,6 @@ describe('DayHours', () => {
   });
 
   it('refuses hours that open and close at the same time', () => {
-    expect(() => DayHours.open(time('18:00'), time('18:00'))).toThrow(InvalidDayHoursError);
+    expectRefusal(() => DayHours.open(time('18:00'), time('18:00')), InvalidDayHoursError);
   });
 });

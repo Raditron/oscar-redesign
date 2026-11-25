@@ -47,7 +47,14 @@ describe('PUT /admin/venue-settings', () => {
     const changed = {
       weeklySchedule: { ...weeklySchedule, monday: null, friday: { opensAt: '19:00', closesAt: '04:00' } },
       happyHour: { from: '19:00', to: '21:00', discountPercent: 30 },
-      contacts: { ...contacts, eventsEmail: 'party@oscarclubsofia.com', instagramHandle: 'oscar.club' },
+      contacts: {
+        ...contacts,
+        generalEmail: 'hello@oscarclubsofia.com',
+        eventsEmail: 'party@oscarclubsofia.com',
+        instagramHandle: 'oscar.club',
+        facebookUrl: 'https://www.facebook.com/oscar.club',
+        mapsUrl: 'https://maps.app.goo.gl/oscar',
+      },
     };
 
     const response = await api.put('/admin/venue-settings').set('Authorization', authorization).send(changed);
@@ -76,6 +83,7 @@ describe('PUT /admin/venue-settings', () => {
 
   describe('refuses details it cannot keep with 400 VALIDATION_FAILED, naming each field', () => {
     const { monday: _monday, ...withoutMonday } = weeklySchedule;
+    const { facebookUrl: _facebookUrl, ...withoutFacebook } = contacts;
 
     it.each([
       ['a weekday left out, rather than null for closed', { ...SITE_VENUE_SETTINGS, weeklySchedule: withoutMonday }, ['weeklySchedule.monday']],
@@ -91,8 +99,12 @@ describe('PUT /admin/venue-settings', () => {
       ['a reservation phone without the country code', { ...SITE_VENUE_SETTINGS, contacts: { ...contacts, reservationPhone: '0899 666 633' } }, ['contacts.reservationPhone']],
       ['an events phone that is not a number', { ...SITE_VENUE_SETTINGS, contacts: { ...contacts, eventsPhone: 'call us' } }, ['contacts.eventsPhone']],
       ['an events email without an @', { ...SITE_VENUE_SETTINGS, contacts: { ...contacts, eventsEmail: 'events.oscarclubsofia.com' } }, ['contacts.eventsEmail']],
+      ['a general email with a space inside', { ...SITE_VENUE_SETTINGS, contacts: { ...contacts, generalEmail: 'oscarclub sf@gmail.com' } }, ['contacts.generalEmail']],
       ['a blank English address', { ...SITE_VENUE_SETTINGS, contacts: { ...contacts, address: { ...contacts.address, en: ' ' } } }, ['contacts.address.en']],
+      ['a Maps link without its scheme', { ...SITE_VENUE_SETTINGS, contacts: { ...contacts, mapsUrl: 'www.google.com/maps' } }, ['contacts.mapsUrl']],
       ['an Instagram link instead of the handle', { ...SITE_VENUE_SETTINGS, contacts: { ...contacts, instagramHandle: 'https://www.instagram.com/oscarclub_official/' } }, ['contacts.instagramHandle']],
+      ['a Facebook link that runs a script', { ...SITE_VENUE_SETTINGS, contacts: { ...contacts, facebookUrl: 'javascript:alert(1)' } }, ['contacts.facebookUrl']],
+      ['the Facebook link left out, rather than given', { ...SITE_VENUE_SETTINGS, contacts: withoutFacebook }, ['contacts.facebookUrl']],
       ['nothing at all', {}, ['contacts', 'happyHour', 'weeklySchedule']],
     ])('%s', async (_case, body, fields) => {
       const { api, authorization } = await asAdmin();

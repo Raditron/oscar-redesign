@@ -1,8 +1,11 @@
 // Seam: the HTTP API of the fully composed backend. The admin panel lists, adds, edits and deletes Events under
 // /admin/events, with the token from a login. Prices cross the API as whole euro cents; free entry is an explicit
-// null. The test clock stands at Sunday 22 November 2026, 01:30 in Sofia: still Saturday the 21st's ServiceNight.
+// null. The test clock stands at Sunday 22 November 2026, 01:30 in Sofia: in the bar's hours, still Saturday the
+// 21st's ServiceNight, so a test that depends on that gives the backend the bar's hours first.
 import { describe, expect, it } from 'vitest';
-import { addEvent, addEvents, eventOn, eventTitled, type AdminEvent } from '../support/events.ts';
+import { givenBarHours } from '../support/bar-hours.ts';
+import { addEvent, addEvents, adminEventList, eventOn, eventTitled, type AdminEvent } from '../support/events.ts';
+import { expectStatus } from '../support/expect-status.ts';
 import { asAdmin } from '../support/test-backend.ts';
 
 const NEXT_SATURDAY = {
@@ -17,7 +20,7 @@ describe('POST /admin/events', () => {
 
     const response = await api.post('/admin/events').set('Authorization', authorization).send(NEXT_SATURDAY);
 
-    expect(response.status).toBe(201);
+    expectStatus(response, 201);
     expect(response.body).toEqual({ id: expect.any(String), ...NEXT_SATURDAY, upcoming: true });
   });
 
@@ -26,7 +29,7 @@ describe('POST /admin/events', () => {
 
     const response = await api.post('/admin/events').set('Authorization', authorization).send(eventOn('2026-10-31'));
 
-    expect(response.status).toBe(201);
+    expectStatus(response, 201);
     expect(response.body.upcoming).toBe(false);
   });
 
@@ -36,6 +39,8 @@ describe('POST /admin/events', () => {
     const free = await api.post('/admin/events').set('Authorization', authorization).send(eventOn('2026-11-28', null));
     const zero = await api.post('/admin/events').set('Authorization', authorization).send(eventOn('2026-12-05', 0));
 
+    expectStatus(free, 201);
+    expectStatus(zero, 201);
     expect(free.body.entryFee).toBeNull();
     expect(zero.body.entryFee).toBe(0);
   });
@@ -48,6 +53,7 @@ describe('POST /admin/events', () => {
       .set('Authorization', authorization)
       .send({ ...NEXT_SATURDAY, title: { bg: '  Парти ', en: ' Party  ' } });
 
+    expectStatus(response, 201);
     expect(response.body.title).toEqual({ bg: 'Парти', en: 'Party' });
   });
 
@@ -69,7 +75,7 @@ describe('POST /admin/events', () => {
 
       const response = await api.post('/admin/events').set('Authorization', authorization).send(body);
 
-      expect(response.status).toBe(400);
+      expectStatus(response, 400);
       expect(response.body).toEqual({
         code: 'VALIDATION_FAILED',
         message: expect.any(String),
@@ -85,16 +91,16 @@ describe('POST /admin/events', () => {
         .set('Authorization', authorization)
         .send({ ...NEXT_SATURDAY, title: { bg: NEXT_SATURDAY.title.bg, en: '' } });
 
+      expectStatus(response, 400);
       expect(response.body.details).toEqual([{ field: 'title.en', message: 'Enter the English title.' }]);
     });
 
     it('and keeps nothing it refused', async () => {
       const { api, authorization } = await asAdmin();
-      await api.post('/admin/events').set('Authorization', authorization).send({ ...NEXT_SATURDAY, entryFee: -500 });
+      const refused = await api.post('/admin/events').set('Authorization', authorization).send({ ...NEXT_SATURDAY, entryFee: -500 });
 
-      const list = await api.get('/admin/events').set('Authorization', authorization);
-
-      expect(list.body).toEqual([]);
+      expectStatus(refused, 400);
+      expect(await adminEventList(api)).toEqual([]);
     });
   });
 });
@@ -105,18 +111,20 @@ describe('GET /admin/events', () => {
 
     const response = await api.get('/admin/events').set('Authorization', authorization);
 
-    expect(response.status).toBe(200);
+    expectStatus(response, 200);
     expect(response.body).toEqual([]);
   });
 
   it('lists every Event: the upcoming ones first, soonest first, then the past ones, latest first', async () => {
     const { api, authorization } = await asAdmin();
+    await givenBarHours(api);
     for (const date of ['2026-10-31', '2026-12-05', '2026-11-21', '2026-11-07', '2026-11-28']) {
       await addEvent(api, eventOn(date));
     }
 
     const response = await api.get('/admin/events').set('Authorization', authorization);
 
+    expectStatus(response, 200);
     expect(response.body.map((event: { date: string; upcoming: boolean }) => [event.date, event.upcoming])).toEqual([
       ['2026-11-21', true], // Saturday: at 01:30 on Sunday it is still Saturday's ServiceNight
       ['2026-11-28', true],
@@ -135,6 +143,7 @@ describe('GET /admin/events', () => {
 
     const response = await api.get('/admin/events').set('Authorization', authorization);
 
+    expectStatus(response, 200);
     expect(response.body.map((event: AdminEvent) => event.id)).toEqual([...idsInOrder(upcoming), ...idsInOrder(past)]);
   });
 
@@ -144,6 +153,7 @@ describe('GET /admin/events', () => {
 
     const response = await api.get('/admin/events').set('Authorization', authorization);
 
+    expectStatus(response, 200);
     expect(response.body).toEqual([{ id, ...NEXT_SATURDAY, upcoming: true }]);
   });
 });
@@ -156,18 +166,17 @@ describe('PUT /admin/events/:id', () => {
 
     const response = await api.put(`/admin/events/${id}`).set('Authorization', authorization).send(corrected);
 
-    expect(response.status).toBe(200);
+    expectStatus(response, 200);
     expect(response.body).toEqual({ id, ...corrected, upcoming: false });
   });
 
   it('keeps the change: the list shows the Event as edited, once', async () => {
     const { api, authorization } = await asAdmin();
     const { id } = await addEvent(api, NEXT_SATURDAY);
-    await api.put(`/admin/events/${id}`).set('Authorization', authorization).send({ ...NEXT_SATURDAY, entryFee: 1500 });
+    const edited = await api.put(`/admin/events/${id}`).set('Authorization', authorization).send({ ...NEXT_SATURDAY, entryFee: 1500 });
 
-    const list = await api.get('/admin/events').set('Authorization', authorization);
-
-    expect(list.body).toEqual([{ id, ...NEXT_SATURDAY, entryFee: 1500, upcoming: true }]);
+    expectStatus(edited, 200);
+    expect(await adminEventList(api)).toEqual([{ id, ...NEXT_SATURDAY, entryFee: 1500, upcoming: true }]);
   });
 
   it('answers an id no Event has with 404 EVENT_NOT_FOUND', async () => {
@@ -175,7 +184,7 @@ describe('PUT /admin/events/:id', () => {
 
     const response = await api.put('/admin/events/no-such-event').set('Authorization', authorization).send(NEXT_SATURDAY);
 
-    expect(response.status).toBe(404);
+    expectStatus(response, 404);
     expect(response.body).toEqual({ code: 'EVENT_NOT_FOUND', message: expect.any(String) });
   });
 
@@ -187,11 +196,10 @@ describe('PUT /admin/events/:id', () => {
       .put(`/admin/events/${id}`)
       .set('Authorization', authorization)
       .send({ ...NEXT_SATURDAY, entryFee: -1 });
-    const list = await api.get('/admin/events').set('Authorization', authorization);
 
-    expect(response.status).toBe(400);
+    expectStatus(response, 400);
     expect(response.body.details).toEqual([{ field: 'entryFee', message: expect.any(String) }]);
-    expect(list.body).toEqual([{ id, ...NEXT_SATURDAY, upcoming: true }]);
+    expect(await adminEventList(api)).toEqual([{ id, ...NEXT_SATURDAY, upcoming: true }]);
   });
 });
 
@@ -202,21 +210,20 @@ describe('DELETE /admin/events/:id', () => {
     const { id: keptId } = await addEvent(api, eventOn('2026-12-05'));
 
     const response = await api.delete(`/admin/events/${id}`).set('Authorization', authorization);
-    const list = await api.get('/admin/events').set('Authorization', authorization);
 
-    expect(response.status).toBe(204);
+    expectStatus(response, 204);
     expect(response.text).toBe('');
-    expect(list.body.map((event: { id: string }) => event.id)).toEqual([keptId]);
+    expect((await adminEventList(api)).map((event) => event.id)).toEqual([keptId]);
   });
 
   it('answers an id no Event has with 404 EVENT_NOT_FOUND, also when it was just deleted', async () => {
     const { api, authorization } = await asAdmin();
     const { id } = await addEvent(api, NEXT_SATURDAY);
-    await api.delete(`/admin/events/${id}`).set('Authorization', authorization);
+    expectStatus(await api.delete(`/admin/events/${id}`).set('Authorization', authorization), 204);
 
     const response = await api.delete(`/admin/events/${id}`).set('Authorization', authorization);
 
-    expect(response.status).toBe(404);
+    expectStatus(response, 404);
     expect(response.body).toEqual({ code: 'EVENT_NOT_FOUND', message: expect.any(String) });
   });
 });
@@ -229,7 +236,7 @@ describe('an id in the path that is not valid percent-encoding', () => {
       .set('Authorization', authorization)
       .send(NEXT_SATURDAY);
 
-    expect(response.status).toBe(400);
+    expectStatus(response, 400);
     expect(response.body).toEqual({ code: 'MALFORMED_URL', message: expect.any(String) });
   });
 });
@@ -241,14 +248,13 @@ describe('without a token', () => {
     ['PUT', '/admin/events/some-id'],
     ['DELETE', '/admin/events/some-id'],
   ] as const)('%s %s answers 401 LOGIN_REQUIRED and changes nothing', async (method, path) => {
-    const { api, authorization } = await asAdmin();
+    const { api } = await asAdmin();
     const { id } = await addEvent(api, NEXT_SATURDAY);
 
     const response = await api[method.toLowerCase() as Lowercase<typeof method>](path.replace('some-id', id)).send(eventOn('2026-12-05'));
-    const list = await api.get('/admin/events').set('Authorization', authorization);
 
-    expect(response.status).toBe(401);
+    expectStatus(response, 401);
     expect(response.body).toEqual({ code: 'LOGIN_REQUIRED', message: expect.any(String) });
-    expect(list.body).toEqual([{ id, ...NEXT_SATURDAY, upcoming: true }]);
+    expect(await adminEventList(api)).toEqual([{ id, ...NEXT_SATURDAY, upcoming: true }]);
   });
 });

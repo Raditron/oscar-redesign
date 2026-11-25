@@ -41,7 +41,10 @@ The content that comes from the backend needs the script to fetch it. Without Ja
 reached, answers with an error or hasn't answered within 10 seconds, or while no address is set, each part of the page
 that shows it says the content isn't available and gives the reservation phone, +359 899 666 633: the one data value
 the HTML keeps on purpose, so a guest can always reach the bar. While the content is on its way nothing stands in for
-it (no spinner, no placeholder), so nothing jumps.
+it (no spinner, no placeholder). When it lands, it pushes the page below it down: the gig list adds up to three rows.
+That is a known limit. Room kept for the rows would leave a gap, or close with the opposite jump, whenever nothing is
+upcoming. Chromium and Firefox keep what the guest is reading in place; Safari doesn't. A link to a part of the page
+(`/#visit`) holds its place in every browser.
 
 Everything else works without JavaScript; the script adds behaviour on top (open-now status, carousel, cocktail index
 preview, menu filter and category bar, copy buttons).
@@ -74,7 +77,7 @@ Links between pages are relative and always name the file (`../en/index.html`), 
 local server and straight from disk. Canonical and hreflang URLs are absolute, in directory form (`/en/`).
 
 Files the old site has on the server stay there and keep working: `/logoOscar.png`, `/prizeyear.png`, `/menu3.png`,
-`/mainmenu/png/*`, `/mainmenu/food/*`. New files only go into new folders (`assets/`, `css/`, `js/`, `en/`).
+`/mainmenu/png/*`, `/mainmenu/food/*`. New files only go into new folders (`assets/`, `css/`, `js/`, `en/`, `admin/`).
 
 ### The design system
 

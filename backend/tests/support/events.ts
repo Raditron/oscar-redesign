@@ -1,12 +1,13 @@
 // Events for the tests, added and read back through the admin API, the way the admin panel does: never written to
 // or read from the database directly.
-import { logInAsAdmin, type TestApi } from './test-backend.ts';
+import { expectStatus } from './expect-status.ts';
+import { logInAsAdmin, type LocalizedTextJson, type TestApi } from './test-backend.ts';
 
 /** An Event as the admin panel lists it. */
 export interface AdminEvent {
   readonly id: string;
   readonly date: string;
-  readonly title: { readonly bg: string; readonly en: string };
+  readonly title: LocalizedTextJson;
   readonly entryFee: number | null;
   readonly upcoming: boolean;
 }
@@ -27,7 +28,7 @@ export async function addEvents(api: TestApi, ...events: object[]): Promise<Admi
   const added: AdminEvent[] = [];
   for (const event of events) {
     const response = await api.post('/admin/events').set('Authorization', authorization).send(event);
-    if (response.status !== 201) throw new Error(`adding an event answered ${response.status}: ${JSON.stringify(response.body)}`);
+    expectStatus(response, 201);
     added.push(response.body);
   }
   return added;
@@ -42,5 +43,6 @@ export async function addEvent(api: TestApi, event: object): Promise<AdminEvent>
 /** Every Event, as GET /admin/events lists them. */
 export async function adminEventList(api: TestApi): Promise<AdminEvent[]> {
   const response = await api.get('/admin/events').set('Authorization', `Bearer ${await logInAsAdmin(api)}`);
+  expectStatus(response, 200);
   return response.body;
 }

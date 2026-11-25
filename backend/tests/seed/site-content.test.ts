@@ -50,6 +50,24 @@ describe("the venue settings step's content", () => {
     expect(result).toEqual({ added: 1, skipped: 0 });
     expect(sent).toEqual([{ method: 'PUT', path: '/admin/venue-settings', body: SITE_VENUE_SETTINGS }]);
   });
+
+  it('has every contact the home pages link to, so none has to stay in the HTML', async () => {
+    const { api, sent } = emptyBackend();
+
+    await venueSettingsStep.load(api);
+
+    expect(sent[0]!.body.contacts).toEqual({
+      reservationPhone: '+359 899 666 633', // the header's phone
+      generalEmail: 'oscarclub.sf@gmail.com', // the visit section's email
+      eventsEmail: 'events@oscarclubsofia.com', // the events section
+      eventsPhone: '+359 883 30 50 55',
+      address: { bg: 'ул. „Славянска“ 15, 1000 София', en: '15 Slavyanska St, 1000 Sofia' }, // the footer
+      // behind every "Маршрут" / "Directions" link (the &amp; in the pages' href is a plain & once read)
+      mapsUrl: 'https://www.google.com/maps/dir/?api=1&destination=Oscar+Club+Cocktail+bar%2C+Slavyanska+15%2C+Sofia',
+      instagramHandle: 'oscarclub_official', // instagram.com/oscarclub_official/
+      facebookUrl: 'https://www.facebook.com/OscarClub.sf', // the visit section, the footer and the JSON-LD's sameAs
+    });
+  });
 });
 
 describe("the categories step's content", () => {

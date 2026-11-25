@@ -48,7 +48,7 @@ export class AdminAuthService {
     const session = this.sessionTokens.read(token);
     if (session === undefined) throw new InvalidSessionError();
     // A session belongs to the password it was started with, so a new password ends every session before it:
-    // that is how the owner locks out someone who knew the old one.
+    // that is how the bar locks out someone who knew the old one.
     if (session.passwordFingerprint !== this.adminPassword.fingerprint) throw new InvalidSessionError();
     if (this.clock.now() >= session.expiresAt) throw new SessionExpiredError();
   }

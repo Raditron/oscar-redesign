@@ -1,15 +1,22 @@
 // Seam: the HTTP API of the fully composed backend. Guests get the upcoming Events from GET /public/events, without
 // a token: at most three, soonest first, each with its date, title and entry fee (null for free entry). An Event is
 // upcoming until its ServiceNight ends, which on a Saturday is 03:00 on Sunday. The Events are added the way the
-// admin panel adds them. The test clock stands at Sunday 22 November 2026, 01:30 in Sofia, in the bar's current hours
-// (Mon–Wed and Sun until 23:30, Thu until 02:00, Fri–Sat until 03:00).
+// admin panel adds them. The test clock stands at Sunday 22 November 2026, 01:30 in Sofia; a test that depends on the
+// bar's hours (Mon–Wed and Sun until 23:30, Thu until 02:00, Fri–Sat until 03:00) gives them to the backend first.
 import { describe, expect, it } from 'vitest';
+import { givenBarHours } from '../support/bar-hours.ts';
 import { addEvents, eventOn, eventTitled } from '../support/events.ts';
-import { createTestBackend, testClock } from '../support/test-backend.ts';
+import { expectStatus } from '../support/expect-status.ts';
+import { createTestBackend, testClock, type TestApi } from '../support/test-backend.ts';
 
 const MINUTE = 60 * 1000;
 
-const datesIn = (body: { date: string }[]) => body.map((event) => event.date);
+/** The dates of the Events guests see now. */
+async function publicEventDates(api: TestApi): Promise<string[]> {
+  const response = await api.get('/public/events');
+  expectStatus(response, 200);
+  return response.body.map((event: { date: string }) => event.date);
+}
 
 describe('GET /public/events', () => {
   it('lists the upcoming Events, soonest first, each with its date, title and entry fee', async () => {
@@ -18,7 +25,7 @@ describe('GET /public/events', () => {
 
     const response = await api.get('/public/events');
 
-    expect(response.status).toBe(200);
+    expectStatus(response, 200);
     expect(response.body).toEqual([
       { date: '2026-11-28', title: { bg: 'Парти на 2026-11-28', en: 'Party on 2026-11-28' }, entryFee: 1500 },
       { date: '2026-12-05', title: { bg: 'Парти на 2026-12-05', en: 'Party on 2026-12-05' }, entryFee: 1000 },
@@ -29,9 +36,7 @@ describe('GET /public/events', () => {
     const api = await createTestBackend();
     await addEvents(api, eventOn('2026-12-19'), eventOn('2026-11-28'), eventOn('2026-12-12'), eventOn('2026-12-05'));
 
-    const response = await api.get('/public/events');
-
-    expect(datesIn(response.body)).toEqual(['2026-11-28', '2026-12-05', '2026-12-12']);
+    expect(await publicEventDates(api)).toEqual(['2026-11-28', '2026-12-05', '2026-12-12']);
   });
 
   it('cuts the same three on every load when more Events share a date: on one date, they come in the order of their ids', async () => {
@@ -42,6 +47,7 @@ describe('GET /public/events', () => {
 
     const response = await api.get('/public/events');
 
+    expectStatus(response, 200);
     expect(response.body.map((event: { title: object }) => event.title)).toEqual(firstThreeById.map((event) => event.title));
   });
 
@@ -51,7 +57,7 @@ describe('GET /public/events', () => {
 
     const response = await api.get('/public/events');
 
-    expect(response.status).toBe(200);
+    expectStatus(response, 200);
     expect(response.body).toEqual([]);
   });
 
@@ -61,39 +67,39 @@ describe('GET /public/events', () => {
 
     const response = await api.get('/public/events');
 
+    expectStatus(response, 200);
     expect(response.body.map((event: { entryFee: number | null }) => event.entryFee)).toEqual([null, 0]);
   });
 
   describe('around midnight', () => {
     it("still lists Saturday's Event at 01:30 on Sunday, since Saturday's ServiceNight runs until 03:00", async () => {
       const api = await createTestBackend();
+      await givenBarHours(api);
       await addEvents(api, eventOn('2026-11-21'), eventOn('2026-11-28'));
 
-      const response = await api.get('/public/events');
-
-      expect(datesIn(response.body)).toEqual(['2026-11-21', '2026-11-28']);
+      expect(await publicEventDates(api)).toEqual(['2026-11-21', '2026-11-28']);
     });
 
     it("drops Saturday's Event at 03:00 on Sunday, when Saturday's ServiceNight ends", async () => {
       const clock = testClock();
       const api = await createTestBackend({ clock });
+      await givenBarHours(api);
       await addEvents(api, eventOn('2026-11-21'), eventOn('2026-11-28'));
 
       clock.advance(90 * MINUTE);
-      const response = await api.get('/public/events');
 
-      expect(datesIn(response.body)).toEqual(['2026-11-28']);
+      expect(await publicEventDates(api)).toEqual(['2026-11-28']);
     });
 
     it("drops Sunday's Event at 00:10 on Monday, since Sunday closed at 23:30", async () => {
       const clock = testClock();
       const api = await createTestBackend({ clock });
+      await givenBarHours(api);
       await addEvents(api, eventOn('2026-11-22'), eventOn('2026-11-28'));
 
       clock.advance((22 * 60 + 40) * MINUTE); // Sunday 01:30 → Monday 00:10
-      const response = await api.get('/public/events');
 
-      expect(datesIn(response.body)).toEqual(['2026-11-28']);
+      expect(await publicEventDates(api)).toEqual(['2026-11-28']);
     });
   });
 
@@ -103,6 +109,7 @@ describe('GET /public/events', () => {
 
       const response = await api.get('/public/events');
 
+      expectStatus(response, 200);
       expect(response.headers['cache-control']).toBe('no-cache');
     });
 
@@ -110,14 +117,15 @@ describe('GET /public/events', () => {
       const api = await createTestBackend();
       await addEvents(api, eventOn('2026-11-28'));
       const first = await api.get('/public/events');
+      expectStatus(first, 200);
 
       const unchanged = await api.get('/public/events').set('If-None-Match', first.headers.etag!);
       await addEvents(api, eventOn('2026-12-05'));
       const afterSave = await api.get('/public/events').set('If-None-Match', first.headers.etag!);
 
-      expect(unchanged.status).toBe(304);
-      expect(afterSave.status).toBe(200);
-      expect(datesIn(afterSave.body)).toEqual(['2026-11-28', '2026-12-05']);
+      expectStatus(unchanged, 304);
+      expectStatus(afterSave, 200);
+      expect(afterSave.body.map((event: { date: string }) => event.date)).toEqual(['2026-11-28', '2026-12-05']);
     });
   });
 });

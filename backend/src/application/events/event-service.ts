@@ -6,7 +6,10 @@ import type { Clock } from '../ports/clock.ts';
 import type { ScheduleProvider } from '../ports/schedule-provider.ts';
 import { EventNotFoundError } from './event-errors.ts';
 
-/** An Event as the admin panel lists it: with whether guests see it tonight. */
+/**
+ * An Event as the admin panel lists it: with whether it is upcoming, by the current ServiceNight. (An upcoming Event
+ * may still be one guests don't see, when three sooner ones are upcoming.)
+ */
 export interface ListedEvent {
   readonly event: Event;
   readonly upcoming: boolean;

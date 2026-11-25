@@ -1,16 +1,18 @@
 // Switched off: #37 (Categories) switches it on by adding `categoriesStep` to SEED_STEPS in src/seed/seed.ts.
+import type { LocalizedTextJson } from '../admin-api.ts';
 import { collectionStep, sameSlug } from '../collection-step.ts';
 
-interface Text {
-  readonly bg: string;
-  readonly en: string;
-}
-
 /** The same text in both languages: a brand ("Jura 10") or a pour ("50 ml") reads the same on either page. */
-const both = (text: string): Text => ({ bg: text, en: text });
+const both = (text: string): LocalizedTextJson => ({ bg: text, en: text });
 
 /** A new MenuItem as the admin API takes it: no id yet, shown to guests. A null price is unconfirmed. */
-const item = (name: Text, price: number | null, note: Text | null = null) => ({ id: null, name, note, price, hidden: false });
+const item = (name: LocalizedTextJson, price: number | null, note: LocalizedTextJson | null = null) => ({
+  id: null,
+  name,
+  note,
+  price,
+  hidden: false,
+});
 
 /** One of the twenty-one shots: each is 3 €, with its ingredients as its note. */
 const shot = (name: string, bg: string, en: string) => item(both(name), 300, { bg, en });
@@ -170,7 +172,6 @@ const SITE_CATEGORIES = [
   },
 ];
 
-/** The categories step: through GET and POST /admin/categories. A Category is already there when its slug is. */
 export const categoriesStep = collectionStep({
   name: 'categories',
   path: '/admin/categories',

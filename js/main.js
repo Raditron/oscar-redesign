@@ -144,9 +144,13 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
    What changes at the bar lives in the backend, the one source of truth, and is fetched as the page loads. A part of
    the page shown from it is filled by OC.fill(box, path, render): it loads `path`, hands the JSON to render(), which
    fills the part's own elements, and marks `box` (the section the part belongs to) with how it went:
-     while loading   aria-busy="true", and nothing new on screen: no spinner, no placeholder, so nothing jumps
+     while loading   aria-busy="true", and nothing new on screen: no spinner, no placeholder
      then            data-oc-state="ready", or "unavailable" when the load (10 seconds at most) or render() failed
-   Each part's elements stay hidden in the HTML until render() has something to put in them. In the "unavailable"
+   Each part's elements stay hidden in the HTML until render() has something to put in them. What it puts there
+   pushes the page below it down (the gig list's up to three rows): a known limit, since room kept for them would
+   leave a gap, or close with the opposite jump, whenever there is nothing to show. Chromium and Firefox keep what the
+   visitor is reading in place (scroll anchoring); WebKit doesn't, and a link to a part of a page holds its place in
+   every browser (below). In the "unavailable"
    state the box's .v2-unavail note shows (CSS): it says the content isn't available and gives the reservation phone,
    the one data value the HTML keeps on purpose, so a guest can always reach the bar. It shows without JS too (the
    <noscript> style in each page's head):

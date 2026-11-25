@@ -1,6 +1,6 @@
 // The backend under test: the real composition root, given a fresh database on the in-memory MongoDB, a fixed
 // clock and the env config parsed from a valid environment. Tests talk to it only over HTTP (Supertest), the way
-// the site and the admin panel will.
+// the site and the admin panel do.
 import { randomUUID } from 'node:crypto';
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
@@ -15,12 +15,12 @@ import { freePort } from './free-port.ts';
 import { TEST_INSTANT } from './test-instant.ts';
 import { ADMIN_PASSWORD, VALID_ENV } from './valid-env.ts';
 
-/** Sunday 22 November 2026, 01:30 in Sofia (UTC+2): still Saturday's ServiceNight (see test-instant.ts). */
-const TEST_NOW = new Date(TEST_INSTANT);
-
-/** The clock every test backend runs on, stopped at TEST_NOW. Pass one in to move time on during a test. */
+/**
+ * The clock every test backend runs on, stopped at TEST_INSTANT: Sunday 22 November 2026, 01:30 in Sofia. Pass one in
+ * to move time on during a test.
+ */
 export function testClock(): FixedClock {
-  return new FixedClock(TEST_NOW);
+  return new FixedClock(new Date(TEST_INSTANT));
 }
 
 export interface TestBackendOptions {
@@ -28,11 +28,17 @@ export interface TestBackendOptions {
   readonly env?: Readonly<Record<string, string | undefined>>;
   /** Another database instead of a fresh one on the in-memory server. */
   readonly db?: Db;
-  /** A clock the test keeps hold of, to advance it, instead of one of its own stopped at TEST_NOW. */
+  /** A clock the test keeps hold of, to advance it, instead of one of its own stopped at TEST_INSTANT. */
   readonly clock?: Clock;
 }
 
 export type TestApi = ReturnType<typeof request>;
+
+/** A LocalizedText as the API writes it, in request and response bodies alike. */
+export interface LocalizedTextJson {
+  readonly bg: string;
+  readonly en: string;
+}
 
 /** Composes the backend for one test and returns an HTTP client for it. Everything is cleaned up when the test ends. */
 export async function createTestBackend(options: TestBackendOptions = {}): Promise<TestApi> {

@@ -2,6 +2,7 @@
 // languages, Bulgarian and English, neither of them blank.
 import { describe, expect, it } from 'vitest';
 import { BlankTextError, LocalizedText } from '../../src/domain/shared/localized-text.ts';
+import { expectRefusal } from '../support/expect-refusal.ts';
 
 describe('LocalizedText', () => {
   it('holds the Bulgarian and the English text', () => {
@@ -24,6 +25,6 @@ describe('LocalizedText', () => {
     ['a Bulgarian text of spaces only', { bg: '   ', en: 'Halloween party' }],
     ['an English text of spaces only', { bg: 'Halloween парти', en: ' \n ' }],
   ])('refuses %s', (_case, texts) => {
-    expect(() => LocalizedText.of(texts)).toThrow(BlankTextError);
+    expectRefusal(() => LocalizedText.of(texts), BlankTextError);
   });
 });

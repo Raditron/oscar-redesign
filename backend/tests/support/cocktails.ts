@@ -1,22 +1,17 @@
 // Cocktails for the tests, added and read back through the admin API, the way the admin panel does: never written to
 // or read from the database directly.
 import { expectStatus } from './expect-status.ts';
-import { logInAsAdmin, type TestApi } from './test-backend.ts';
-
-interface Text {
-  readonly bg: string;
-  readonly en: string;
-}
+import { logInAsAdmin, type LocalizedTextJson, type TestApi } from './test-backend.ts';
 
 /** A Cocktail as the admin panel lists it. */
 export interface AdminCocktail {
   readonly id: string;
   readonly slug: string;
   readonly name: string;
-  readonly slogan: Text;
-  readonly description: Text;
-  readonly ingredients: Text;
-  readonly imageAlt: Text;
+  readonly slogan: LocalizedTextJson;
+  readonly description: LocalizedTextJson;
+  readonly ingredients: LocalizedTextJson;
+  readonly imageAlt: LocalizedTextJson;
   readonly imagePath: string;
   readonly baseSpirit: string;
   readonly volumeMl: number;

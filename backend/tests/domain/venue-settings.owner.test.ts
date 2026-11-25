@@ -10,28 +10,37 @@ import { HappyHour } from '../../src/domain/venue-settings/happy-hour.ts';
 import { InstagramHandle } from '../../src/domain/venue-settings/instagram-handle.ts';
 import { PhoneNumber } from '../../src/domain/venue-settings/phone-number.ts';
 import { VenueSettings } from '../../src/domain/venue-settings/venue-settings.ts';
+import { WebLink } from '../../src/domain/venue-settings/web-link.ts';
 import { BAR_HOURS } from '../support/bar-hours.ts';
+
+const MAPS_URL = 'https://www.google.com/maps/dir/?api=1&destination=Oscar+Club+Cocktail+bar%2C+Slavyanska+15%2C+Sofia';
 
 const siteContacts = () =>
   Contacts.of({
     reservationPhone: PhoneNumber.parse('+359 899 666 633'),
+    generalEmail: EmailAddress.parse('oscarclub.sf@gmail.com'),
     eventsEmail: EmailAddress.parse('events@oscarclubsofia.com'),
     eventsPhone: PhoneNumber.parse('+359 883 30 50 55'),
     address: LocalizedText.of({ bg: 'ул. „Славянска“ 15, 1000 София', en: '15 Slavyanska St, 1000 Sofia' }),
+    mapsUrl: WebLink.parse(MAPS_URL),
     instagramHandle: InstagramHandle.parse('oscarclub_official'),
+    facebookUrl: WebLink.parse('https://www.facebook.com/OscarClub.sf'),
   });
 
 const siteHappyHour = () => HappyHour.of({ from: TimeOfDay.parse('18:00'), to: TimeOfDay.parse('20:00'), discountPercent: 50 });
 
 describe('Contacts', () => {
-  it('keeps the reservation phone, the events email and phone, the address in both languages and the Instagram handle', () => {
+  it('keeps the reservation phone, the general and events emails, the events phone, the address with its directions, Instagram and Facebook', () => {
     const contacts = siteContacts();
 
     expect(contacts.reservationPhone.toString()).toBe('+359 899 666 633');
+    expect(contacts.generalEmail.toString()).toBe('oscarclub.sf@gmail.com');
     expect(contacts.eventsEmail.toString()).toBe('events@oscarclubsofia.com');
     expect(contacts.eventsPhone.toString()).toBe('+359 883 30 50 55');
     expect(contacts.address.en).toBe('15 Slavyanska St, 1000 Sofia');
+    expect(contacts.mapsUrl.toString()).toBe(MAPS_URL);
     expect(contacts.instagramHandle.toString()).toBe('oscarclub_official');
+    expect(contacts.facebookUrl.toString()).toBe('https://www.facebook.com/OscarClub.sf');
   });
 });
 

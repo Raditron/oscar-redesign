@@ -13,7 +13,7 @@ export interface EventDetails {
 }
 
 /**
- * Something on at the bar on one date, such as a DJ. Guests see the upcoming ones on the home page.
+ * Something on at the bar on one date, such as a DJ. Guests see the three soonest upcoming ones on the home page.
  *
  * The aggregate boundary: an Event is an aggregate on its own. Nothing else has to change when it changes, and
  * nothing inside it has an identity of its own (its date, title and fee are value objects), so it is loaded, edited
@@ -66,8 +66,9 @@ export class Event {
   }
 
   /**
-   * Whether guests should still see it: its date is on or after the date of `serviceNight`. A Saturday's Event stays
-   * upcoming until Saturday's ServiceNight ends, past midnight, not at midnight.
+   * Whether it is upcoming: its date is on or after the date of `serviceNight`. A Saturday's Event stays upcoming until
+   * Saturday's ServiceNight ends, past midnight, not at midnight. (Guests see at most three upcoming Events, so being
+   * upcoming makes an Event one guests may see, not one they do: see event-lists.ts.)
    */
   isUpcomingOn(serviceNight: ServiceNight): boolean {
     return !this.date.isBefore(serviceNight.date);

@@ -1,19 +1,15 @@
 // Switched off: #38 (Cocktails) switches it on by adding `cocktailsStep` to SEED_STEPS in src/seed/seed.ts.
+import type { LocalizedTextJson } from '../admin-api.ts';
 import { collectionStep, sameSlug } from '../collection-step.ts';
-
-interface Text {
-  readonly bg: string;
-  readonly en: string;
-}
 
 interface SiteCocktail {
   readonly slug: string;
   readonly name: string;
   /** The first line of its slide in the home page carousel (`.v2-feat-slogan`). */
-  readonly slogan: Text;
+  readonly slogan: LocalizedTextJson;
   /** The slide's second line (`.v2-lede`), where it says more than the ingredients; otherwise it is them. */
-  readonly description?: Text;
-  readonly ingredients: Text;
+  readonly description?: LocalizedTextJson;
+  readonly ingredients: LocalizedTextJson;
   readonly photo: string;
   readonly baseSpirit: string;
   readonly volumeMl: number;
@@ -203,7 +199,6 @@ function cocktailBody({ photo, description, ...cocktail }: SiteCocktail, index: 
   };
 }
 
-/** The cocktails step: through GET and POST /admin/cocktails. A Cocktail is already there when its slug is. */
 export const cocktailsStep = collectionStep({
   name: 'cocktails',
   path: '/admin/cocktails',

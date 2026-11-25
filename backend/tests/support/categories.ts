@@ -1,13 +1,13 @@
 // Categories for the tests, added and read back through the admin API, the way the admin panel does: never written
 // to or read from the database directly.
 import { expectStatus } from './expect-status.ts';
-import { logInAsAdmin, type TestApi } from './test-backend.ts';
+import { logInAsAdmin, type LocalizedTextJson, type TestApi } from './test-backend.ts';
 
 /** A MenuItem as the admin panel lists it. */
 export interface AdminMenuItem {
   readonly id: string;
-  readonly name: { readonly bg: string; readonly en: string };
-  readonly note: { readonly bg: string; readonly en: string } | null;
+  readonly name: LocalizedTextJson;
+  readonly note: LocalizedTextJson | null;
   readonly price: number | null;
   readonly hidden: boolean;
 }
@@ -17,8 +17,8 @@ export interface AdminCategory {
   readonly id: string;
   readonly slug: string;
   readonly section: string;
-  readonly name: { readonly bg: string; readonly en: string };
-  readonly servingSize: { readonly bg: string; readonly en: string } | null;
+  readonly name: LocalizedTextJson;
+  readonly servingSize: LocalizedTextJson | null;
   readonly position: number;
   readonly items: readonly AdminMenuItem[];
 }

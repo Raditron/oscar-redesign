@@ -10,6 +10,12 @@ export class AdminApiError extends Error {
   }
 }
 
+/** A LocalizedText as the admin API takes and gives it. */
+export interface LocalizedTextJson {
+  readonly bg: string;
+  readonly en: string;
+}
+
 /**
  * The admin API as the seed uses it: a logged-in client over plain HTTP (the fetch built into Node), the way the
  * admin panel talks to the backend. It knows paths and JSON, never the backend's code, so the seed loads content

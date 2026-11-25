@@ -1,7 +1,7 @@
 // Seam: the HTTP API of the fully composed backend. Guests get the bar's VenueSettings from
 // GET /public/venue-settings, without a token: the WeeklySchedule behind the hours table, the open-now line and the
-// opening-hours JSON-LD; the HappyHour; and the Contacts every phone, email, address and Instagram link on the site
-// shows. The VenueSettings are saved the way the admin panel saves them.
+// opening-hours JSON-LD; the HappyHour; and the Contacts behind every phone, email, address, directions, Instagram and
+// Facebook link on the site. The VenueSettings are saved the way the admin panel saves them.
 import { describe, expect, it } from 'vitest';
 import { expectStatus } from '../support/expect-status.ts';
 import { createTestBackend } from '../support/test-backend.ts';

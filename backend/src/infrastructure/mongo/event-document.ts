@@ -1,7 +1,7 @@
 import { Event } from '../../domain/events/event.ts';
 import { CalendarDate } from '../../domain/shared/calendar-date.ts';
 import { DomainError } from '../../domain/shared/domain-error.ts';
-import { LocalizedText } from '../../domain/shared/localized-text.ts';
+import { LocalizedText, type PlainLocalizedText } from '../../domain/shared/localized-text.ts';
 import { Money } from '../../domain/shared/money.ts';
 
 /**
@@ -18,7 +18,7 @@ export interface EventDocument {
   /** YYYY-MM-DD. Text, not a BSON date: a BSON date is an instant, and an instant would put the day at risk of
    * shifting by a time zone. Text in this form also sorts by date. */
   readonly date: string;
-  readonly title: { readonly bg: string; readonly en: string };
+  readonly title: PlainLocalizedText;
   /** Whole euro cents, or null for free entry. The unit is in the name, since a number on its own doesn't say it. */
   readonly entryFeeCents: number | null;
 }

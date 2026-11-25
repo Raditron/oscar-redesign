@@ -55,17 +55,17 @@ so it never sees Express, MongoDB or zod. That keeps the bar's rules in plain cl
 without a server or a database, and lets the outer layers change (another database, another web framework) without
 touching them. `tests/architecture/dependencies.test.ts` reads every import in the four layers' folders (and in
 `seed/`) and holds each layer to the "May import" column below, its layers and its packages alike, since a wrong
-import would otherwise compile and run without anyone noticing. What a test of imports can't see is a global; the domain uses two, both part of every JavaScript runtime
-rather than of Node or a library: `Intl`, to read an instant on Sofia's clock, and `crypto.randomUUID()`, to give a
-new Event its id.
+import would otherwise compile and run without anyone noticing. What a test of imports can't see is a global; the
+domain uses two, both part of every JavaScript runtime rather than of Node or a library: `Intl`, to read an instant on
+Sofia's clock, and `crypto.randomUUID()`, to give a new Event its id.
 
-| Layer              | What it holds                                                                                                                                                                                           | May import                                                        |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| **domain**         | Entities, value objects and aggregates; the rules they enforce; the errors they raise; the repository interfaces for each aggregate; facts about the bar that every rule shares, such as its time zone. | domain                                                                           |
-| **application**    | One service per aggregate, with a method per use case, and the errors it raises; the rules of admin access (`application/auth/`). The ports those services need from the outside world (the Clock, …). | domain, application                                                              |
+| Layer              | What it holds                                                                                                                                                                                           | May import                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| **domain**         | Entities, value objects and aggregates; the rules they enforce; the errors they raise; the repository interfaces for each aggregate; facts about the bar that every rule shares, such as its time zone. | domain                                                                             |
+| **application**    | One service per aggregate, with a method per use case, and the errors it raises; the rules of admin access (`application/auth/`). The ports those services need from the outside world (the Clock, …).  | domain, application                                                                |
 | **infrastructure** | Adapters that implement those ports and repository interfaces: MongoDB repositories and their document mappers, the clocks, the password check (bcrypt) and the session tokens (JWT).                   | domain, application, the libraries it adapts (MongoDB, bcrypt, JWT, Node's crypto) |
-| **interface**      | HTTP: routers and their handlers (the controllers), zod schemas for request bodies, CORS, the admin guard, turning errors into responses, and the Logger the error handler reports to.                  | domain, application, Express, zod                                                |
-| **outer shell**    | `config.ts` (the env config), `composition-root.ts` (wiring), `main.ts` (the process), `scripts/` (tools run by hand), `seed/` (the seed, a client of the admin API).                                   | everything                                                                       |
+| **interface**      | HTTP: routers and their handlers (the controllers), zod schemas for request bodies, CORS, the admin guard, turning errors into responses, and the Logger the error handler reports to.                  | domain, application, Express, zod                                                  |
+| **outer shell**    | `config.ts` (the env config), `composition-root.ts` (wiring), `main.ts` (the process), `scripts/` (tools run by hand), `seed/` (the seed, a client of the admin API).                                   | everything, except `seed/`, which imports only its own files                       |
 
 Interface and infrastructure never import each other: they only meet in the composition root.
 
@@ -95,7 +95,7 @@ A few consequences, each a choice the code makes on purpose:
 | an error a use case raises that isn't a domain rule (an unknown id)            | beside the service, `src/application/<aggregate>/`                  |
 | a port a use case needs (other than a repository interface)                    | `src/application/ports/`                                            |
 | a MongoDB repository and its document mapper                                   | `src/infrastructure/mongo/`                                         |
-| any other adapter for a port                                                   | `src/infrastructure/<technology>/`, like `infrastructure/clock/`    |
+| any other adapter for a port                                                   | `src/infrastructure/<what it adapts>/`, like `clock/` or `auth/`    |
 | routes, their handlers, their zod request schemas and their JSON answers       | `src/interface/http/<resource>/`, like `interface/http/events/`     |
 | a new error code, or the HTTP answer for a domain or application error         | `src/interface/http/errors/`                                        |
 | a new environment variable                                                     | `src/config.ts`, and a described entry in `.env.example`            |
@@ -231,7 +231,8 @@ moment without waiting for it.
   the database, so an Event never exists without one); `Event.restore(id, details)` is how the repository loads one
   back.
 - *Behaviour, not just data.* `edit(details)` is the only way to change it; `isUpcomingOn(serviceNight)` answers
-  the rule guests see: upcoming while its date is on or after the ServiceNight's date.
+  whether it is upcoming: its date is on or after the ServiceNight's date. (Upcoming is not the same as shown:
+  guests see at most three upcoming Events, so a fourth is upcoming and still not on the site.)
 - *Its invariants live in its parts.* An Event built from value objects can't have a blank title or a negative fee,
   so it needs no checks of its own. An aggregate with a rule that spans several of its parts checks it in its own
   factory and methods, and throws a `DomainError` of its own.
@@ -252,10 +253,9 @@ there are" is a domain idea. It loads and saves whole Events and says nothing of
 `listForAdmin`, `add`, `edit`, `delete`. It orchestrates and decides nothing itself: it works out the current
 ServiceNight from the Clock and the ScheduleProvider, loads and saves through the EventRepository, and leaves the
 rules to the domain: `event-lists.ts` picks and orders the Events, and each Event says whether it is upcoming. It
-is handed domain values (`EventDetails`), never JSON, and hands back Events, or
-`ListedEvent`s: a read model of its own, an Event with whether guests see it now, which is what the admin panel
-lists. What it refuses that isn't a domain rule, an id no Event has, it throws as its own error,
-`EventNotFoundError`.
+is handed domain values (`EventDetails`), never JSON, and hands back Events, or `ListedEvent`s: a read model of its
+own, an Event with whether it is upcoming now, which is what the admin panel lists. What it refuses that isn't a
+domain rule, an id no Event has, it throws as its own error, `EventNotFoundError`.
 
 It loads every Event and filters them in memory rather than asking MongoDB for "date ≥ tonight". The bar has a few
 Events a month, and this way the rule "upcoming" lives in one place, `Event.isUpcomingOn`, instead of a second copy
@@ -316,7 +316,9 @@ any `DomainError` → 400 (see "Errors").
   ServiceNight across midnight and on closed days, with no HTTP, no database and no clock. `tests/contract/`
   (`admin-events.test.ts`, `public-events.test.ts`) checks the routes over HTTP against the composed app: what a
   client sends and what it gets back, including the Saturday Event still listed at Sunday 01:30 (the test clock's
-  moment) and gone once the clock moves on to 03:00.
+  moment) and gone once the clock moves on to 03:00. A test that depends on the bar's hours says so by calling
+  `givenBarHours(api)` (`tests/support/bar-hours.ts`) first; see "The VenueSettings slice replaces the temporary
+  ScheduleProvider".
 
 ### A request through every layer: `PUT /admin/events/:id`
 
@@ -485,8 +487,10 @@ index) but not the Categories, asks for only what it shows.
 ```
 VenueSettings  { weeklySchedule: { monday … sunday: { opensAt: "18:00", closesAt: "03:00" } | null },
                  happyHour: { from: "18:00", to: "20:00", discountPercent: 50 },
-                 contacts: { reservationPhone: "+359 899 666 633", eventsEmail: "events@oscarclubsofia.com",
-                             eventsPhone: "+359 883 30 50 55", address: { bg, en }, instagramHandle: "oscarclub_official" } }
+                 contacts: { reservationPhone: "+359 899 666 633", generalEmail: "oscarclub.sf@gmail.com",
+                             eventsEmail: "events@oscarclubsofia.com", eventsPhone: "+359 883 30 50 55",
+                             address: { bg, en }, mapsUrl: "https://www.google.com/maps/dir/?api=1&destination=…",
+                             instagramHandle: "oscarclub_official", facebookUrl: "https://www.facebook.com/OscarClub.sf" } }
 
 Category (sent)     { slug, section: "shots" | "sets" | "spirits", name: { bg, en },
                       servingSize: { bg: "0,5 l", en: "0.5 l" } | null, position: 1…,
@@ -530,6 +534,11 @@ or what keeps the site working:
   the bar from a foreign phone only in that form. How the digits are grouped is left as written.
 - **An Instagram handle is the handle, not a link:** the site builds the profile link, the message link and the "@…"
   from it.
+- **Every contact is required, the general email, the Maps link and the Facebook page included** (the user's
+  decision): the site then reads all of them from the backend, and none has to stay written in the HTML (#39).
+- **A web link (the Maps link, the Facebook page) starts with `http://` or `https://`:** the site writes it into an
+  `<a href>`, where a `javascript:` link would run on the bar's own page and a link without its scheme would lead to
+  a page of the site that doesn't exist. Where it leads is the Admin's business.
 - **A happy hour starts before it ends, on the same evening:** `OC.status` in js/main.js compares the minutes since
   that evening's midnight, so a window across midnight would never show on the open-now line.
 - **An image path has no scheme and no host:** the site writes it into an `<img src>`, where a `javascript:` URL or
@@ -549,10 +558,15 @@ code stays as it is.
 **Before the first save** there are no VenueSettings, and the user decided what that means: the venue reads answer
 404 `VENUE_SETTINGS_NOT_FOUND`, and for Events no schedule means every day counts as closed, so an Event is upcoming
 from its own date in Sofia (at 01:30 on Sunday, Saturday's Event is gone and Sunday's is listed). The seed always
-creates VenueSettings, so a seeded backend never meets this. One consequence is #36's to handle: the Events tests
-(`admin-events.test.ts`, `public-events.test.ts`) save no VenueSettings and expect the bar's hours (Saturday's Event
-still listed at 01:30 on Sunday), so #36 changes their setup to save the bar's hours first. That change is the
-owner's, made with the slice, not before.
+creates VenueSettings, so a seeded backend never meets this.
+
+**The Events tests stay unchanged.** Some of them expect the bar's hours (Saturday's Event still listed at 01:30 on
+Sunday), and once the temporary adapter is gone a backend with no VenueSettings has none. So every Events test that
+depends on the hours calls `givenBarHours(api)` (`tests/support/bar-hours.ts`) before it adds its Events. Today that
+helper does nothing, because the temporary adapter already answers with the bar's hours; #36 makes it save the bar's
+hours as VenueSettings through the admin API, and that helper's body is the only test code #36 changes for Events.
+The owner's tests never call it, so they still meet a backend with no VenueSettings when they mean to (the 404s, the
+calendar-day rule), and a test that saves its own hours (a closed Saturday) is never overwritten by it.
 
 ### Finishing a slice
 
@@ -560,12 +574,13 @@ owner's, made with the slice, not before.
 2. Build the slice through the layers, as "Following the pattern for another aggregate" above lists: its repository
    interface and `restore`, service, document mapper and repository, request schemas, JSON answers, router, and its
    error codes in `ErrorCode` and `toHttpError`.
-3. Delete its entries from `pending-routes.ts`, and add its seed step to `SEED_STEPS`.
+3. Delete its entries from `pending-routes.ts`, and add its seed step to `SEED_STEPS`. (#36 also replaces the
+   temporary ScheduleProvider in the composition root, and fills in `givenBarHours`, as above.)
 4. Run `npm run test:owner` until its files pass, then rename them to `*.test.ts`; `npm test` must stay green.
 
 | Slice | Needs first | Its tests | Its pending routes | Its seed step |
 | ----- | ----------- | --------- | ------------------ | ------------- |
-| #36   | nothing     | `tests/domain/`: `happy-hour`, `phone-number`, `email-address`, `instagram-handle`, `venue-settings`; `tests/contract/`: `admin-venue-settings`, `public-venue-settings`, `venue-settings-schedule`; `tests/seed/seed-venue-settings` | `GET /public/venue-settings`, `GET` and `PUT /admin/venue-settings` | `venueSettingsStep` |
+| #36   | nothing     | `tests/domain/`: `happy-hour`, `phone-number`, `email-address`, `instagram-handle`, `web-link`, `venue-settings`; `tests/contract/`: `admin-venue-settings`, `public-venue-settings`, `venue-settings-schedule`; `tests/seed/seed-venue-settings` | `GET /public/venue-settings`, `GET` and `PUT /admin/venue-settings` | `venueSettingsStep` |
 | #37   | nothing     | `tests/domain/`: `slug`, `position`, `section`, `category`; `tests/contract/`: `admin-categories`, `public-categories`; `tests/seed/seed-categories` | `GET /public/categories`, `GET` and `POST /admin/categories`, `PUT` and `DELETE /admin/categories/:id` | `categoriesStep` |
 | #38   | #37's Slug and Position | `tests/domain/`: `base-spirit`, `accent-colour`, `volume`, `image-path`, `cocktail`; `tests/contract/`: `admin-cocktails`, `public-cocktails`; `tests/seed/seed-cocktails` | `GET /public/cocktails`, `GET` and `POST /admin/cocktails`, `PUT` and `DELETE /admin/cocktails/:id` | `cocktailsStep` |
 
@@ -612,12 +627,12 @@ Choices worth knowing:
   lock-out, to its end in milliseconds, by moving a `FixedClock` on.
 - **A session ends on a whole second.** A JWT counts time in whole seconds, so `logIn` rounds the expiry down to
   one: the `expiresAt` an Admin is told is exactly when their token stops working, not up to a second later.
-- **Changing the password ends every session.** When a staff member who knew the password leaves, the owner sets a
-  new `ADMIN_PASSWORD_HASH` and restarts the backend; that alone must lock them out, even if they kept a token.
-  So each token carries the fingerprint of the hash it was issued under, and `checkSession` refuses a token whose
-  fingerprint isn't the current one. The fingerprint is 16 characters of an HMAC keyed with the hash, never the
-  hash itself or a plain digest of it, because anyone holding a token can read what it carries. (The same password
-  hashed again gets a new salt, so a new hash ends sessions even then.)
+- **Changing the password ends every session.** When a staff member who knew the password leaves, whoever runs the
+  backend for the bar sets a new `ADMIN_PASSWORD_HASH` and restarts it; that alone must lock them out, even if they
+  kept a token. So each token carries the fingerprint of the hash it was issued under, and `checkSession` refuses a
+  token whose fingerprint isn't the current one. The fingerprint is 16 characters of an HMAC keyed with the hash,
+  never the hash itself or a plain digest of it, because anyone holding a token can read what it carries. (The same
+  password hashed again gets a new salt, so a new hash ends sessions even then.)
 - **A failed login is counted before the password is checked.** bcrypt takes a moment, on purpose. Counted
   afterwards, ten guesses sent at once would all be checked before the first failure was recorded; counted first
   (and taken back when the password is right), no more than five ever are.
@@ -673,33 +688,37 @@ Every error response, from every route, has the same JSON body:
 { "code": "ROUTE_NOT_FOUND", "message": "There is no GET /no-such-route." }
 ```
 
-- `code` is for programs: the site and the admin panel branch on it, never on the message. Every code is listed in
-  the `ErrorCode` union in `src/interface/http/errors/http-error.ts`.
+- `code` is for programs, which branch on it, never on the message: the admin panel tells an Event deleted meanwhile
+  (`EVENT_NOT_FOUND`) from a backend that has no such route (`ROUTE_NOT_FOUND`, an address set wrong), and the seed
+  tells "no VenueSettings yet" (`VENUE_SETTINGS_NOT_FOUND`) from a failure. A client that only needs to know whether
+  a call worked may go by the status alone, as the site does: any error leaves its part "unavailable". Every code is
+  listed in the `ErrorCode` union in `src/interface/http/errors/http-error.ts`.
 - `message` is for people: safe to show, never internals.
 - `details` appears on validation failures found by a request's zod schema: a list of
   `{ "field": "title.en", "message": "…" }`, one entry per problem, so the admin panel can show each message next to
   its field.
 
-| Status | When                                                         | Code today                          |
-| ------ | ------------------------------------------------------------ | ----------------------------------- |
-| 400    | a request fails validation (with `details`)                  | `VALIDATION_FAILED`                 |
-| 400    | a value the domain refuses got past validation (no `details`) | `VALIDATION_FAILED`                 |
-| 400    | a JSON body that doesn't parse                               | `MALFORMED_JSON`                    |
-| 400    | an id in the path with a %-escape that doesn't decode        | `MALFORMED_URL`                     |
-| 401    | a wrong password at login                                    | `WRONG_PASSWORD`                    |
-| 401    | a missing, invalid or expired token on an admin route        | `LOGIN_REQUIRED`                    |
-| 404    | no such route                                                | `ROUTE_NOT_FOUND`                   |
-| 404    | no Event with that id                                        | `EVENT_NOT_FOUND`                   |
-| 413    | a body over 100 kB                                           | `BODY_TOO_LARGE`                    |
-| 415    | a body the parser can't read otherwise (e.g. not UTF-8)      | `UNREADABLE_BODY`                   |
-| 429    | too many failed logins (with `Retry-After`)                  | `TOO_MANY_FAILED_LOGINS`            |
-| 500    | anything unexpected                                          | `INTERNAL_ERROR`                    |
-| 501    | a route of the owner's slices that isn't written yet         | `NOT_IMPLEMENTED` (scaffolding)     |
+| Status     | When                                                                           | Code today                      |
+| ---------- | ------------------------------------------------------------------------------ | ------------------------------- |
+| 400        | a request fails validation (with `details`)                                    | `VALIDATION_FAILED`             |
+| 400        | a value the domain refuses got past validation (no `details`)                  | `VALIDATION_FAILED`             |
+| 400        | a JSON body that doesn't parse                                                 | `MALFORMED_JSON`                |
+| 400        | an id in the path with a %-escape that doesn't decode                          | `MALFORMED_URL`                 |
+| 401        | a wrong password at login                                                      | `WRONG_PASSWORD`                |
+| 401        | a missing, invalid or expired token on an admin route                          | `LOGIN_REQUIRED`                |
+| 404        | no such route                                                                  | `ROUTE_NOT_FOUND`               |
+| 404        | no Event with that id                                                          | `EVENT_NOT_FOUND`               |
+| 413        | a body over 100 kB                                                             | `BODY_TOO_LARGE`                |
+| 400 or 415 | a body the parser can't read otherwise (e.g. 415: not UTF-8), with its status  | `UNREADABLE_BODY`               |
+| 429        | too many failed logins (with `Retry-After`)                                    | `TOO_MANY_FAILED_LOGINS`        |
+| 500        | anything unexpected                                                            | `INTERNAL_ERROR`                |
+| 501        | a route of the owner's slices that isn't written yet                           | `NOT_IMPLEMENTED` (scaffolding) |
 
 Each aggregate names its own unknown id (`EVENT_NOT_FOUND`, and later `CATEGORY_NOT_FOUND` and `COCKTAIL_NOT_FOUND`;
-`VENUE_SETTINGS_NOT_FOUND` before they're first saved), so the admin panel knows what has gone without reading the
-message. The owner's slices add these codes to `ErrorCode` as they answer them (see "The owner's contract"), with
-one more: 409 `DUPLICATE_SLUG`, for a slug another of its kind already has (#37, then #38).
+`VENUE_SETTINGS_NOT_FOUND` before they're first saved), so a client knows what has gone without reading the
+message, and never mistakes it for a route that doesn't exist. The owner's slices add these codes to `ErrorCode` as
+they answer them (see "The owner's contract"), with one more: 409 `DUPLICATE_SLUG`, for a slug another of its kind
+already has (#37, then #38).
 
 The interface layer throws `HttpError`s, which already carry their status and body. The domain and application
 layers throw their own errors, which know nothing of HTTP; `toHttpError` (`errors/to-http-error.ts`), which the
@@ -765,8 +784,9 @@ line; a program (the browser suite) imports and calls it.
 
 - **It goes through the admin API**, logging in with the admin password and adding content the way the admin panel
   does, never writing to MongoDB. Seeded content passes the same checks as an Admin's edits, and the seed needs only
-  the backend's address and the password: no database connection, and no import from the backend's layers, so it
-  is one more client of the API. It uses Node's own `fetch`, and nothing from the repo root's package.
+  the backend's address and the password: no database connection, and no import from the rest of the backend (its
+  layers, the composition root, the env config), so it is one more client of the API. It uses Node's own `fetch`,
+  and nothing from the repo root's package.
 - **It refuses a database that has content**, before loading anything: each step checks whether its kind of content
   is already there, and if any is, `seed()` throws `SeedRefusedError` and the script says so and exits with 1.
 - **Forced, it adds only what is missing.** With `--force` (or `force: true`) each step adds the site's content that
@@ -810,14 +830,16 @@ domain objects.
   checks what the step sends against the pages. Once a step is switched on, `seed-*.owner.test.ts` checks it end
   to end as well.
 - **`tests/architecture/`: the imports.** The one test that reads source files: it holds each layer to the "May
-  import" column of the table above, layers and packages alike, and keeps the seed a client of the API.
+  import" column of the table above, layers and packages alike, and keeps the seed a client of the API: it may
+  import only its own files.
 
-Helpers in `tests/support/` say what went wrong rather than only that something did: `expectStatus(response,
-201)` fails with what the backend answered instead ("expected 201, got 400 VALIDATION_FAILED: … (price: …)");
-`expectValidationFailed(response, ['price'])` expects a 400 with a detail, and a message, on each field named; and
-`expectRefusal(act, InvalidSlugError)` expects one rule's own DomainError and throws anything else on as it is.
-`asAdmin()` gives a test a backend and an Admin's Authorization header for it. A file named `*.owner.test.ts` is the owner's finish line (see "The owner's contract"), run by `npm run test:owner`
-only.
+Helpers in `tests/support/` say what went wrong rather than only that something did, and every aggregate's tests use
+them, the Events tests as much as the owner's: `expectStatus(response, 201)` fails with what the backend answered
+instead ("expected 201, got 400 VALIDATION_FAILED: … (price: …)"); `expectValidationFailed(response, ['price'])`
+expects a 400 with a detail, and a message, on each field named; and `expectRefusal(act, InvalidSlugError)` expects
+one rule's own DomainError and throws anything else on as it is. `asAdmin()` gives a test a backend and an Admin's
+Authorization header for it. A file named `*.owner.test.ts` is the owner's finish line (see "The owner's contract"),
+run by `npm run test:owner` only.
 
 `tests/support/global-setup.ts` starts one in-memory MongoDB per run; `createTestBackend()` gives each test its own
 database on it and drops it when the test ends. No test touches a real database.

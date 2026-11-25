@@ -64,6 +64,15 @@ One of the bar's signature cocktails, shown with its photo, ingredients, base sp
 colour, and, in the home page carousel, its slogan and description.
 _Avoid_: drink, signature (on its own), recipe
 
+**Volume**:
+How much a Cocktail holds, in whole millilitres: 280.
+_Avoid_: size, serving size (that belongs to a Category), ml (on its own)
+
+**Image path**:
+Where a Cocktail's photo is: the path to one of the site's own images, "assets/img/cocktails/taratorw.webp", never a
+link to another site.
+_Avoid_: image URL, photo link, src
+
 **Base spirit**:
 The spirit a Cocktail is built on, from a fixed list (vodka, whiskey, rum, tequila, gin, cognac, soju); guests
 filter the cocktails by it.
@@ -114,8 +123,8 @@ The bar's own details that the site shows: its WeeklySchedule, HappyHour and Con
 _Avoid_: settings (on its own), config, bar info
 
 **Contacts**:
-How guests reach the bar: the reservation phone, the events email and phone, the address in both languages, and
-the Instagram handle.
+How guests reach the bar: the reservation phone, the general email, the events email and phone, the address in both
+languages with the link to its directions on Google Maps, the Instagram handle and the Facebook page.
 _Avoid_: contact info, details
 
 ## People

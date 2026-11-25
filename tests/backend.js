@@ -17,20 +17,15 @@
 const { test: base, expect } = require('@playwright/test');
 const { spawn } = require('node:child_process');
 const http = require('node:http');
-const net = require('node:net');
 const path = require('node:path');
+const { freePort } = require('../backend/tests/support/free-port.ts');
 const { ADMIN_PASSWORD } = require('../backend/tests/support/valid-env.ts');
+// The moment every backend in the suite starts at, the backend's own tests' moment too: Sunday 22 November 2026, 01:30
+// in Sofia, still Saturday's ServiceNight. Both Events the seed loads (31 October, 7 November) are past by then, so
+// the shared backend lists no upcoming Events; a test that needs some adds them to a private backend.
 const { TEST_INSTANT } = require('../backend/tests/support/test-instant.ts');
 
 const BACKEND_DIR = path.resolve(__dirname, '..', 'backend');
-
-/**
- * The moment every backend in the suite starts at: Sunday 22 November 2026, 01:30 in Sofia, still Saturday's
- * ServiceNight. It is the backend's own tests' moment too, kept in one place (backend/tests/support/test-instant.ts).
- * Both Events the seed loads (31 October, 7 November) are past by then, so the shared backend lists no upcoming
- * Events; a test that needs some adds them to a private backend.
- */
-const SUITE_INSTANT = TEST_INSTANT;
 
 const SOFIA_WALL_CLOCK = new Intl.DateTimeFormat('en-GB', {
   timeZone: 'Europe/Sofia', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
@@ -41,11 +36,11 @@ const SOFIA_WALL_CLOCK = new Intl.DateTimeFormat('en-GB', {
  * ms being how far that backend's clock has been moved on.
  */
 function suiteTime(ms = 0) {
-  const at = Object.fromEntries(SOFIA_WALL_CLOCK.formatToParts(Date.parse(SUITE_INSTANT) + ms).map(p => [p.type, p.value]));
+  const at = Object.fromEntries(SOFIA_WALL_CLOCK.formatToParts(Date.parse(TEST_INSTANT) + ms).map(p => [p.type, p.value]));
   return `${at.year}-${at.month}-${at.day}T${at.hour}:${at.minute}`;
 }
 
-const BACKEND_ARGS = ['--experimental-strip-types', '--disable-warning=ExperimentalWarning', 'tests/support/browser-backend.ts', '--now', SUITE_INSTANT];
+const BACKEND_ARGS = ['--experimental-strip-types', '--disable-warning=ExperimentalWarning', 'tests/support/browser-backend.ts', '--now', TEST_INSTANT];
 /** What a backend prints once it is seeded and listening. The group's name is where Playwright keeps the shared one's
  *  address: in process.env.OC_BACKEND_URL, which the test workers inherit. */
 const READY = /Backend for the browser suite: (?<oc_backend_url>http:\/\/\S+)/;
@@ -67,13 +62,9 @@ function sharedBackendUrl() {
   return url;
 }
 
-/** A base URL nothing listens on: a local port the OS has just handed out and taken back, so a request is refused at once. */
+/** A base URL nothing listens on (the backend's own freePort()), so a request is refused at once. */
 async function closedBackendUrl() {
-  const server = net.createServer();
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  const { port } = server.address();
-  await new Promise(resolve => server.close(resolve));
-  return `http://127.0.0.1:${port}`;
+  return `http://127.0.0.1:${await freePort()}`;
 }
 
 /** A backend that hangs: it takes every request and never answers. Resolves to { url, stop() }. */

@@ -2,6 +2,7 @@
 // way an Event's date is kept: what it allows and what it refuses.
 import { describe, expect, it } from 'vitest';
 import { CalendarDate, InvalidCalendarDateError } from '../../src/domain/shared/calendar-date.ts';
+import { expectRefusal } from '../support/expect-refusal.ts';
 
 describe('a calendar date', () => {
   it.each(['2026-10-31', '2028-02-29', '2000-02-29', '2026-12-31'])('allows %s', (text) => {
@@ -19,6 +20,6 @@ describe('a calendar date', () => {
     ['a date with a time', '2026-10-31T21:00'],
     ['nothing', ''],
   ])('refuses %s (%j)', (_case, text) => {
-    expect(() => CalendarDate.parse(text)).toThrow(InvalidCalendarDateError);
+    expectRefusal(() => CalendarDate.parse(text), InvalidCalendarDateError);
   });
 });

@@ -1,7 +1,8 @@
 // Seam: the source tree. ARCHITECTURE.md's one rule between the layers is that dependencies point inward only, and
 // its table says what each layer may import: which layers, and which packages. The domain at the centre imports
 // nothing but other domain code: never Express, MongoDB, zod or any other package. A wrong import compiles and runs,
-// so nothing else would notice it; this test reads every import in the four layers' folders and in seed/.
+// so nothing else would notice it; this test reads every import in the four layers' folders, and in seed/, which may
+// import only its own files.
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -70,7 +71,12 @@ describe('the layers', () => {
 });
 
 describe('the seed', () => {
-  it('stays a client of the admin API: it imports none of the layers, so it can only load what an Admin could', () => {
-    expect(importsIn('seed').filter((entry) => (LAYERS as readonly string[]).includes(entry.reaches))).toEqual([]);
+  // Not the layers, and not the outer shell either: through composition-root.ts or config.ts it could reach the
+  // database or every layer at once.
+  it('stays a client of the admin API: it imports only its own files, so it can only load what an Admin could', () => {
+    const seed = join(SRC, 'seed');
+    const outsideSeed = (entry: Import) =>
+      entry.reaches === 'a package' || relative(seed, resolve(SRC, dirname(entry.file), entry.module)).startsWith('..');
+    expect(importsIn('seed').filter(outsideSeed)).toEqual([]);
   });
 });

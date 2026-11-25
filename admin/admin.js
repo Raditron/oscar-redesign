@@ -14,7 +14,7 @@
   // The address and the 10-second limit are js/main.js's (OC.backend, LOAD_LIMIT), copied because the panel doesn't
   // load that file: keep the two in step
   const BACKEND = (typeof window.OC_API === 'string' ? window.OC_API : window.OC_BACKEND || '').replace(/\/+$/, '');
-  const LIMIT = 10 * 1000;
+  const LOAD_LIMIT = 10 * 1000;
   const TOKEN_KEY = 'oc-admin-token';
   const NO_ADDRESS = 'Панелът не знае адреса на сървъра: той се записва в js/config.js.';
 
@@ -32,12 +32,12 @@
   /* ---------- talking to the backend ---------- */
   /**
    * One call. Resolves to { status, headers, body } and never rejects: status 0 means no answer came (no address set,
-   * offline, or nothing within LIMIT, which also sets timedOut: the backend may have done it all the same).
+   * offline, or nothing within LOAD_LIMIT, which also sets timedOut: the backend may have done it all the same).
    */
   async function send(method, path, { body, token } = {}) {
     if (!BACKEND) return { status: 0 };
     const stop = new AbortController();
-    const timer = setTimeout(() => stop.abort(), LIMIT);
+    const timer = setTimeout(() => stop.abort(), LOAD_LIMIT);
     const headers = {};
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -51,6 +51,10 @@
       clearTimeout(timer);
     }
   }
+
+  // An error's code says what went wrong, where its status may not: a 404 is a deleted event (EVENT_NOT_FOUND), or an
+  // address that reaches the wrong server (ROUTE_NOT_FOUND)
+  const codeOf = res => (res.body && res.body.code) || '';
 
   /** Why a call didn't go through, for a reason that isn't one field: the end of a sentence that says what failed. */
   function failureReason(status) {
@@ -248,9 +252,9 @@
       $('#events-said').textContent = editing ? 'Промените са запазени.' : 'Събитието е добавено.';
       showInForm(null);
       loadEvents();
-    } else if (res.status === 400 && res.body && res.body.details) {
+    } else if (codeOf(res) === 'VALIDATION_FAILED' && res.body.details) {
       showFieldErrors(res.body.details.map(d => d.field));
-    } else if (res.status === 404) {
+    } else if (codeOf(res) === 'EVENT_NOT_FOUND') {
       // deleted meanwhile (another tab, another phone): what was typed stays, and can be added as a new event
       editing = null;
       showFormMode();
@@ -276,8 +280,8 @@
     if (dialog.returnValue !== 'delete') return;
     const res = await callAsAdmin('DELETE', `/admin/events/${encodeURIComponent(ev.id)}`);
     const said = $('#events-said');
-    // 404: it was already gone, which is what the admin wanted
-    if (res.status === 204 || res.status === 404) {
+    // EVENT_NOT_FOUND: it was already gone, which is what the admin wanted
+    if (res.status === 204 || codeOf(res) === 'EVENT_NOT_FOUND') {
       said.textContent = 'Събитието е изтрито.';
       if (editing === ev.id) showInForm(null);
     } else {

@@ -21,10 +21,13 @@ export const SITE_VENUE_SETTINGS = {
   happyHour: { from: '18:00', to: '20:00', discountPercent: 50 },
   contacts: {
     reservationPhone: '+359 899 666 633',
+    generalEmail: 'oscarclub.sf@gmail.com',
     eventsEmail: 'events@oscarclubsofia.com',
     eventsPhone: '+359 883 30 50 55',
     address: { bg: 'ул. „Славянска“ 15, 1000 София', en: '15 Slavyanska St, 1000 Sofia' },
+    mapsUrl: 'https://www.google.com/maps/dir/?api=1&destination=Oscar+Club+Cocktail+bar%2C+Slavyanska+15%2C+Sofia',
     instagramHandle: 'oscarclub_official',
+    facebookUrl: 'https://www.facebook.com/OscarClub.sf',
   },
 };
 
