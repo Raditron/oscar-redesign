@@ -28,7 +28,8 @@ const CHROME = {
  * read (locator.evaluateAll / allTextContents / allInnerTexts) on a locator inside a region named by aria-labelledby
  * crashes the page once that region has been queried before ("Page crashed"; reproduced on a 3-element page with no CSS
  * or script). Reading the same elements through their handles does not, so in Firefox those three calls take that
- * route. The result is identical; Chromium and WebKit use Playwright's own calls. Installed by openPage().
+ * route. The result is identical; Chromium and WebKit use Playwright's own calls. Installed by openPage(). The cause is
+ * the Firefox bug described at AXE_FOR_FIREFOX below.
  */
 function patchFirefoxLocators(pw) {
   const proto = Object.getPrototypeOf(pw.locator('html'));
@@ -141,9 +142,21 @@ async function expectLocalReferencesResolve(pw) {
   return urls;
 }
 
+/**
+ * Firefox workaround (test tooling only, nothing to do with the site). Playwright 1.65's Firefox (159) crashes the page
+ * ("Page crashed") once an element's ariaLabelledByElements has been read from two JavaScript worlds: Playwright reads
+ * it in a world of its own whenever it finds an element by role or label, and axe reads it in the page's (Mozilla bug
+ * 2090055, fixed in Firefox 163; microsoft/playwright#43967). So in Firefox, axe takes aria-labelledby from the
+ * attribute, the only way the site sets it: the same rules run and find the same things. Drop it once Playwright's
+ * Firefox is 163 or later.
+ */
+const axeCore = require(require.resolve('axe-core', { paths: [require.resolve('@axe-core/playwright')] }));   // the copy AxeBuilder injects
+const AXE_FOR_FIREFOX = `${axeCore.source}\n;axe.configure({ standards: { ariaAttrs: { 'aria-labelledby': { prop: undefined } } } });`;
+
 /** axe scan: no serious or critical violations. `exclude` takes CSS selectors to leave out (use sparingly). */
 async function expectNoSeriousA11yViolations(pw, { exclude = [] } = {}) {
-  let axe = new AxeBuilder({ page: pw });
+  const inFirefox = pw.context().browser()?.browserType().name() === 'firefox';
+  let axe = new AxeBuilder({ page: pw, axeSource: inFirefox ? AXE_FOR_FIREFOX : undefined });
   for (const sel of exclude) axe = axe.exclude(sel);
   const { violations } = await axe.analyze();
   const serious = violations.filter(v => v.impact === 'serious' || v.impact === 'critical')

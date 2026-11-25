@@ -3,8 +3,9 @@
 // seed, with its clock stopped (backend/tests/support/browser-backend.ts). Never a real database, and the backend
 // gets no test-only routes: tests change its data the way the admin panel does, through the admin API.
 //
-//   the shared backend     one for the whole run, started by playwright.config.js beside the static server, for
-//                          checks that only read. H.openPage points every page at it unless told otherwise.
+//   the shared backend     one for the whole run, started before the first test and stopped after the last
+//                          (tests/shared-backend.js), for checks that only read. H.openPage points every page at it
+//                          unless told otherwise.
 //   a private backend      one per test, from the `privateBackend` fixture below, for a test that adds content, moves
 //                          the clock or spends the login rate limit, so it never disturbs the tests running beside it.
 //   closedBackendUrl()     an address nothing answers at: the backend is down.
@@ -13,10 +14,15 @@
 //
 // A page is pointed at a backend with window.OC_API, set before js/main.js runs (see H.openPage), never through the
 // URL. A spec that needs a private backend takes `test` from here instead of from @playwright/test.
+//
+// Each backend's MongoDB keeps ~200 MB of data in a temp folder. The suite makes that folder and removes it once the
+// backend's process has gone, however it went: stopped, ended outright, or crashed.
 'use strict';
 const { test: base, expect } = require('@playwright/test');
 const { spawn } = require('node:child_process');
+const fs = require('node:fs');
 const http = require('node:http');
+const os = require('node:os');
 const path = require('node:path');
 const { freePort } = require('../backend/tests/support/free-port.ts');
 const { ADMIN_PASSWORD } = require('../backend/tests/support/valid-env.ts');
@@ -41,21 +47,10 @@ function suiteTime(ms = 0) {
 }
 
 const BACKEND_ARGS = ['--experimental-strip-types', '--disable-warning=ExperimentalWarning', 'tests/support/browser-backend.ts', '--now', TEST_INSTANT];
-/** What a backend prints once it is seeded and listening. The group's name is where Playwright keeps the shared one's
- *  address: in process.env.OC_BACKEND_URL, which the test workers inherit. */
-const READY = /Backend for the browser suite: (?<oc_backend_url>http:\/\/\S+)/;
+/** What a backend prints once it is seeded and listening. */
+const READY = /Backend for the browser suite: (?<url>http:\/\/\S+)/;
 
-/** The shared backend, as an entry of playwright.config.js's webServer. It picks a free port itself, so suites run in
- *  several checkouts at once never meet, and Playwright waits for it to say it's seeded before any test starts. */
-const sharedBackendServer = () => ({
-  command: `node ${BACKEND_ARGS.join(' ')}`,
-  cwd: BACKEND_DIR,
-  wait: { stdout: READY },
-  // the first run downloads a mongod binary (~74 MB) into backend/node_modules/.cache
-  timeout: 5 * 60_000
-});
-
-/** The shared backend's base URL. */
+/** The shared backend's base URL: in process.env.OC_BACKEND_URL, which the test workers inherit from the run. */
 function sharedBackendUrl() {
   const url = process.env.OC_BACKEND_URL;
   if (!url) throw new Error('No shared backend: run the suite through playwright.config.js, which starts it');
@@ -93,19 +88,26 @@ const STOP_LIMIT = 10_000;
  *   logIn()             a session token, from POST /auth/login, for an Authorization: Bearer header
  *   addEvents(...e)     adds Events through POST /admin/events, as the admin panel does: { date, title: { bg, en }, entryFee }
  *   advanceClock(ms)    moves its clock on (a session expiring, a ServiceNight ending), and resolves once it has
- *   stop()              ends it and its database
- * A backend that isn't ready within STARTUP_LIMIT is ended (mongodb-memory-server's own watcher then ends its mongod)
- * and the promise rejects.
+ *   stop()              ends it, and resolves once its database's folder is gone
+ * A backend that isn't ready within `startupLimit` is ended (mongodb-memory-server's own watcher then ends its mongod)
+ * and the promise rejects, once the folder is gone.
  */
-async function startPrivateBackend() {
-  const child = spawn(process.execPath, BACKEND_ARGS, { cwd: BACKEND_DIR, stdio: ['ignore', 'pipe', 'inherit', 'ipc'] });
+async function startBackend({ startupLimit = STARTUP_LIMIT } = {}) {
+  // the database's folder, named as mongodb-memory-server names its own
+  const dbPath = fs.mkdtempSync(path.join(os.tmpdir(), 'mongo-mem-'));
+  const child = spawn(process.execPath, [...BACKEND_ARGS, '--db-path', dbPath], { cwd: BACKEND_DIR, stdio: ['ignore', 'pipe', 'inherit', 'ipc'] });
   const exited = new Promise(resolve => child.once('exit', resolve));
+  // A backend that stops removes the folder itself; one that is ended outright or crashes can't, so it goes here, once
+  // the process has. Its mongod can outlive it for a moment (on Linux and macOS, until mongodb-memory-server's watcher
+  // ends it, within 2 s) and still hold the files: hence the retries.
+  const removed = exited.then(() => fs.promises.rm(dbPath, { recursive: true, force: true, maxRetries: 10 }));
+
   const url = await new Promise((resolve, reject) => {
     let out = '';
-    child.stdout.on('data', chunk => { out += chunk; const ready = READY.exec(out); if (ready) resolve(ready.groups.oc_backend_url); });
-    exited.then(code => reject(new Error(`the private backend stopped before it was ready (exit code ${code})`)));
-    setTimeout(() => reject(new Error(`the private backend wasn't ready within ${STARTUP_LIMIT / 1000} s`)), STARTUP_LIMIT).unref();
-  }).catch(error => { child.kill(); throw error; });
+    child.stdout.on('data', chunk => { out += chunk; const ready = READY.exec(out); if (ready) resolve(ready.groups.url); });
+    exited.then(code => reject(new Error(`the backend stopped before it was ready (exit code ${code})`)));
+    setTimeout(() => reject(new Error(`the backend wasn't ready within ${startupLimit / 1000} s`)), startupLimit).unref();
+  }).catch(async error => { child.kill(); await removed; throw error; });
 
   const send = async (route, init = {}) => {
     const res = await fetch(url + route, { ...init, headers: { 'Content-Type': 'application/json', ...init.headers } });
@@ -134,15 +136,16 @@ async function startPrivateBackend() {
       const outright = setTimeout(() => child.kill(), STOP_LIMIT);
       await exited;
       clearTimeout(outright);
+      await removed;
     }
   };
 }
 
 const test = base.extend({
-  /** A backend of this test's own (see startPrivateBackend), stopped when the test ends. Only a test that names it
+  /** A backend of this test's own (see startBackend), stopped when the test ends. Only a test that names it
    *  starts one; it gets its own time limit, room to start and to stop on a busy machine. */
   privateBackend: [async ({}, use) => {
-    const backend = await startPrivateBackend();
+    const backend = await startBackend();
     try { await use(backend); } finally { await backend.stop(); }
   }, { timeout: STARTUP_LIMIT + STOP_LIMIT }],
   /** The base URL of a backend that hangs (see startHangingBackend), for this test's length. */
@@ -152,4 +155,4 @@ const test = base.extend({
   }
 });
 
-module.exports = { test, expect, suiteTime, sharedBackendServer, sharedBackendUrl, closedBackendUrl, startPrivateBackend };
+module.exports = { test, expect, suiteTime, sharedBackendUrl, closedBackendUrl, startBackend };

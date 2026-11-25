@@ -6,9 +6,13 @@
 //   node --experimental-strip-types tests/support/browser-backend.ts --now 2026-11-22T01:30:00+02:00
 //
 // It listens on a free port on 127.0.0.1 and, once the seed is in, prints "Backend for the browser suite: <url>".
-// Only then may it be used. Started with an IPC channel (as the suite's private backends are), it also moves its
-// clock on when sent { advanceClockBy: milliseconds }, answers { clockAdvancedBy: milliseconds }, and stops when the
-// channel closes. The HTTP API is the real one: nothing here adds a route.
+// Only then may it be used. Started with an IPC channel (as the suite's backends are), it also moves its clock on
+// when sent { advanceClockBy: milliseconds }, answers { clockAdvancedBy: milliseconds }, and stops when the channel
+// closes. The HTTP API is the real one: nothing here adds a route.
+//
+// MongoDB keeps its data in --db-path <empty folder> when given, else in a temp folder of its own. Stopping removes
+// that folder. A process that is killed can't, so the suite gives each backend a folder and removes it itself once
+// the process has gone (the repo root's tests/backend.js).
 import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { parseArgs } from 'node:util';
@@ -20,7 +24,7 @@ import { FixedClock } from '../../src/infrastructure/clock/fixed-clock.ts';
 import { seed } from '../../src/seed/seed.ts';
 import { ADMIN_PASSWORD, VALID_ENV } from './valid-env.ts';
 
-const { values } = parseArgs({ options: { now: { type: 'string' } } });
+const { values } = parseArgs({ options: { now: { type: 'string' }, 'db-path': { type: 'string' } } });
 const now = new Date(values.now ?? '');
 if (Number.isNaN(now.getTime())) throw new Error('--now must be an instant with its offset, e.g. 2026-11-22T01:30:00+02:00');
 
@@ -31,8 +35,9 @@ const running: (() => unknown)[] = [];
 if (process.send) process.once('disconnect', () => void stop());
 
 const clock = new FixedClock(now);
-const mongo = await MongoMemoryServer.create();
-running.push(() => mongo.stop());
+const mongo = await MongoMemoryServer.create({ instance: { dbPath: values['db-path'] } });
+// force: the data folder goes too when it is one given with --db-path (mongodb-memory-server keeps those by default)
+running.push(() => mongo.stop({ doCleanup: true, force: true }));
 const client = await new MongoClient(mongo.getUri()).connect();
 running.push(() => client.close());
 const app = composeApp({
