@@ -30,6 +30,21 @@ describe('CORS', () => {
     expect(response.headers['access-control-allow-origin']).toBe(SITE);
   });
 
+  it('lets the site read Retry-After on a 429, so the admin panel can say how long the wait is', async () => {
+    // A browser hands a page on another origin only the "safelisted" headers unless the answer exposes more
+    const api = await createTestBackend();
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      await api.post('/auth/login').set('Origin', SITE).send({ password: 'a wrong guess' });
+    }
+
+    const response = await api.post('/auth/login').set('Origin', SITE).send({ password: 'a wrong guess' });
+
+    const exposed = (response.headers['access-control-expose-headers'] ?? '').toLowerCase().split(/\s*,\s*/);
+    expect(response.status).toBe(429);
+    expect(response.headers['retry-after']).toBeDefined();
+    expect(exposed).toContain('retry-after');
+  });
+
   it.each(['https://oscarclubsofia.com', 'https://www.oscarclubsofia.com', 'http://oscarclubsofia.com'])(
     'lets %s read responses when CORS_ORIGINS lists several origins, with or without a space after each comma',
     async (origin) => {

@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="bg">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- The bar's admin panel. Reached only by typing its address: no page links here, and it isn't listed in a robots.txt
+     either, because listing it there would advertise it. noindex keeps it out of search results if a link ever leaks. -->
+<meta name="robots" content="noindex, nofollow">
+<title>Админ · Оскар клуб</title>
+<meta name="theme-color" content="#000000">
+<link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="../assets/fonts/onest-cyrillic-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="admin.css">
+<script src="../js/config.js" defer></script>
+<script src="admin.js" defer></script>
+</head>
+<body>
+<div class="ad">
+<header class="ad-hdr">
+  <svg class="ad-mark" viewBox="0 0 240 124" role="img" aria-label="Oscar Club"><g fill="none" stroke="currentColor" stroke-width="11"><circle cx="64" cy="62" r="52"/><path d="M215.5 95.4A52 52 0 1 1 215.5 28.6"/></g></svg>
+  <p class="ad-hdr-name">Админ</p>
+  <nav class="ad-nav" aria-label="Раздели" data-signed-in hidden>
+    <a href="#events" aria-current="page">Събития</a>
+  </nav>
+  <button class="ad-quiet ad-out" type="button" data-sign-out data-signed-in hidden>Изход</button>
+</header>
+
+<main id="main">
+
+<section class="ad-sec ad-sign-in" aria-labelledby="sign-in-h" data-signed-out>
+  <h1 class="ad-h1" id="sign-in-h">Вход</h1>
+  <p class="ad-voice">Тук се променя съдържанието на сайта.</p>
+  <noscript><p class="ad-say">Панелът работи само с включен JavaScript.</p></noscript>
+  <form class="ad-form" id="sign-in" aria-labelledby="sign-in-h" novalidate>
+    <div class="ad-field">
+      <label for="sign-in-password">Парола</label>
+      <input id="sign-in-password" name="password" type="password" autocomplete="current-password" required aria-describedby="sign-in-password-err">
+    </div>
+    <p class="ad-err" id="sign-in-password-err" role="alert"></p>
+    <div class="ad-actions"><button class="ad-btn" type="submit">Влез</button></div>
+  </form>
+</section>
+
+<section class="ad-sec" id="events" aria-labelledby="events-h" data-signed-in hidden>
+  <h1 class="ad-h1" id="events-h">Събития</h1>
+  <p class="ad-voice">Предстоящите се показват на началната страница: най-близките три.</p>
+
+  <form class="ad-form" id="event-form" aria-labelledby="event-form-h" novalidate>
+    <h2 class="ad-h2" id="event-form-h">Ново събитие</h2>
+    <div class="ad-grid">
+      <div class="ad-field">
+        <label for="ev-date">Дата</label>
+        <input id="ev-date" name="date" type="date" required aria-describedby="ev-date-err">
+        <p class="ad-err" id="ev-date-err"></p>
+      </div>
+      <div class="ad-field">
+        <label for="ev-fee">Вход, €</label>
+        <input id="ev-fee" name="entryFee" inputmode="decimal" autocomplete="off" aria-describedby="ev-fee-hint ev-fee-err">
+        <p class="ad-hint" id="ev-fee-hint">Например 15 или 12,50. Празно: свободен вход.</p>
+        <p class="ad-err" id="ev-fee-err"></p>
+      </div>
+      <div class="ad-field">
+        <label for="ev-title-bg">Заглавие на български</label>
+        <input id="ev-title-bg" name="title.bg" autocomplete="off" required aria-describedby="ev-title-bg-err">
+        <p class="ad-err" id="ev-title-bg-err"></p>
+      </div>
+      <div class="ad-field">
+        <label for="ev-title-en">Заглавие на английски</label>
+        <input id="ev-title-en" name="title.en" lang="en" autocomplete="off" required aria-describedby="ev-title-en-err">
+        <p class="ad-err" id="ev-title-en-err"></p>
+      </div>
+    </div>
+    <p class="ad-err" id="event-form-err" role="alert"></p>
+    <div class="ad-actions">
+      <button class="ad-btn" type="submit">Добави събитие</button>
+      <button class="ad-quiet" type="button" data-cancel-edit hidden>Откажи промяната</button>
+    </div>
+  </form>
+  <p class="ad-say" id="events-said" role="status" tabindex="-1"></p>
+
+  <div class="ad-lists" id="event-lists">
+    <h2 class="ad-h2" id="upcoming-h">Предстоящи</h2>
+    <ul class="ad-events" id="upcoming" aria-labelledby="upcoming-h"></ul>
+    <p class="ad-voice" id="no-upcoming" hidden>Няма предстоящи събития. Сайтът показва само линка към Instagram.</p>
+    <div id="past-group" hidden>
+      <h2 class="ad-h2" id="past-h">Минали <span class="ad-h2-note">не се показват на сайта</span></h2>
+      <ul class="ad-events is-past" id="past" aria-labelledby="past-h"></ul>
+    </div>
+    <p class="ad-err" id="events-load-err" role="alert"></p>
+    <p class="ad-actions" id="events-retry" hidden><button class="ad-quiet" type="button">Опитай пак</button></p>
+  </div>
+</section>
+
+</main>
+</div>
+
+<dialog class="ad-dialog" id="sign-in-again" aria-labelledby="sign-in-again-h">
+  <form class="ad-form" novalidate>
+    <h2 class="ad-h2" id="sign-in-again-h">Влез отново</h2>
+    <p>Сесията изтече. Въведи паролата отново: написаното остава, както си е.</p>
+    <div class="ad-field">
+      <label for="sign-in-again-password">Парола</label>
+      <input id="sign-in-again-password" name="password" type="password" autocomplete="current-password" required autofocus aria-describedby="sign-in-again-password-err">
+    </div>
+    <p class="ad-err" id="sign-in-again-password-err" role="alert"></p>
+    <div class="ad-actions">
+      <button class="ad-btn" type="submit">Влез</button>
+      <button class="ad-quiet" type="button" data-close>Откажи</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="ad-dialog" id="confirm-delete" aria-labelledby="confirm-delete-h">
+  <form class="ad-form" method="dialog">
+    <h2 class="ad-h2" id="confirm-delete-h">Изтриване</h2>
+    <p>Да изтрия ли <b data-what></b>? Това не може да се върне.</p>
+    <div class="ad-actions">
+      <button class="ad-btn" type="submit" value="delete">Изтрий</button>
+      <button class="ad-quiet" type="submit" value="keep" autofocus>Откажи</button>
+    </div>
+  </form>
+</dialog>
+</body>
+</html>

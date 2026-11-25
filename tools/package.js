@@ -7,11 +7,12 @@
 //   dist/README-handoff.html       the hand-off note for the client (from docs/handoff.html), NEXT TO the folder
 //   dist/oscarclubsofia.com.zip    both of the above, to send in one file
 //
-// What ships is found by following references, not by a list: start from the four pages, follow every file they
-// reference (src, href, srcset, url(), and absolute https://oscarclubsofia.com/… addresses in meta tags and
-// JSON-LD), then every file those reference (the stylesheet's fonts), and so on. An image nobody references
-// does not ship. The fonts' OFL licences ship next to the fonts (the licence asks for that). A reference that
-// does not resolve, or that points outside the site's own files (design-system/, tests/, …), stops the build.
+// What ships is found by following references, not by a list: start from the four pages and the admin panel
+// (admin/index.html), follow every file they reference (src, href, srcset, url(), and absolute
+// https://oscarclubsofia.com/… addresses in meta tags and JSON-LD), then every file those reference (the
+// stylesheets' fonts), and so on. An image nobody references does not ship. The fonts' OFL licences ship next
+// to the fonts (the licence asks for that). A reference that does not resolve, or that points outside the site's
+// own files (design-system/, tests/, …), stops the build.
 //
 // The zip is written here with Node's zlib (deflate) and a small ZIP writer, so no zip tool is needed.
 'use strict';
@@ -25,8 +26,11 @@ const SITE_DIR = 'oscarclubsofia.com';
 const NOTE_SRC = 'docs/handoff.html';
 const NOTE_OUT = 'README-handoff.html';
 const PAGES = ['index.html', 'en/index.html', 'mainmenu/index.html', 'en/mainmenu/index.html'];
+// The admin panel: shipped and crawled like a page, but named on its own, because no public page links to it (only
+// its address leads there), so following references would never find it
+const ADMIN_PAGE = 'admin/index.html';
 // The only places a shipped file may come from. Anything else a page points at is a mistake.
-const SHIPPABLE = /^(index\.html|en\/index\.html|mainmenu\/index\.html|en\/mainmenu\/index\.html|css\/[^/]+\.css|js\/[^/]+\.js|assets\/.+)$/;
+const SHIPPABLE = /^(index\.html|en\/index\.html|mainmenu\/index\.html|en\/mainmenu\/index\.html|css\/[^/]+\.css|js\/[^/]+\.js|assets\/.+|admin\/[^/]+\.(html|css|js))$/;
 // Fonts' licence files: shipped beside the fonts they cover, although no page links to them.
 const LICENCE = /^OFL-.+\.txt$/;
 
@@ -68,7 +72,7 @@ function resolveReference(fromRel, ref) {
 }
 
 /**
- * Follow references from the four pages. Returns { files: Map(rel → Set(referrers)), problems: [string] }.
+ * Follow references from the four pages and the admin panel. Returns { files: Map(rel → Set(referrers)), problems: [string] }.
  * `root` is the folder to read (the repo by default).
  */
 function crawl(root = REPO) {
@@ -79,7 +83,7 @@ function crawl(root = REPO) {
     if (!files.has(rel)) { files.set(rel, new Set()); queue.push(rel); }
     if (from) files.get(rel).add(from);
   };
-  PAGES.forEach(p => take(p, null));
+  [...PAGES, ADMIN_PAGE].forEach(p => take(p, null));
   while (queue.length) {
     const rel = queue.shift();
     const abs = path.join(root, rel);
@@ -201,7 +205,7 @@ function build({ out = path.join(REPO, 'dist'), log = () => {} } = {}) {
   return { siteDir, notePath, zipPath, files: list };
 }
 
-module.exports = { build, crawl, referencesIn, resolveReference, zip, unzip, PAGES, SITE_DIR, NOTE_OUT, NOTE_SRC, HOST };
+module.exports = { build, crawl, referencesIn, resolveReference, zip, unzip, PAGES, ADMIN_PAGE, SITE_DIR, NOTE_OUT, NOTE_SRC, HOST };
 
 if (require.main === module) {
   try { build({ log: s => console.log(s) }); } catch (e) { console.error(e.message); process.exit(1); }

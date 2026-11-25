@@ -16,9 +16,13 @@ const REPO = path.resolve(__dirname, '..');
 const OLD_SITE = path.join(__dirname, 'fixtures', 'old-site');
 const OLD_PAGES = ['index.html', 'mainmenu/index.html'];
 const PAGES = H.PAGES.map(p => p.path.slice(1));
+// The admin panel (#35) ships too, but it is no public page: it stays out of H.PAGES (and so out of the SEO checks),
+// and only its own address leads to it
+const ADMIN = PKG.ADMIN_PAGE;
 const LICENCE = /^assets\/fonts\/OFL-(.+)\.txt$/;
-// Only these may ship: the four pages, the stylesheet, the scripts (behaviour and the backend's address) and the new assets
-const SHIPPABLE = /^(index\.html|en\/index\.html|mainmenu\/index\.html|en\/mainmenu\/index\.html|css\/styles\.css|js\/(main|config)\.js|assets\/.+)$/;
+// Only these may ship: the four pages, the stylesheet, the scripts (behaviour and the backend's address), the new
+// assets, and the admin panel's page, stylesheet and script
+const SHIPPABLE = /^(index\.html|en\/index\.html|mainmenu\/index\.html|en\/mainmenu\/index\.html|css\/styles\.css|js\/(main|config)\.js|assets\/.+|admin\/(index\.html|admin\.css|admin\.js))$/;
 // …and none of the repo's dev and design files may
 const EXCLUDED_DIRS = ['design-system/', 'tests/', 'tools/', 'docs/', 'backend/', 'node_modules/', 'dist/', '.claude/', '.git/', 'test-results/', 'playwright-report/'];
 const EXCLUDED_NAMES = ['package.json', 'package-lock.json', 'playwright.config.js', 'README.md', '.gitignore', 'handoff.html', PKG.NOTE_OUT];
@@ -87,8 +91,8 @@ async function referencedPaths(pw, base) {
 }
 
 test.describe('the upload folder', () => {
-  test('holds the four pages, the stylesheet, the scripts and the new assets, and nothing from the dev side', async () => {
-    for (const f of [...PAGES, 'css/styles.css', 'js/main.js', 'js/config.js']) expect(files, f).toContain(f);
+  test('holds the four pages, the stylesheet, the scripts, the new assets and the admin panel, and nothing from the dev side', async () => {
+    for (const f of [...PAGES, 'css/styles.css', 'js/main.js', 'js/config.js', ADMIN, 'admin/admin.css', 'admin/admin.js']) expect(files, f).toContain(f);
     expect(files.filter(f => !SHIPPABLE.test(f)), 'files that are not site files').toEqual([]);
     expect(files.filter(f => EXCLUDED_DIRS.some(d => f.startsWith(d) || f.includes(`/${d}`))), 'dev folders').toEqual([]);
     expect(files.filter(f => EXCLUDED_NAMES.includes(path.posix.basename(f))), 'dev files').toEqual([]);
@@ -113,15 +117,16 @@ test.describe('the upload folder', () => {
     }
   });
 
-  test('every shipped file is referenced by a shipped page or stylesheet, and every reference resolves', async ({ page }) => {
+  test('every shipped file is referenced by a shipped page (the four, or the admin panel) or stylesheet, and every reference resolves', async ({ page }) => {
     // fetches every page and every referenced file in turn: give it room when the machine is busy (e.g. three engines)
     test.setTimeout(120_000);
     const srv = await serve(site);
     // the shipped js/config.js may hold the live backend's address: the suite never calls it
     await H.pointAtBackend(page, sharedBackendUrl());
     try {
-      const referenced = new Set();
-      for (const p of H.PAGES) {
+      // the panel is reached by its address alone, never by a link
+      const referenced = new Set([ADMIN]);
+      for (const p of [...H.PAGES, { name: 'admin', path: `/${ADMIN}` }]) {
         const log = H.watchNetwork(page);
         const res = await page.goto(`${srv.url}${p.path}`);
         expect(res.status(), p.name).toBe(200);
@@ -182,10 +187,10 @@ test.describe('the hand-off note', () => {
     for (const [article, words] of [
       [bg, ['oscarclubsofia.com', 'Замени', 'Обедини', 'Не трийте нищо', '+359 899 666 633', 'search.google.com/test/rich-results',
         'Какво още ни трябва', 'NX0', 'основателя', 'Работното време', 'ноември 2026', 'Оценките', 'Averna', 'Happy hour',
-        'Преди качването', 'js/config.js']],
+        'Преди качването', 'js/config.js', 'oscarclubsofia.com/admin/', 'Панелът за промени']],
       [en, ['oscarclubsofia.com', 'Overwrite', 'Merge', 'Don\'t delete anything', '+359 899 666 633', 'search.google.com/test/rich-results',
         'What we still need', 'NX0', 'founder', 'Opening hours', 'November 2026', 'ratings', 'Averna', 'Happy hour',
-        'Before you upload', 'js/config.js']]
+        'Before you upload', 'js/config.js', 'oscarclubsofia.com/admin/', 'The editing panel']]
     ]) {
       const text = await article.innerText();
       for (const w of words) expect(text, `"${w}"`).toContain(w);

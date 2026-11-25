@@ -10,6 +10,9 @@ export interface CorsOptions {
 // What the site and the admin panel send: reads, JSON bodies, and the admin token as a Bearer header.
 const ALLOWED_METHODS = 'GET, POST, PUT, DELETE';
 const ALLOWED_HEADERS = 'Authorization, Content-Type';
+// A browser hands a page on another origin only a few safe headers unless told it may read more: the admin panel
+// reads a 429's Retry-After to say how long the wait is.
+const EXPOSED_HEADERS = 'Retry-After';
 
 /**
  * CORS for the site's origins only. An origin that isn't allowed gets no CORS headers at all, so the browser
@@ -30,6 +33,7 @@ export function cors({ origins, allowLocalhost }: CorsOptions): RequestHandler {
       return;
     }
     response.set('Access-Control-Allow-Origin', origin);
+    response.set('Access-Control-Expose-Headers', EXPOSED_HEADERS);
     if (isPreflight(request)) {
       response.set({ 'Access-Control-Allow-Methods': ALLOWED_METHODS, 'Access-Control-Allow-Headers': ALLOWED_HEADERS });
       response.status(204).end();

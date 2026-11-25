@@ -21,6 +21,15 @@ menu, the hours and the contacts are still written in the HTML until their turn 
 `js/config.js` holds the backend's address. It is committed empty, which the site survives (below): set it before
 uploading (see Hand-off).
 
+### The admin panel
+
+`/admin/` is where the bar's staff edit the content (today the Saturday gig list: add, change, delete events). No
+page links to it, it carries `noindex` and it isn't listed in a robots.txt (that would advertise it); only its address
+leads there. One shared password signs in; the session lasts 8 hours and ends when the tab is closed; when it runs out
+mid-edit the panel asks for the password again and keeps what was typed. The panel's own words are Bulgarian only;
+content is typed in Bulgarian and English side by side. It reads the backend's address from `js/config.js`, like the
+pages. Its page, stylesheet and script are in `admin/`, apart from the public pages' files.
+
 ### What a guest's browser asks for
 
 The site's own files (the fonts are self-hosted too) and the content from the site's own backend. Nothing from anyone
@@ -47,6 +56,7 @@ en/mainmenu/index.html     Menu, English     https://oscarclubsofia.com/en/mainm
 css/styles.css             the one stylesheet
 js/config.js               the backend's address (committed empty; set it before uploading)
 js/main.js                 the one behaviour script, which also fetches the backend's content (documented at the top)
+admin/                     the admin panel (index.html, admin.css, admin.js): unlinked, noindex
 assets/fonts/              self-hosted WOFF2 subsets (Poiret One, Cormorant italic, Onest) + their OFL licences
 assets/img/                photos and logos (cocktails as WebP)
 assets/icons/              favicons
@@ -124,7 +134,9 @@ The suite opens the pages in a real browser and checks only what a visitor sees 
 Sofia time, both languages side by side, every link and file resolving with nothing requested beyond the site and its
 backend, the content from the backend and its unavailable state (backend down or hanging, no address, no
 JavaScript), no-JS and reduced-motion behaviour, the carousel, index, filter and category bar, axe accessibility
-scans, titles, link previews and JSON-LD. `tests/15-package.spec.js` checks the upload itself (see Package).
+scans, titles, link previews and JSON-LD. `tests/35-admin.spec.js` does the same for the admin panel: what an admin
+sees and does, from signing in to an event showing on the home page. `tests/15-package.spec.js` checks the upload
+itself (see Package).
 
 Run one file with `npx playwright test tests/12-menu.spec.js --project=chromium` (leave out `--project` for all three
 engines); pass the same arguments to the dist run with
@@ -146,7 +158,8 @@ dist/README-handoff.html       the hand-off note (from docs/handoff.html), next 
 dist/oscarclubsofia.com.zip    both of the above in one file, to send to the bar
 ```
 
-`tools/package.js` follows references instead of using a list: it starts from the four pages and takes every file
+`tools/package.js` follows references instead of using a list: it starts from the four pages and the admin panel
+(`admin/index.html`, named on its own because nothing links to it) and takes every file
 they reference (src, href, srcset, CSS `url()`, and the absolute `https://oscarclubsofia.com/…` addresses in meta tags
 and JSON-LD), then everything those files reference. An image nobody references is not shipped, and nothing from
 `backend/` ever is. The fonts' OFL licences ship next to the fonts. A reference that doesn't resolve, or that points
@@ -168,8 +181,8 @@ list says it isn't available.
 Send `dist/oscarclubsofia.com.zip` to the bar. `README-handoff.html` inside it (source: `docs/handoff.html`) says,
 in Bulgarian and English: what to upload (the contents of `oscarclubsofia.com/` into the site's main folder,
 overwriting), that `js/config.js` must hold the backend's address, what must not be deleted on the server, three
-checks after the upload, and the open items (NX0 partnership terms, founder's name, opening hours, rating snapshot,
-Averna's euro price, any drinks left out of the happy hour).
+checks after the upload, the admin panel's address, and the open items (NX0 partnership terms, founder's name,
+opening hours, rating snapshot, Averna's euro price, any drinks left out of the happy hour).
 
 ## Content still to confirm with the bar
 

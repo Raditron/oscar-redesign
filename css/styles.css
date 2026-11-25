@@ -49,6 +49,8 @@
 
 
 /* ================= 2 · tokens ================= */
+/* The admin panel's stylesheet copies some of these tokens and the @font-face rules above (it loads no other CSS):
+   keep them in step */
 /* shared tokens (tokens.css). The site is dark by design, so these are single-theme on purpose.
    Declared on .site (not :root) so the menu's nested <div class="site v2-v1menu" data-style="neon"> gets them again */
 .site{

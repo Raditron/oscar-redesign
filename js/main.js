@@ -152,6 +152,7 @@ if (!override) setInterval(OC.renderAllStatus, 60 * 1000);
    <noscript> style in each page's head):
      <p class="v2-lede v2-unavail">Програмата не е достъпна в момента. Маса запазваш на <a href="tel:+359899666633">…</a>.</p>
    Once the box is marked, OC.fill sends an 'oc:filled' event on window: what sits below may have moved. */
+// The admin panel's admin.js copies the address and LOAD_LIMIT, as it loads no other script: keep them in step.
 // (a slash typed at the end of the address would double the one each path starts with)
 OC.backend = (typeof window.OC_API === 'string' ? window.OC_API : window.OC_BACKEND || '').replace(/\/+$/, '');
 // a backend that takes the request and then hangs must not leave the part waiting for good
@@ -173,6 +174,7 @@ OC.fill = (box, path, render) => {
     dispatchEvent(new Event('oc:filled'));   // heard by "a link to a part of a page", below
   });
 };
+// The admin panel's euros() writes amounts the way the Bulgarian pages do: keep the two in step
 OC.euros = cents => {
   const n = cents % 100 ? (cents / 100).toFixed(2) : String(cents / 100);
   return OC.lang === 'bg' ? `${n.replace('.', ',')} €` : `€${n}`;

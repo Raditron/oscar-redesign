@@ -733,7 +733,8 @@ admin panel, so the browser checks CORS on every call.
   browsers send an `http://` Origin, and refusing it would leave them with an empty page.
 - Every response carries `Vary: Origin`, allowed or not, so a shared cache never serves one origin's answer to
   another.
-- Errors carry the same CORS headers as successes, so the site can read the error body.
+- Errors carry the same CORS headers as successes, so the site can read the error body. Every answer to an allowed
+  origin also carries `Access-Control-Expose-Headers: Retry-After`, so the admin panel can say how long a 429 waits.
 
 ## Time: the Clock port, the bar's time zone and its hours
 
