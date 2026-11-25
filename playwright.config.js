@@ -1,5 +1,6 @@
 // Playwright config (dev only, not uploaded). `npm test` runs every tests/*.spec.js against the static pages,
-// served from the repo root by tests/server.js exactly as the host serves them.
+// served from the repo root by tests/server.js exactly as the host serves them, beside a seeded backend on an
+// in-memory database that the pages load their content from (tests/backend.js, started by tests/shared-backend.js).
 // `npm run test:dist` runs the same suite against the upload folder instead: it packages first, then sets
 // SITE_ROOT=dist/oscarclubsofia.com, which tests/server.js serves in place of the repo root.
 const { defineConfig, devices } = require('@playwright/test');
@@ -38,5 +39,7 @@ module.exports = defineConfig({
     command: `node tests/server.js ${PORT}`,
     url: `http://localhost:${PORT}/index.html`,
     reuseExistingServer: false
-  }
+  },
+  // the shared backend (tests/backend.js), in the package run too
+  globalSetup: './tests/shared-backend.js'
 });

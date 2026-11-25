@@ -2,12 +2,52 @@
 
 The website of Oscar Club, a cocktail bar at 15 Slavyanska St, Sofia (since 1999). Bulgarian and English.
 
-Static, hand-written HTML, CSS and JavaScript. No build step, no framework, no third-party requests (fonts are
-self-hosted). All content is in the HTML; the one script only adds behaviour on top (open-now status, carousel,
-cocktail index preview, menu filter and category bar, copy buttons), so every page works without it.
-
 It replaces the old site file for file: the Bulgarian pages keep their old addresses, English is new under `/en/`,
 and none of the old site's files are renamed, moved or overwritten except the two old pages.
+
+## Two deployables
+
+- **The site**: static, hand-written HTML, CSS and JavaScript, uploaded to the bar's current host. No build step, no
+  framework. The HTML holds the design and its fixed copy (navigation, headings, the story, the catering pitch, the
+  footer, labels).
+- **The backend** (`backend/`): a Node + TypeScript API on MongoDB, on a host of its own. Its database is the single
+  source of truth for everything at the bar that changes: the menu, the events, the opening hours and the contacts.
+  The pages fetch that content from the backend's public reads as they load and render it into their markup; the
+  admin panel, where the bar's staff edit it, writes it. See [backend/ARCHITECTURE.md](backend/ARCHITECTURE.md).
+
+The content moves to the backend one part at a time. Today the Saturday gig list on the home page comes from it; the
+menu, the hours and the contacts are still written in the HTML until their turn (see #29).
+
+`js/config.js` holds the backend's address. It is committed empty, which the site survives (below): set it before
+uploading (see Hand-off).
+
+### The admin panel
+
+`/admin/` is where the bar's staff edit the content (today the Saturday gig list: add, change, delete events). No
+page links to it, it carries `noindex` and it isn't listed in a robots.txt (that would advertise it); only its address
+leads there. One shared password signs in; the session lasts 8 hours and ends when the tab is closed; when it runs out
+mid-edit the panel asks for the password again and keeps what was typed. The panel's own words are Bulgarian only;
+content is typed in Bulgarian and English side by side. It reads the backend's address from `js/config.js`, like the
+pages. Its page, stylesheet and script are in `admin/`, apart from the public pages' files.
+
+### What a guest's browser asks for
+
+The site's own files (the fonts are self-hosted too) and the content from the site's own backend. Nothing from anyone
+else: no CDN, no web fonts, no analytics.
+
+### Without JavaScript, or without the backend
+
+The content that comes from the backend needs the script to fetch it. Without JavaScript, when the backend can't be
+reached, answers with an error or hasn't answered within 10 seconds, or while no address is set, each part of the page
+that shows it says the content isn't available and gives the reservation phone, +359 899 666 633: the one data value
+the HTML keeps on purpose, so a guest can always reach the bar. While the content is on its way nothing stands in for
+it (no spinner, no placeholder). When it lands, it pushes the page below it down: the gig list adds up to three rows.
+That is a known limit. Room kept for the rows would leave a gap, or close with the opposite jump, whenever nothing is
+upcoming. Chromium and Firefox keep what the guest is reading in place; Safari doesn't. A link to a part of the page
+(`/#visit`) holds its place in every browser.
+
+Everything else works without JavaScript; the script adds behaviour on top (open-now status, carousel, cocktail index
+preview, menu filter and category bar, copy buttons).
 
 ## Structure
 
@@ -17,7 +57,9 @@ en/index.html              Home, English     https://oscarclubsofia.com/en/
 mainmenu/index.html        Menu, Bulgarian   https://oscarclubsofia.com/mainmenu/
 en/mainmenu/index.html     Menu, English     https://oscarclubsofia.com/en/mainmenu/
 css/styles.css             the one stylesheet
-js/main.js                 the one script (progressive enhancement; documented at the top)
+js/config.js               the backend's address (committed empty; set it before uploading)
+js/main.js                 the one behaviour script, which also fetches the backend's content (documented at the top)
+admin/                     the admin panel (index.html, admin.css, admin.js): unlinked, noindex
 assets/fonts/              self-hosted WOFF2 subsets (Poiret One, Cormorant italic, Onest) + their OFL licences
 assets/img/                photos and logos (cocktails as WebP)
 assets/icons/              favicons
@@ -25,7 +67,9 @@ assets/share/              the link-preview image (1200×630)
 
 docs/handoff.html          the hand-off note for the bar (Bulgarian, then English); not uploaded
 design-system/             the v2 prototype: the design reference. Not uploaded, not edited
-tests/                     Playwright suite, local server, old-site fixture
+backend/                   the content API (Node + TypeScript), its own package on its own host; not uploaded.
+                           See backend/ARCHITECTURE.md
+tests/                     Playwright suite, local server, the suite's backends, old-site fixture
 tools/                     packaging, the dist test run, the share-image generator
 ```
 
@@ -33,7 +77,7 @@ Links between pages are relative and always name the file (`../en/index.html`), 
 local server and straight from disk. Canonical and hreflang URLs are absolute, in directory form (`/en/`).
 
 Files the old site has on the server stay there and keep working: `/logoOscar.png`, `/prizeyear.png`, `/menu3.png`,
-`/mainmenu/png/*`, `/mainmenu/food/*`. New files only go into new folders (`assets/`, `css/`, `js/`, `en/`).
+`/mainmenu/png/*`, `/mainmenu/food/*`. New files only go into new folders (`assets/`, `css/`, `js/`, `en/`, `admin/`).
 
 ### The design system
 
@@ -45,17 +89,32 @@ at `http://localhost:4173/design-system/index.html` and pick Version 2, then a p
 ## Run it locally
 
 ```
-npm run serve              # http://localhost:4173/index.html  (any static server at the repo root works too)
+npm run serve              # http://localhost:4173/index.html, this machine only (or any static server at the repo root)
 ```
 
 Add `?now=YYYY-MM-DDTHH:MM` to set the clock in Sofia time, e.g. `/index.html?now=2026-11-20T01:30`.
 
+With `js/config.js` empty, the gig list says it isn't available. To see it filled, run a backend and put its address
+in `js/config.js` (don't commit it). The quickest is the one the test suite runs: the backend on an in-memory
+database filled by the seed, its clock stopped at `--now`, which decides which events are upcoming. The seed's two
+events are 31 October and 7 November 2026, so a moment before them lists both. It prints its address:
+
+```
+cd backend
+node --experimental-strip-types tests/support/browser-backend.ts --now 2026-10-30T20:00:00+02:00
+```
+
+For a backend on a real database, see "Running it" in `backend/ARCHITECTURE.md`; set `CORS_ALLOW_LOCALHOST=true`
+there so the local pages may read it.
+
 ## Test
 
-Dev-only tooling; none of it is uploaded. Needs Node 18 or newer.
+Dev-only tooling; none of it is uploaded. Needs Node 22.13 or newer (the suite runs the backend) and both packages'
+dependencies.
 
 ```
 npm install
+npm install --prefix backend
 npm test                   # installs Chromium for Playwright if needed, then runs tests/*.spec.js on the working tree
 npm run test:all           # the same suite in all three engines: Chromium, Firefox and WebKit (Safari's engine)
 npm run test:dist          # packages (below), then runs the same suite against dist/oscarclubsofia.com (Chromium)
@@ -63,16 +122,30 @@ npm run test:dist          # packages (below), then runs the same suite against 
 
 `npm test` stays on Chromium so it is quick; run `npm run test:all` before a release. The few checks an engine can't
 make (e.g. reading the clipboard back) are skipped there with the reason written next to the skip. The dist run takes
-engines too: `npm run test:dist -- --project=chromium --project=firefox --project=webkit`.
+engines too: `npm run test:dist -- --project=chromium --project=firefox --project=webkit`. The backend's own tests run
+in `backend/` (`npm test` there; see its ARCHITECTURE.md).
+
+The pages load their content from real backends: the backend's own app on an in-memory MongoDB (never a real
+database), filled by the seed, with its clock stopped at Sunday 22 November 2026, 01:30 in Sofia, a moment the pages'
+`?now=` can match (`tests/backend.js`). One shared backend starts beside the static server, for the checks that only
+read. A test that adds content or moves the clock gets a private backend of its own, so it never disturbs the tests
+running beside it; "the backend is down" is an address nothing answers at, and "the backend hangs" a local server
+that takes the request and never answers. The first run downloads a MongoDB binary (~74 MB) into
+`backend/node_modules/.cache`.
 
 The suite opens the pages in a real browser and checks only what a visitor sees and can do: the open-now status by
-Sofia time, both languages side by side, every link and file resolving with no third-party requests, no-JS and
-reduced-motion behaviour, the carousel, index, filter and category bar, axe accessibility scans, titles, link
-previews and JSON-LD. `tests/15-package.spec.js` checks the upload itself (see Package).
+Sofia time, both languages side by side, every link and file resolving with nothing requested beyond the site and its
+backend, the content from the backend and its unavailable state (backend down or hanging, no address, no
+JavaScript), no-JS and reduced-motion behaviour, the carousel, index, filter and category bar, axe accessibility
+scans, titles, link previews and JSON-LD. `tests/35-admin.spec.js` does the same for the admin panel: what an admin
+sees and does, from signing in to an event showing on the home page. `tests/15-package.spec.js` checks the upload
+itself (see Package).
 
 Run one file with `npx playwright test tests/12-menu.spec.js --project=chromium` (leave out `--project` for all three
 engines); pass the same arguments to the dist run with
-`npm run test:dist -- tests/12-menu.spec.js`. `SITE_ROOT=<folder>` makes the test server serve another folder.
+`npm run test:dist -- tests/12-menu.spec.js`. `SITE_ROOT=<folder>` makes the test server serve another folder. The
+test server answers this machine only, and never serves `backend/`, under any name the disk opens it by, so a
+developer's `backend/.env` stays private.
 
 ## Package
 
@@ -88,11 +161,12 @@ dist/README-handoff.html       the hand-off note (from docs/handoff.html), next 
 dist/oscarclubsofia.com.zip    both of the above in one file, to send to the bar
 ```
 
-`tools/package.js` follows references instead of using a list: it starts from the four pages and takes every file
+`tools/package.js` follows references instead of using a list: it starts from the four pages and the admin panel
+(`admin/index.html`, named on its own because nothing links to it) and takes every file
 they reference (src, href, srcset, CSS `url()`, and the absolute `https://oscarclubsofia.com/…` addresses in meta tags
-and JSON-LD), then everything those files reference. An image nobody references is not shipped. The fonts' OFL
-licences ship next to the fonts. A reference that doesn't resolve, or that points outside the site's files, stops the
-build. The zip is written with Node's own zlib, so no zip tool is needed on any OS.
+and JSON-LD), then everything those files reference. An image nobody references is not shipped, and nothing from
+`backend/` ever is. The fonts' OFL licences ship next to the fonts. A reference that doesn't resolve, or that points
+outside the site's files, stops the build. The zip is written with Node's own zlib, so no zip tool is needed on any OS.
 
 The package test checks that the folder holds only site files and nothing from the dev side, that every shipped file
 is referenced and every reference resolves, that the zip matches the folder byte for byte, and, using the stand-in
@@ -103,10 +177,15 @@ URL answering with its original bytes while the four pages become the new ones.
 
 ## Hand-off
 
+Before packaging for the bar, set the backend's address in `js/config.js` (the package is a copy of the working
+tree), and make sure the backend's `CORS_ORIGINS` lists the site's address. Shipped empty, the site works, but the gig
+list says it isn't available.
+
 Send `dist/oscarclubsofia.com.zip` to the bar. `README-handoff.html` inside it (source: `docs/handoff.html`) says,
 in Bulgarian and English: what to upload (the contents of `oscarclubsofia.com/` into the site's main folder,
-overwriting), what must not be deleted on the server, three checks after the upload, and the open
-items (NX0 partnership terms, founder's name, opening hours, rating snapshot, Averna's euro price, any drinks left out of the happy hour).
+overwriting), that `js/config.js` must hold the backend's address, what must not be deleted on the server, three
+checks after the upload, the admin panel's address, and the open items (NX0 partnership terms, founder's name,
+opening hours, rating snapshot, Averna's euro price, any drinks left out of the happy hour).
 
 ## Content still to confirm with the bar
 

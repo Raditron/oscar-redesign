@@ -32,18 +32,12 @@ const week = (page, lang) => page.getByRole('table', { name: T[lang].hours });
 /** Names of the rows marked as tonight (aria-current="date"). */
 const markedRows = async (page, lang) => week(page, lang).locator('tr[aria-current="date"]').locator('th').allInnerTexts();
 
-// Sofia local times (week of Mon 16 Nov 2026) → the night it is (index into T.days, Monday first)
-const NIGHTS = [
-  { when: 'Mon 20:00', now: '2026-11-16T20:00', night: 0 },
-  { when: 'Mon 12:00 (before opening, today is still today)', now: '2026-11-16T12:00', night: 0 },
-  { when: 'Tue 00:30 (Monday closed at 23:30)', now: '2026-11-17T00:30', night: 1 },
-  { when: 'Thu 23:00', now: '2026-11-19T23:00', night: 3 },
-  { when: 'Fri 01:30 (still Thursday night, open until 02:00)', now: '2026-11-20T01:30', night: 3 },
-  { when: 'Fri 02:30 (Thursday night is over)', now: '2026-11-20T02:30', night: 4 },
-  { when: 'Sat 02:50 (still Friday night)', now: '2026-11-21T02:50', night: 4 },
-  { when: 'Sun 01:00 (still Saturday night)', now: '2026-11-22T01:00', night: 5 },
-  { when: 'Sun 12:00', now: '2026-11-22T12:00', night: 6 }
-];
+// Which night a moment belongs to: the backend's ServiceNight cases, shared so the site's copy of the rule (OC.nightOf)
+// and the backend's are checked against the same table. Each is a Sofia local time, as ?now= takes it, and the date
+// of its night; the page marks that date's weekday.
+const { SERVICE_NIGHT_CASES } = require('../backend/tests/support/service-night-cases.ts');
+/** The weekday of a 'YYYY-MM-DD' date, as an index into T.days (Monday first). */
+const weekdayOf = date => (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
 
 test.describe('the three sections', () => {
   for (const lang of ['bg', 'en']) {
@@ -56,7 +50,7 @@ test.describe('the three sections', () => {
       const music = section(page, lang, 'music');
       await expect(music.getByRole('heading', { level: 2 })).toHaveText(t.music);
       await expect(music.getByRole('img', { name: t.musicAlt })).toBeAttached();
-      await expect(music.getByRole('listitem')).toHaveCount(2);
+      // (the gig list comes from the backend: tests/34-events.spec.js)
       await expect(music.getByRole('link', { name: /@oscarclub_official/ })).toHaveAttribute('href', IG);
 
       const events = section(page, lang, 'events');
@@ -99,11 +93,12 @@ test.describe('the three sections', () => {
 
 test.describe('the week of hours: tonight is marked (Sofia time)', () => {
   for (const lang of ['bg', 'en']) {
-    for (const c of NIGHTS) {
-      test(`${lang.toUpperCase()} · ${c.when} → ${T.en.days[c.night]}`, async ({ page }) => {
-        await H.openPage(page, H.page(lang, 'home').path, { now: c.now });
+    for (const c of SERVICE_NIGHT_CASES) {
+      const night = weekdayOf(c.serviceNight);
+      test(`${lang.toUpperCase()} · ${c.when} → ${T.en.days[night]}`, async ({ page }) => {
+        await H.openPage(page, H.page(lang, 'home').path, { now: c.sofiaTime });
         await expect(week(page, lang).getByRole('row')).toHaveCount(7);
-        expect(await markedRows(page, lang)).toEqual([T[lang].days[c.night]]);
+        expect(await markedRows(page, lang)).toEqual([T[lang].days[night]]);
       });
     }
   }

@@ -1,0 +1,6 @@
+node_modules/
+dist/
+# Real environment variables stay on the machine that runs the backend; only the example is committed.
+.env
+.env.*
+!.env.example

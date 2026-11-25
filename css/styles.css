@@ -49,6 +49,8 @@
 
 
 /* ================= 2 · tokens ================= */
+/* The admin panel's stylesheet copies some of these tokens and the @font-face rules above (it loads no other CSS):
+   keep them in step */
 /* shared tokens (tokens.css). The site is dark by design, so these are single-theme on purpose.
    Declared on .site (not :root) so the menu's nested <div class="site v2-v1menu" data-style="neon"> gets them again */
 .site{
@@ -231,6 +233,16 @@ body{margin:0;background:#000}
 .v2-slate .v2-now-week{--sep:1.1em;display:flex;flex-wrap:wrap;margin-left:calc(var(--sep) * -1);clip-path:inset(-4px -4px -4px var(--sep))}
 .v2-slate .v2-now-week>span{position:relative;padding-left:var(--sep)}
 .v2-slate .v2-now-week i{position:absolute;top:0;left:0;width:var(--sep);height:auto;border-radius:0;background:none;font-style:normal;text-align:center}
+
+/* content from the backend (js/main.js, OC.fill): the "unavailable" note says the content isn't there and gives the
+   reservation phone. It shows when the backend can't be reached and without JS; never while the content loads, nor
+   once it is in. Quiet: it speaks in the lede's voice (<p class="v2-lede v2-unavail">), no box, no colour */
+.v2-unavail{display:none}
+[data-oc-state="unavailable"] .v2-unavail{display:block}
+/* Without JS nothing can load the content, so the note shows: each page's head holds
+   <noscript><style>.v2-unavail{display:block}</style></noscript>. Hidden by default and shown that way, rather than
+   shown in the HTML and hidden by the script, so it never flashes up while the script is on its way. (Not
+   @media (scripting:none): browsers older than 2023 ignore it; every browser honours <noscript>.) */
 
 
 /* ================= 5 · chrome: header, footer, thumb bar ================= */

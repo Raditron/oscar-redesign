@@ -1,8 +1,9 @@
 // Tiny static file server for local preview and the Playwright tests. Zero dependencies.
 // Serves the site folder, so the pages answer at the same paths as on the real host:
 //   /index.html  /en/index.html  /mainmenu/index.html  /en/mainmenu/index.html
-// A directory URL ("/", "/en/") serves its index.html, like the host does. Missing files are a plain 404.
-// Usage: node tests/server.js [port]   (default 4173, or $PORT)
+// A directory URL ("/", "/en/") serves its index.html, like the host does. Missing files are a plain 404, and so is
+// anything in backend/.
+// Usage: node tests/server.js [port]   (default 4173, or $PORT), on this machine only (127.0.0.1)
 // The folder is the repo root, or $SITE_ROOT when set (e.g. SITE_ROOT=dist/oscarclubsofia.com serves the package).
 // The tests also use createServer(root) to serve other folders (the package, a copy of the old site).
 'use strict';
@@ -24,16 +25,25 @@ const siteRoot = () => path.resolve(REPO, process.env.SITE_ROOT || '.');
 /** An http.Server (not yet listening) that serves `root` the way the host does. */
 function createServer(root) {
   const ROOT = path.resolve(root);
+  // The backend's folder is never served, as if it weren't there: a developer's backend/.env, its secrets, sits in it.
+  // Windows opens a folder by other names too (another case, an NTFS stream's suffix: backend::$INDEX_ALLOCATION), so
+  // each file is judged by the name the disk gives it, its real path, not by the name asked for.
+  const REAL_ROOT = fs.realpathSync.native(ROOT);
+  const inBackend = real => path.relative(REAL_ROOT, real).split(path.sep)[0].toLowerCase() === 'backend';
+  const notFound = res => res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found');
   return http.createServer((req, res) => {
     let rel;
     try { rel = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { rel = '/'; }
     let file = path.join(ROOT, path.normalize(rel));
     if (!file.startsWith(ROOT)) { res.writeHead(403).end('Forbidden'); return; }
     if (rel.endsWith('/')) file = path.join(file, 'index.html');
-    fs.stat(file, (err, st) => {
-      if (err || !st.isFile()) { res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found'); return; }
-      res.writeHead(200, { 'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
-      fs.createReadStream(file).pipe(res);
+    fs.realpath.native(file, (err, real) => {
+      if (err || inBackend(real)) { notFound(res); return; }
+      fs.stat(real, (err, st) => {
+        if (err || !st.isFile()) { notFound(res); return; }
+        res.writeHead(200, { 'Content-Type': TYPES[path.extname(real).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+        fs.createReadStream(real).pipe(res);
+      });
     });
   });
 }
@@ -56,5 +66,6 @@ if (require.main === module) {
   const ROOT = siteRoot();
   const PORT = Number(process.argv[2] || process.env.PORT || 4173);
   if (!fs.existsSync(path.join(ROOT, 'index.html'))) { console.error(`No index.html in ${ROOT}`); process.exit(1); }
-  createServer(ROOT).listen(PORT, () => console.log(`Serving ${ROOT} at http://localhost:${PORT}/`));
+  // this machine only: the repo root holds more than the site, and nobody else on the network needs it
+  createServer(ROOT).listen(PORT, '127.0.0.1', () => console.log(`Serving ${ROOT} at http://localhost:${PORT}/`));
 }

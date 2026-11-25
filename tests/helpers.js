@@ -2,6 +2,7 @@
 // (roles, labels, text, requests), never class names.
 const { expect } = require('@playwright/test');
 const AxeBuilder = require('@axe-core/playwright').default;
+const { sharedBackendUrl } = require('./backend');
 
 const SITE = 'https://oscarclubsofia.com';
 
@@ -27,7 +28,8 @@ const CHROME = {
  * read (locator.evaluateAll / allTextContents / allInnerTexts) on a locator inside a region named by aria-labelledby
  * crashes the page once that region has been queried before ("Page crashed"; reproduced on a 3-element page with no CSS
  * or script). Reading the same elements through their handles does not, so in Firefox those three calls take that
- * route. The result is identical; Chromium and WebKit use Playwright's own calls. Installed by openPage().
+ * route. The result is identical; Chromium and WebKit use Playwright's own calls. Installed by openPage(). The cause is
+ * the Firefox bug described at AXE_FOR_FIREFOX below.
  */
 function patchFirefoxLocators(pw) {
   const proto = Object.getPrototypeOf(pw.locator('html'));
@@ -46,9 +48,29 @@ function patchFirefoxLocators(pw) {
   proto.allInnerTexts = function () { return inFirefox(this) ? this.evaluateAll(els => els.map(e => e.innerText)) : allInnerTexts.call(this); };
 }
 
-/** Open a page. `now` sets the clock as Sofia local time ('2026-11-20T01:30'); `query` adds more parameters. */
-async function openPage(pw, path, { now, query } = {}) {
+// The backend each page loads from. An init script can't be taken back, and the order several run in isn't defined,
+// so a page is pointed at one backend for good.
+const pointedAt = new WeakMap();
+
+/** Point the page at a backend (see tests/backend.js): window.OC_API, set before js/main.js runs, on every load. */
+async function pointAtBackend(pw, url) {
+  if (pointedAt.has(pw)) {
+    if (pointedAt.get(pw) !== url) throw new Error(`This page loads from ${pointedAt.get(pw)}: open another page for ${url}`);
+    return;
+  }
+  pointedAt.set(pw, url);
+  await pw.addInitScript(u => { window.OC_API = u; }, url);
+}
+
+/**
+ * Open a page. `now` sets the clock as Sofia local time ('2026-11-20T01:30'); `query` adds more parameters; `backend`
+ * is the base URL the page loads its content from: the suite's shared backend unless given (a private backend's url,
+ * closedBackendUrl(), or '' for none). null leaves it to js/config.js: only for a test that serves that file itself
+ * (page.route), so the suite never calls the backend the file on disk may name.
+ */
+async function openPage(pw, path, { now, query, backend = sharedBackendUrl() } = {}) {
   patchFirefoxLocators(pw);
+  if (backend !== null) await pointAtBackend(pw, backend);
   const params = new URLSearchParams(query || {});
   if (now) params.set('now', now);
   const qs = params.toString();
@@ -63,7 +85,7 @@ const headerStatus = pw => pw.getByRole('banner').getByRole('status');
 /**
  * Start recording network traffic. Call before openPage. Returns { failed, thirdParty, requests }:
  *   failed      every request that errored or answered 4xx/5xx
- *   thirdParty  every http(s) request to a host other than the local test server
+ *   thirdParty  every http(s) request to a host other than the local test servers (the site's, and its backend's)
  */
 function watchNetwork(pw) {
   const log = { failed: [], thirdParty: [], requests: [] };
@@ -77,7 +99,7 @@ function watchNetwork(pw) {
   return log;
 }
 
-/** Assert the recorded traffic: nothing failed, nothing left the site. */
+/** Assert the recorded traffic: nothing failed, nothing went beyond the site and its backend. */
 function expectCleanNetwork(log) {
   expect(log.thirdParty, 'requests to third-party hosts').toEqual([]);
   expect(log.failed, 'failed requests / 404s').toEqual([]);
@@ -120,9 +142,21 @@ async function expectLocalReferencesResolve(pw) {
   return urls;
 }
 
+/**
+ * Firefox workaround (test tooling only, nothing to do with the site). Playwright 1.65's Firefox (159) crashes the page
+ * ("Page crashed") once an element's ariaLabelledByElements has been read from two JavaScript worlds: Playwright reads
+ * it in a world of its own whenever it finds an element by role or label, and axe reads it in the page's (Mozilla bug
+ * 2090055, fixed in Firefox 163; microsoft/playwright#43967). So in Firefox, axe takes aria-labelledby from the
+ * attribute, the only way the site sets it: the same rules run and find the same things. Drop it once Playwright's
+ * Firefox is 163 or later.
+ */
+const axeCore = require(require.resolve('axe-core', { paths: [require.resolve('@axe-core/playwright')] }));   // the copy AxeBuilder injects
+const AXE_FOR_FIREFOX = `${axeCore.source}\n;axe.configure({ standards: { ariaAttrs: { 'aria-labelledby': { prop: undefined } } } });`;
+
 /** axe scan: no serious or critical violations. `exclude` takes CSS selectors to leave out (use sparingly). */
 async function expectNoSeriousA11yViolations(pw, { exclude = [] } = {}) {
-  let axe = new AxeBuilder({ page: pw });
+  const inFirefox = pw.context().browser()?.browserType().name() === 'firefox';
+  let axe = new AxeBuilder({ page: pw, axeSource: inFirefox ? AXE_FOR_FIREFOX : undefined });
   for (const sel of exclude) axe = axe.exclude(sel);
   const { violations } = await axe.analyze();
   const serious = violations.filter(v => v.impact === 'serious' || v.impact === 'critical')
@@ -165,6 +199,6 @@ const WEBKIT_TAB = 'WebKit (as Safari by default) does not move Tab through link
 
 module.exports = {
   SITE, PAGES, VIEWPORTS, CHROME, page,
-  openPage, headerStatus, watchNetwork, expectCleanNetwork, scrollThrough, expectLocalReferencesResolve,
+  openPage, pointAtBackend, headerStatus, watchNetwork, expectCleanNetwork, scrollThrough, expectLocalReferencesResolve,
   expectNoSeriousA11yViolations, tabThrough, WEBKIT_TAB
 };
